@@ -312,4 +312,4 @@ def split_array_by_number_of_workers(client: Client, dataarray: DataArray, max_l
 
 
 if __name__ == '__main__':
-    dask_find_or_start_client()
+    dask_find_or_start_client(address="127.0.0.1:44683")
