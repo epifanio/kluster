@@ -18,10 +18,11 @@ class KlusterAttitudeView(pg.GraphicsLayoutWidget):
 
     Look at superclassing PlotItem.  This would allow us to make attitude plot items and streamline this code.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.setWindowTitle('Kluster Attitude View')
+        self.setWindowTitle("Kluster Attitude View")
 
         self.pts_per_plot = 1000
 
@@ -74,15 +75,15 @@ class KlusterAttitudeView(pg.GraphicsLayoutWidget):
         self.initialize_datastore()
 
         self.roll_plot = self.configure_attitude_plot(self.addPlot())
-        self.roll_plot.setLabel('left', 'roll', 'deg')
+        self.roll_plot.setLabel("left", "roll", "deg")
         self.pitch_plot = self.configure_attitude_plot(self.addPlot())
-        self.pitch_plot.setLabel('right', 'pitch', 'deg')
+        self.pitch_plot.setLabel("right", "pitch", "deg")
         self.nextRow()
         self.heave_plot = self.configure_attitude_plot(self.addPlot(colspan=2))
-        self.heave_plot.setLabel('left', 'heave', 'm')
+        self.heave_plot.setLabel("left", "heave", "m")
         self.nextRow()
         self.heading_plot = self.configure_attitude_plot(self.addPlot(colspan=2))
-        self.heading_plot.setLabel('left', 'heading', 'deg')
+        self.heading_plot.setLabel("left", "heading", "deg")
 
     def configure_attitude_plot(self, newplot):
         """
@@ -123,17 +124,25 @@ class KlusterAttitudeView(pg.GraphicsLayoutWidget):
             self.data_slices = return_chunk_slices(xarr)
             self.data_slice_index = 0
             self.data_ptr = 0
-            self.data_chunk_instances.append(xarr.isel(time=self.data_slices[0]).compute())
+            self.data_chunk_instances.append(
+                xarr.isel(time=self.data_slices[0]).compute()
+            )
             if len(self.data_slices) > 1:
-                self.data_chunk_instances.append(xarr.isel(time=self.data_slices[1]).compute())
+                self.data_chunk_instances.append(
+                    xarr.isel(time=self.data_slices[1]).compute()
+                )
             if self.pts_per_plot > self.data_slices[0].stop:
                 self.plot_pts = self.data_slices[0].stop
             else:
                 self.plot_pts = self.pts_per_plot
 
-            self.plot_data_instances = [np.empty((self.plot_pts, 2)), np.empty((self.plot_pts, 2)),
-                                        np.empty((self.plot_pts, 2)), np.empty((self.plot_pts, 2))]
-            self.plot_data_ids = ['roll', 'pitch', 'heave', 'heading']
+            self.plot_data_instances = [
+                np.empty((self.plot_pts, 2)),
+                np.empty((self.plot_pts, 2)),
+                np.empty((self.plot_pts, 2)),
+                np.empty((self.plot_pts, 2)),
+            ]
+            self.plot_data_ids = ["roll", "pitch", "heave", "heading"]
 
     def start_plotting(self):
         """
@@ -177,10 +186,18 @@ class KlusterAttitudeView(pg.GraphicsLayoutWidget):
                     self.initialize_data(self.data)
                     return
                 self.data_slice_index += 1
-                self.data_chunk_instances.append(self.data.isel(time=self.data_slices[self.data_slice_index + 1]).compute())
+                self.data_chunk_instances.append(
+                    self.data.isel(
+                        time=self.data_slices[self.data_slice_index + 1]
+                    ).compute()
+                )
 
-            self.active_curves = [self.roll_plot.plot(), self.pitch_plot.plot(), self.heave_plot.plot(),
-                                  self.heading_plot.plot()]
+            self.active_curves = [
+                self.roll_plot.plot(),
+                self.pitch_plot.plot(),
+                self.heave_plot.plot(),
+                self.heading_plot.plot(),
+            ]
 
         if self.data_ptr == 0:
             curr_time_idx = slice(self.data_ptr, self.data_ptr + self.plot_pts)
@@ -193,7 +210,9 @@ class KlusterAttitudeView(pg.GraphicsLayoutWidget):
                 self.plot_data_instances[cnt] = tmp
                 curv.setData(x=tmp[:, 0], y=tmp[:, 1])
         else:
-            curr_time_idx = self.data_ptr - self.data_slices[self.data_slice_index].start
+            curr_time_idx = (
+                self.data_ptr - self.data_slices[self.data_slice_index].start
+            )
             self.data_ptr += 1
             raw_att = self.data_chunk_instances[0].isel(time=curr_time_idx)
             for cnt, curv in enumerate(self.active_curves):
@@ -228,7 +247,7 @@ class KlusterAttitudeView(pg.GraphicsLayoutWidget):
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5
@@ -236,7 +255,10 @@ if __name__ == '__main__':
     test_window = KlusterAttitudeView()
 
     try:
-        fq = reload_data(r"C:\collab\dasktest\data_dir\hassler_acceptance\refsurf\converted", show_progress=False)
+        fq = reload_data(
+            r"C:\collab\dasktest\data_dir\hassler_acceptance\refsurf\converted",
+            show_progress=False,
+        )
         att_dat = fq.multibeam.raw_att
     except AttributeError:  # cant find the converted data, use this test data instead
         roll_dat = np.rad2deg(np.sin(np.linspace(-np.pi, np.pi, 2000)))
@@ -244,9 +266,15 @@ if __name__ == '__main__':
         heave_dat = np.linspace(0, 1, 2000)
         heading_dat = np.linspace(0, 180, 2000)
         time_dat = np.arange(0, 2000)
-        att_dat = xr.Dataset({'roll': (['time'], roll_dat), 'pitch': (['time'], pitch_dat),
-                              'heave': (['time'], heave_dat), 'heading': (['time'], heading_dat)},
-                             coords={'time': time_dat}).chunk()
+        att_dat = xr.Dataset(
+            {
+                "roll": (["time"], roll_dat),
+                "pitch": (["time"], pitch_dat),
+                "heave": (["time"], heave_dat),
+                "heading": (["time"], heading_dat),
+            },
+            coords={"time": time_dat},
+        ).chunk()
     test_window.build_plots()
     test_window.initialize_data(att_dat)
     test_window.start_plotting()

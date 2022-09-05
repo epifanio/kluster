@@ -15,7 +15,7 @@ class VesselFile:
 
     def __init__(self, filepath: str = None):
         self.data = {}
-        self.source_file = ''
+        self.source_file = ""
         if filepath:
             self.open(filepath)
 
@@ -30,11 +30,15 @@ class VesselFile:
         """
 
         if not os.path.exists(filepath):
-            raise ValueError('VesselFile: {} can not be found'.format(filepath))
+            raise ValueError("VesselFile: {} can not be found".format(filepath))
         filext = os.path.splitext(filepath)[1]
-        if filext != '.kfc':
-            raise ValueError('VesselFile: {} is not a valid Kluster configuration file (.kfc)'.format(filepath))
-        with open(filepath, 'r') as json_fil:
+        if filext != ".kfc":
+            raise ValueError(
+                "VesselFile: {} is not a valid Kluster configuration file (.kfc)".format(
+                    filepath
+                )
+            )
+        with open(filepath, "r") as json_fil:
             self.data = json.load(json_fil)
         self.source_file = filepath
 
@@ -63,10 +67,23 @@ class VesselFile:
         """
 
         if serial_number in self.data:
-            identical_offsets, identical_angles, identical_tpu, data_matches, new_waterline = compare_dict_data(self.data[serial_number], data)
-            if not identical_offsets or not identical_angles or not identical_tpu or new_waterline:
+            (
+                identical_offsets,
+                identical_angles,
+                identical_tpu,
+                data_matches,
+                new_waterline,
+            ) = compare_dict_data(self.data[serial_number], data)
+            if (
+                not identical_offsets
+                or not identical_angles
+                or not identical_tpu
+                or new_waterline
+            ):
                 if carry_over_tpu:
-                    new_data = carry_over_optional(self.data[serial_number], deepcopy(data))
+                    new_data = carry_over_optional(
+                        self.data[serial_number], deepcopy(data)
+                    )
                 else:
                     new_data = data
                 for entry in new_data.keys():
@@ -74,7 +91,7 @@ class VesselFile:
                         self.data[serial_number][entry][ky] = val
                 only_retain_earliest_entry(self.data[serial_number])
         else:
-            print('Adding new entry in vessel file for {}'.format(serial_number))
+            print("Adding new entry in vessel file for {}".format(serial_number))
             self.data[serial_number] = data
 
     def save(self, filepath: str = None):
@@ -89,7 +106,7 @@ class VesselFile:
 
         if not filepath:
             filepath = self.source_file
-        with open(filepath, 'w') as json_fil:
+        with open(filepath, "w") as json_fil:
             json.dump(self.data, json_fil, indent=4)
         self.source_file = filepath
 
@@ -114,13 +131,19 @@ class VesselFile:
         subset_data = {}
         if serial_number in self.data:
             first_sensor = list(self.data[serial_number].keys())[0]
-            timestamps = [int(f) for f in list(self.data[serial_number][first_sensor].keys())]
-            final_timestamps = get_overlapping_timestamps(timestamps, starttime, endtime)
+            timestamps = [
+                int(f) for f in list(self.data[serial_number][first_sensor].keys())
+            ]
+            final_timestamps = get_overlapping_timestamps(
+                timestamps, starttime, endtime
+            )
             if final_timestamps:
                 for entry in self.data[serial_number].keys():
                     subset_data[entry] = {}
                     for tstmp in final_timestamps:
-                        subset_data[entry][tstmp] = self.data[serial_number][entry][tstmp]
+                        subset_data[entry][tstmp] = self.data[serial_number][entry][
+                            tstmp
+                        ]
                 return subset_data
             else:
                 return None
@@ -173,7 +196,11 @@ def get_overlapping_timestamps(timestamps: list, starttime: int, endtime: int):
     #   the given starttime by 60 seconds
     buffer = 60
     starting_timestamp = None
-    for tstmp in timestamps:  # first pass, find the nearest timestamp (to starttime) without going over the starttime
+    for (
+        tstmp
+    ) in (
+        timestamps
+    ):  # first pass, find the nearest timestamp (to starttime) without going over the starttime
         if tstmp < starttime + buffer:
             if not starting_timestamp:
                 starting_timestamp = tstmp
@@ -184,7 +211,11 @@ def get_overlapping_timestamps(timestamps: list, starttime: int, endtime: int):
         return final_timestamps
     starttime = starting_timestamp
     final_timestamps.append(str(starttime))
-    for tstmp in timestamps:  # second pass, append all timestamps that are between the starting timestamp and endtime
+    for (
+        tstmp
+    ) in (
+        timestamps
+    ):  # second pass, append all timestamps that are between the starting timestamp and endtime
         if (tstmp > starttime) and (tstmp <= endtime):
             final_timestamps.append(str(tstmp))
     return final_timestamps
@@ -228,44 +259,64 @@ def compare_dict_data(dict_one: dict, dict_two: dict):
         new waterline value found
     """
 
-    check = {'identical_offsets': True, 'identical_angles': True, 'identical_tpu': True, 'data_matches': True,
-             'new_waterline': None}
+    check = {
+        "identical_offsets": True,
+        "identical_angles": True,
+        "identical_tpu": True,
+        "data_matches": True,
+        "new_waterline": None,
+    }
     for sensor_one, data_one in dict_one.items():
         # only care about non-tpu differences
         if sensor_one in kluster_variables.tpu_parameter_names:
-            ky = 'identical_tpu'
+            ky = "identical_tpu"
         elif sensor_one in kluster_variables.offset_parameter_names:
-            ky = 'identical_offsets'
+            ky = "identical_offsets"
         elif sensor_one in kluster_variables.angle_parameter_names:
-            ky = 'identical_angles'
-        elif sensor_one.lower() == 'waterline':
-            ky = 'new_waterline'
+            ky = "identical_angles"
+        elif sensor_one.lower() == "waterline":
+            ky = "new_waterline"
         else:
             continue
         if sensor_one in dict_two:
             data_two = dict_two[sensor_one]
-            if check['identical_tpu'] or check['identical_offsets'] or check['identical_angles']:
+            if (
+                check["identical_tpu"]
+                or check["identical_offsets"]
+                or check["identical_angles"]
+            ):
                 for tstmp, entry in data_one.items():
                     if tstmp in data_two:
                         if float(data_one[tstmp]) != float(data_two[tstmp]):
                             check[ky] = False
                     else:
                         check[ky] = False
-            if check['data_matches']:
+            if check["data_matches"]:
                 vals_one = [data_one[t] for t in [t for t in data_one.keys()]]
                 vals_two = [data_two[t] for t in [t for t in data_two.keys()]]
                 if vals_one != vals_two:
-                    check['data_matches'] = False
-            if ky == 'new_waterline':
+                    check["data_matches"] = False
+            if ky == "new_waterline":
                 waterline_one = data_one[list(data_one.keys())[0]]
                 waterline_two = data_two[list(data_two.keys())[0]]
                 if float(waterline_one) != float(waterline_two):
-                    check['new_waterline'] = float(waterline_two)
+                    check["new_waterline"] = float(waterline_two)
         else:
-            check = {'identical_offsets': False, 'identical_angles': False, 'identical_tpu': False, 'data_matches': False,
-                     'new_waterline': None}
+            check = {
+                "identical_offsets": False,
+                "identical_angles": False,
+                "identical_tpu": False,
+                "data_matches": False,
+                "new_waterline": None,
+            }
             break
-    return check['identical_offsets'], check['identical_angles'], check['identical_tpu'], check['data_matches'], check['new_waterline']
+    return (
+        check["identical_offsets"],
+        check["identical_angles"],
+        check["identical_tpu"],
+        check["data_matches"],
+        check["new_waterline"],
+    )
 
 
 def split_by_timestamp(xyzrph: dict):
@@ -316,7 +367,9 @@ def carry_over_optional(starting_data: dict, new_data: dict):
     first_new_entry = list(new_data.keys())[0]
     last_tstmp = str(max(starting_tstmps))
     for sensor in starting_data:
-        if (sensor in kluster_variables.tpu_parameter_names) or (sensor in kluster_variables.optional_parameter_names):
+        if (sensor in kluster_variables.tpu_parameter_names) or (
+            sensor in kluster_variables.optional_parameter_names
+        ):
             if sensor not in new_data:
                 new_data[sensor] = {}
             for tstmp, val in new_data[first_new_entry].items():
@@ -348,7 +401,11 @@ def only_retain_earliest_entry(data: dict):
     remove_these = []
     for primary_cnt, timestamp in enumerate(timestamps):
         for secondary_cnt, sec_timestamp in enumerate(timestamps):
-            if primary_cnt == secondary_cnt or timestamp in remove_these or sec_timestamp in remove_these:
+            if (
+                primary_cnt == secondary_cnt
+                or timestamp in remove_these
+                or sec_timestamp in remove_these
+            ):
                 continue
             prim_values = [data[entry][timestamp] for entry in data]
             sec_values = [data[entry][sec_timestamp] for entry in data]
@@ -399,21 +456,29 @@ def trim_xyzrprh_to_times(xyzrph: dict, mintime: float, maxtime: float):
         nearest_prior = int(nearest_prior[0][0])
         nearest_prior_tstmp = [xyzrph_times[nearest_prior]]
         if len(xyzrph_times) > 1:
-            for tstmp in xyzrph_times[nearest_prior + 1:]:
+            for tstmp in xyzrph_times[nearest_prior + 1 :]:
                 if float(tstmp) < float(maxtime):
                     nearest_prior_tstmp.append(tstmp)
-        drop_these = [tstmp for tstmp in xyzrph_times if tstmp not in nearest_prior_tstmp]
+        drop_these = [
+            tstmp for tstmp in xyzrph_times if tstmp not in nearest_prior_tstmp
+        ]
         for tstmp in drop_these:
             for ky, data_dict in xyzrph.items():
                 if tstmp in data_dict:
                     data_dict.pop(tstmp)
         return xyzrph
     else:
-        print('trim_xyzrprh_to_times: Unable to find timestamps in this instance that are prior to given start time: {}'.format(mintime))
+        print(
+            "trim_xyzrprh_to_times: Unable to find timestamps in this instance that are prior to given start time: {}".format(
+                mintime
+            )
+        )
         return None
 
 
-def convert_from_fqpr_xyzrph(xyzrph: dict, sonar_model: str, system_identifier: str, source_identifier: str):
+def convert_from_fqpr_xyzrph(
+    xyzrph: dict, sonar_model: str, system_identifier: str, source_identifier: str
+):
     """
     xyzrph data (offsets/angles/tpu parameters) are stored as an attribute in each zarr store for the fqpr instance.
     Here we convert that data to the format the the VesselFile wants, including the sonartype and source attribute.
@@ -439,8 +504,12 @@ def convert_from_fqpr_xyzrph(xyzrph: dict, sonar_model: str, system_identifier: 
     first_sensor = list(xyzrph.keys())[0]
     tstmps = list(xyzrph[first_sensor].keys())
     vess_xyzrph = {str(system_identifier): xyzrph}
-    vess_xyzrph[str(system_identifier)]['sonar_type'] = {tst: sonar_model for tst in tstmps}
-    vess_xyzrph[str(system_identifier)]['source'] = {tst: source_identifier for tst in tstmps}
+    vess_xyzrph[str(system_identifier)]["sonar_type"] = {
+        tst: sonar_model for tst in tstmps
+    }
+    vess_xyzrph[str(system_identifier)]["source"] = {
+        tst: source_identifier for tst in tstmps
+    }
     return vess_xyzrph
 
 
@@ -467,8 +536,8 @@ def convert_from_vessel_xyzrph(vess_xyzrph: dict):
     for sysident in system_identifiers:
         xdata = deepcopy(vess_xyzrph[sysident])
         xyzrph.append(xdata)
-        if 'sonar_type' in xdata:
-            sonar_type.append(xdata.pop('sonar_type'))
-        if 'source' in xdata:
-            source.append(xdata.pop('source'))
+        if "sonar_type" in xdata:
+            sonar_type.append(xdata.pop("sonar_type"))
+        if "source" in xdata:
+            source.append(xdata.pop("source"))
     return xyzrph, sonar_type, system_identifiers, source

@@ -35,11 +35,15 @@ class KlusterActions(QtWidgets.QTreeView):
         self.external_settings = settings
 
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.model = QtGui.QStandardItemModel()  # row can be 0 even when there are more than 0 rows
+        self.model = (
+            QtGui.QStandardItemModel()
+        )  # row can be 0 even when there are more than 0 rows
         self.setModel(self.model)
         self.setUniformRowHeights(False)
         self.setAcceptDrops(False)
-        self.viewport().setAcceptDrops(False)  # viewport is the total rendered area, this is recommended from my reading
+        self.viewport().setAcceptDrops(
+            False
+        )  # viewport is the total rendered area, this is recommended from my reading
 
         # ExtendedSelection - allows multiselection with shift/ctrl
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
@@ -53,17 +57,22 @@ class KlusterActions(QtWidgets.QTreeView):
         # makes it so no editing is possible with the table
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        self.categories = ['Next Action', 'All Actions', 'Queued Files', 'Unmatched Files']
+        self.categories = [
+            "Next Action",
+            "All Actions",
+            "Queued Files",
+            "Unmatched Files",
+        ]
         self.tree_data = {}
         self.actions = None
         self.unmatched = None
         self.exclude_buffer = []
 
-        self.start_button = QtWidgets.QPushButton('Start Process')
+        self.start_button = QtWidgets.QPushButton("Start Process")
         self.start_button.clicked.connect(self.start_process)
         self.start_button.setDisabled(True)
 
-        self.auto_checkbox = QtWidgets.QCheckBox('Auto')
+        self.auto_checkbox = QtWidgets.QCheckBox("Auto")
         self.auto_checkbox.setCheckable(True)
         self.auto_checkbox.clicked.connect(self.auto_process)
 
@@ -73,10 +82,12 @@ class KlusterActions(QtWidgets.QTreeView):
         self.button_sizer.addWidget(self.auto_checkbox)
         self.button_sizer.setAlignment(QtCore.Qt.AlignLeft)
         self.button_widget.setLayout(self.button_sizer)
-        self.button_widget.setToolTip('Start the action below by clicking "Start Process".\n' +
-                                      'If the "Start Process" button is greyed out, there is no viable action to run.\n\n' +
-                                      'If the "Auto" check box is checked, Kluster will automatically run all actions as they appear.\n' +
-                                      'You will not need to use the "Start Process" button with "Auto" enabled.')
+        self.button_widget.setToolTip(
+            'Start the action below by clicking "Start Process".\n'
+            + 'If the "Start Process" button is greyed out, there is no viable action to run.\n\n'
+            + 'If the "Auto" check box is checked, Kluster will automatically run all actions as they appear.\n'
+            + 'You will not need to use the "Start Process" button with "Auto" enabled.'
+        )
 
         self.stop_auto = Event()
         self.stop_auto.set()
@@ -99,7 +110,9 @@ class KlusterActions(QtWidgets.QTreeView):
         """
 
         if self.parent() is not None:
-            if self.parent().parent() is not None:  # widget is docked, kluster_main is the parent of the dock
+            if (
+                self.parent().parent() is not None
+            ):  # widget is docked, kluster_main is the parent of the dock
                 self.parent().parent().print(msg, loglevel)
             else:  # widget is undocked, kluster_main is the parent
                 self.parent().print(msg, loglevel)
@@ -119,7 +132,9 @@ class KlusterActions(QtWidgets.QTreeView):
         """
 
         if self.parent() is not None:
-            if self.parent().parent() is not None:  # widget is docked, kluster_main is the parent of the dock
+            if (
+                self.parent().parent() is not None
+            ):  # widget is docked, kluster_main is the parent of the dock
                 self.parent().parent().debug_print(msg, loglevel)
             else:  # widget is undocked, kluster_main is the parent
                 self.parent().debug_print(msg, loglevel)
@@ -141,11 +156,11 @@ class KlusterActions(QtWidgets.QTreeView):
         """
         Setup the menu that is generated on right clicking in the action tree.
         """
-        self.right_click_menu_files = QtWidgets.QMenu('menu', self)
+        self.right_click_menu_files = QtWidgets.QMenu("menu", self)
 
-        exclude_dat = QtWidgets.QAction('Exclude File', self)
+        exclude_dat = QtWidgets.QAction("Exclude File", self)
         exclude_dat.triggered.connect(self.exclude_file_event)
-        undo_exclude_dat = QtWidgets.QAction('Undo Exclude', self)
+        undo_exclude_dat = QtWidgets.QAction("Undo Exclude", self)
         undo_exclude_dat.triggered.connect(self.undo_exclude)
 
         self.right_click_menu_files.addAction(exclude_dat)
@@ -157,7 +172,7 @@ class KlusterActions(QtWidgets.QTreeView):
         """
         index = self.currentIndex()
         parent_name = index.parent().data()
-        if parent_name in ['Queued Files', 'Unmatched Files']:
+        if parent_name in ["Queued Files", "Unmatched Files"]:
             self.right_click_menu_files.exec_(QtGui.QCursor.pos())
 
     def exclude_file_event(self, e):
@@ -182,10 +197,10 @@ class KlusterActions(QtWidgets.QTreeView):
             all_data.append([sel_data, parent_name])
 
         for sel_data, parent_name in all_data:
-            if parent_name == 'Queued Files':
+            if parent_name == "Queued Files":
                 self.exclude_queued_file.emit(sel_data)
                 xclude_data.append(sel_data)
-            elif parent_name == 'Unmatched Files':
+            elif parent_name == "Unmatched Files":
                 self.exclude_unmatched_file.emit(sel_data)
                 xclude_data.append(sel_data)
 
@@ -202,15 +217,17 @@ class KlusterActions(QtWidgets.QTreeView):
 
         """
         self.model.clear()
-        self.model.setHorizontalHeaderLabels(['Actions'])
+        self.model.setHorizontalHeaderLabels(["Actions"])
         for cnt, c in enumerate(self.categories):
             parent = QtGui.QStandardItem(c)
             self.tree_data[c] = [parent]
             self.model.appendRow(parent)
             self.setFirstColumnSpanned(cnt, self.rootIndex(), True)
 
-            if c == 'Next Action':
-                proj_child = QtGui.QStandardItem('')  # empty entry to overwrite with setIndexWidget
+            if c == "Next Action":
+                proj_child = QtGui.QStandardItem(
+                    ""
+                )  # empty entry to overwrite with setIndexWidget
                 parent.appendRow(proj_child)
                 qindex_button = parent.child(0, 0).index()
                 self.setIndexWidget(qindex_button, self.button_widget)
@@ -233,9 +250,11 @@ class KlusterActions(QtWidgets.QTreeView):
             next_action = actions[0]
             action_text = next_action.text
             if next_action.input_files:
-                input_files = ['Input Files:'] + ['- ' + f for f in next_action.input_files]
+                input_files = ["Input Files:"] + [
+                    "- " + f for f in next_action.input_files
+                ]
             else:
-                input_files = ['Input Files: None']
+                input_files = ["Input Files: None"]
             data = [action_text] + input_files
 
             for d in data:
@@ -243,7 +262,7 @@ class KlusterActions(QtWidgets.QTreeView):
                 ttip = self._build_action_tooltip(next_action)
                 proj_child.setToolTip(ttip)
                 parent.appendRow(proj_child)
-                self.tree_data['Next Action'].append(d)
+                self.tree_data["Next Action"].append(d)
             self.start_button.setDisabled(False)
             self.expand(parent.index())
 
@@ -260,14 +279,14 @@ class KlusterActions(QtWidgets.QTreeView):
         """
 
         parent.removeRows(0, parent.rowCount())
-        self.tree_data['All Actions'] = [self.tree_data['All Actions'][0]]
+        self.tree_data["All Actions"] = [self.tree_data["All Actions"][0]]
         if actions:
             for act in actions:
                 proj_child = QtGui.QStandardItem(act.text)
                 ttip = self._build_action_tooltip(act)
                 proj_child.setToolTip(ttip)
                 parent.appendRow(proj_child)
-                self.tree_data['All Actions'].append(act.text)
+                self.tree_data["All Actions"].append(act.text)
 
     def _build_action_tooltip(self, action):
         """
@@ -285,26 +304,46 @@ class KlusterActions(QtWidgets.QTreeView):
         """
 
         if action.input_files:
-            ttip = '{}\n\nPriority:{}\nInput Files:\n-{}'.format(action.text, action.priority, '\n-'.join(action.input_files))
+            ttip = "{}\n\nPriority:{}\nInput Files:\n-{}".format(
+                action.text, action.priority, "\n-".join(action.input_files)
+            )
         elif action.priority == 5:  # process multibeam action
-            ttip = '{}\n\nPriority:{}\nRun Orientation:{}\nRun Correct Beam Vectors:{}\n'.format(action.text, action.priority, action.kwargs['run_orientation'], action.kwargs['run_beam_vec'])
-            ttip += 'Run Sound Velocity:{}\nRun Georeference:{}\nRun TPU:{}'.format(action.kwargs['run_svcorr'], action.kwargs['run_georef'], action.kwargs['run_tpu'])
-            if action.kwargs['run_georef']:
-                ttip += '\nCast Selection: {}'.format(action.kwargs['cast_selection_method'])
-            if action.kwargs['run_georef']:
-                if action.kwargs['use_epsg']:
-                    ttip += '\nEPSG: {}\nVertical Reference: {}'.format(action.kwargs['epsg'], action.kwargs['vert_ref'])
+            ttip = "{}\n\nPriority:{}\nRun Orientation:{}\nRun Correct Beam Vectors:{}\n".format(
+                action.text,
+                action.priority,
+                action.kwargs["run_orientation"],
+                action.kwargs["run_beam_vec"],
+            )
+            ttip += "Run Sound Velocity:{}\nRun Georeference:{}\nRun TPU:{}".format(
+                action.kwargs["run_svcorr"],
+                action.kwargs["run_georef"],
+                action.kwargs["run_tpu"],
+            )
+            if action.kwargs["run_georef"]:
+                ttip += "\nCast Selection: {}".format(
+                    action.kwargs["cast_selection_method"]
+                )
+            if action.kwargs["run_georef"]:
+                if action.kwargs["use_epsg"]:
+                    ttip += "\nEPSG: {}\nVertical Reference: {}".format(
+                        action.kwargs["epsg"], action.kwargs["vert_ref"]
+                    )
                 else:
-                    ttip += '\nCoordinate System: {}\nVertical Reference: {}'.format(action.kwargs['coord_system'], action.kwargs['vert_ref'])
-            if 'only_this_line' in action.kwargs:
-                if action.kwargs['only_this_line']:
-                    ttip += '\nLine: {}'.format(action.kwargs['only_this_line'])
+                    ttip += "\nCoordinate System: {}\nVertical Reference: {}".format(
+                        action.kwargs["coord_system"], action.kwargs["vert_ref"]
+                    )
+            if "only_this_line" in action.kwargs:
+                if action.kwargs["only_this_line"]:
+                    ttip += "\nLine: {}".format(action.kwargs["only_this_line"])
         elif action.priority == 6:
-            ttip = '{}\n\nPriority:{}\nAdding from:\n{}\nRemoving:\n{}'.format(action.text, action.priority,
-                                                                               '\n'.join([af.output_folder for af in action.kwargs['add_fqpr']]),
-                                                                               '\n'.join([rf.output_folder for rf in action.kwargs['remove_fqpr']]))
+            ttip = "{}\n\nPriority:{}\nAdding from:\n{}\nRemoving:\n{}".format(
+                action.text,
+                action.priority,
+                "\n".join([af.output_folder for af in action.kwargs["add_fqpr"]]),
+                "\n".join([rf.output_folder for rf in action.kwargs["remove_fqpr"]]),
+            )
         else:
-            ttip = '{}\n\nPriority:{}'.format(action.text, action.priority)
+            ttip = "{}\n\nPriority:{}".format(action.text, action.priority)
         return ttip
 
     def _update_queued_files(self, parent: QtGui.QStandardItem, actions: list):
@@ -320,7 +359,7 @@ class KlusterActions(QtWidgets.QTreeView):
         """
 
         parent.removeRows(0, parent.rowCount())
-        self.tree_data['Queued Files'] = [self.tree_data['Queued Files'][0]]
+        self.tree_data["Queued Files"] = [self.tree_data["Queued Files"][0]]
         fils = []
         if actions:
             for act in actions:
@@ -328,7 +367,7 @@ class KlusterActions(QtWidgets.QTreeView):
             for f in fils:
                 proj_child = QtGui.QStandardItem(f)
                 parent.appendRow(proj_child)
-                self.tree_data['Queued Files'].append(f)
+                self.tree_data["Queued Files"].append(f)
 
     def _update_unmatched(self, parent: QtGui.QStandardItem, unmatched: dict):
         """
@@ -343,15 +382,17 @@ class KlusterActions(QtWidgets.QTreeView):
         """
 
         parent.removeRows(0, parent.rowCount())
-        self.tree_data['Unmatched Files'] = [self.tree_data['Unmatched Files'][0]]
+        self.tree_data["Unmatched Files"] = [self.tree_data["Unmatched Files"][0]]
         if unmatched:
             for unmatched_file, reason in unmatched.items():
                 proj_child = QtGui.QStandardItem(unmatched_file)
                 proj_child.setToolTip(reason)
                 parent.appendRow(proj_child)
-                self.tree_data['Unmatched Files'].append(unmatched_file)
+                self.tree_data["Unmatched Files"].append(unmatched_file)
 
-    def update_actions(self, actions: list = None, unmatched: dict = None, process_mode: str = None):
+    def update_actions(
+        self, actions: list = None, unmatched: dict = None, process_mode: str = None
+    ):
         """
         Method driven by kluster_intelligence, can be used to either update actions, unmatched, or both.
 
@@ -373,16 +414,16 @@ class KlusterActions(QtWidgets.QTreeView):
         if unmatched is not None:
             self.unmatched = unmatched
 
-        self.model.setHorizontalHeaderLabels(['Actions ({})'.format(process_mode)])
+        self.model.setHorizontalHeaderLabels(["Actions ({})".format(process_mode)])
         for cnt, c in enumerate(self.categories):
             parent = self.tree_data[c][0]
-            if c == 'Next Action' and actions is not None:
+            if c == "Next Action" and actions is not None:
                 self._update_next_action(parent, actions)
-            elif c == 'All Actions' and actions is not None:
+            elif c == "All Actions" and actions is not None:
                 self._update_all_actions(parent, actions)
-            elif c == 'Queued Files' and actions is not None:
+            elif c == "Queued Files" and actions is not None:
                 self._update_queued_files(parent, actions)
-            elif c == 'Unmatched Files' and unmatched is not None:
+            elif c == "Unmatched Files" and unmatched is not None:
                 self._update_unmatched(parent, unmatched)
 
     def start_process(self):
@@ -394,7 +435,7 @@ class KlusterActions(QtWidgets.QTreeView):
 
     def auto_process(self):
         if self.is_auto:
-            self.print('Enabling autoprocessing', logging.INFO)
+            self.print("Enabling autoprocessing", logging.INFO)
             self.auto_thread = AutoThread(self.stop_auto, self.emit_auto_signal)
             self.stop_auto.clear()
             self.auto_thread.start()
@@ -412,7 +453,7 @@ class KlusterActions(QtWidgets.QTreeView):
         Save the settings to the Qsettings registry
         """
         settings = self.settings_object
-        settings.setValue('Kluster/actions_window_auto', self.is_auto)
+        settings.setValue("Kluster/actions_window_auto", self.is_auto)
 
     def read_settings(self):
         """
@@ -421,7 +462,9 @@ class KlusterActions(QtWidgets.QTreeView):
         settings = self.settings_object
 
         try:
-            self.auto_checkbox.setChecked(settings.value('Kluster/actions_window_auto').lower() == 'true')
+            self.auto_checkbox.setChecked(
+                settings.value("Kluster/actions_window_auto").lower() == "true"
+            )
             self.auto_process()
         except AttributeError:
             # no settings exist yet for this app, .lower failed
@@ -437,7 +480,7 @@ class OutWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self.resize(450, 800)
-        self.setWindowTitle('Actions')
+        self.setWindowTitle("Actions")
         self.top_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.top_widget)
         layout = QtWidgets.QHBoxLayout()
@@ -446,8 +489,10 @@ class OutWindow(QtWidgets.QMainWindow):
         self.project = FqprProject()
 
         self.k_actions = KlusterActions(self)
-        self.k_actions.setObjectName('kluster_actions')
-        self.k_actions.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.k_actions.setObjectName("kluster_actions")
+        self.k_actions.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         self.k_actions.setMinimumWidth(300)
         layout.addWidget(self.k_actions)
 
@@ -459,7 +504,7 @@ class OutWindow(QtWidgets.QMainWindow):
         self.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

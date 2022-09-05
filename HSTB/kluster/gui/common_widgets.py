@@ -26,7 +26,7 @@ class TableWithCopy(QtWidgets.QTableWidget):
 
     def contextMenuEvent(self, event):
         mymenu = QtWidgets.QMenu(self)
-        copy_action = QtWidgets.QAction('Copy', self)
+        copy_action = QtWidgets.QAction("Copy", self)
         copy_action.triggered.connect(self.copy_data)
         mymenu.addAction(copy_action)
         mymenu.popup(QtGui.QCursor.pos())
@@ -38,7 +38,7 @@ class TableWithCopy(QtWidgets.QTableWidget):
             if item:
                 app = QtWidgets.QApplication.instance()
                 if app is None:
-                    print('TableWithCopy: Unable to find QT Application!')
+                    print("TableWithCopy: Unable to find QT Application!")
                 else:
                     cb = app.clipboard()
                     cb.clear(mode=cb.Clipboard)
@@ -46,11 +46,15 @@ class TableWithCopy(QtWidgets.QTableWidget):
 
 
 class SaveStateDialog(QtWidgets.QDialog):
-    def __init__(self, parent=None, settings=None, widgetname='', appname='Kluster'):
+    def __init__(self, parent=None, settings=None, widgetname="", appname="Kluster"):
         super().__init__(parent)
         self.external_settings = settings
-        self.text_controls = []  # append a [name as string, control] to this to save text controls
-        self.checkbox_controls = []  # append a [name as string, control] to this to save checkbox controls
+        self.text_controls = (
+            []
+        )  # append a [name as string, control] to this to save text controls
+        self.checkbox_controls = (
+            []
+        )  # append a [name as string, control] to this to save checkbox controls
         self.widgetname = widgetname
         self.appname = appname
         self._ontop = False
@@ -95,12 +99,21 @@ class SaveStateDialog(QtWidgets.QDialog):
         if self.text_controls:
             for cname, tcntrl in self.text_controls:
                 try:
-                    settings.setValue('{}/{}_{}'.format(self.appname, self.widgetname, cname), tcntrl.currentText())
+                    settings.setValue(
+                        "{}/{}_{}".format(self.appname, self.widgetname, cname),
+                        tcntrl.currentText(),
+                    )
                 except:
-                    settings.setValue('{}/{}_{}'.format(self.appname, self.widgetname, cname), tcntrl.text())
+                    settings.setValue(
+                        "{}/{}_{}".format(self.appname, self.widgetname, cname),
+                        tcntrl.text(),
+                    )
         if self.checkbox_controls:
             for cname, ccntrl in self.checkbox_controls:
-                settings.setValue('{}/{}_{}'.format(self.appname, self.widgetname, cname), ccntrl.isChecked())
+                settings.setValue(
+                    "{}/{}_{}".format(self.appname, self.widgetname, cname),
+                    ccntrl.isChecked(),
+                )
         settings.sync()
 
     def read_settings(self):
@@ -111,9 +124,11 @@ class SaveStateDialog(QtWidgets.QDialog):
         try:
             if self.text_controls:
                 for cname, tcntrl in self.text_controls:
-                    base_value = settings.value('{}/{}_{}'.format(self.appname, self.widgetname, cname))
+                    base_value = settings.value(
+                        "{}/{}_{}".format(self.appname, self.widgetname, cname)
+                    )
                     if base_value is None:
-                        base_value = ''
+                        base_value = ""
                     text_value = str(base_value)
                     if text_value:
                         try:
@@ -129,9 +144,11 @@ class SaveStateDialog(QtWidgets.QDialog):
 
             if self.checkbox_controls:
                 for cname, ccntrl in self.checkbox_controls:
-                    check_value = settings.value('{}/{}_{}'.format(self.appname, self.widgetname, cname))
+                    check_value = settings.value(
+                        "{}/{}_{}".format(self.appname, self.widgetname, cname)
+                    )
                     try:
-                        ccntrl.setChecked(check_value.lower() == 'true')
+                        ccntrl.setChecked(check_value.lower() == "true")
                     except AttributeError:
                         try:
                             ccntrl.setChecked(check_value)
@@ -143,24 +160,35 @@ class SaveStateDialog(QtWidgets.QDialog):
 
 
 class AcceptDialog(QtWidgets.QMessageBox):
-    def __init__(self, message: str = 'default message', title: str = 'default title', mode: str = 'threeoption'):
+    def __init__(
+        self,
+        message: str = "default message",
+        title: str = "default title",
+        mode: str = "threeoption",
+    ):
         super().__init__()
         self.setWindowTitle(title)
         self.setText(message)
-        if mode == 'threeoption':
-            self.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
+        if mode == "threeoption":
+            self.setStandardButtons(
+                QtWidgets.QMessageBox.Yes
+                | QtWidgets.QMessageBox.No
+                | QtWidgets.QMessageBox.Cancel
+            )
         self.setDefaultButton(QtWidgets.QMessageBox.Yes)
 
     def run(self):
         result = self.exec_()
         if result == QtWidgets.QMessageBox.Cancel:
-            return 'cancel'
+            return "cancel"
         elif result == QtWidgets.QMessageBox.No:
-            return 'no'
+            return "no"
         elif result == QtWidgets.QMessageBox.Yes:
-            return 'yes'
+            return "yes"
         else:
-            raise ValueError('AcceptDialog: Unable to translate return code {}'.format(result))
+            raise ValueError(
+                "AcceptDialog: Unable to translate return code {}".format(result)
+            )
 
 
 class PlotDataHandler(QtWidgets.QWidget):
@@ -171,6 +199,7 @@ class PlotDataHandler(QtWidgets.QWidget):
     - specify time by typing in the min time, max time
     - specify time by selecting the line you are interested in
     """
+
     fqpr_loaded = Signal(bool)
     ping_count_changed = Signal(int)
 
@@ -188,39 +217,41 @@ class PlotDataHandler(QtWidgets.QWidget):
         self.slider_maxtime = 0
         self.translate_time = False
 
-        self.setWindowTitle('Basic Plot')
+        self.setWindowTitle("Basic Plot")
         layout = QtWidgets.QVBoxLayout()
 
-        self.start_msg = QtWidgets.QLabel('Select the converted data to plot (a converted folder):')
+        self.start_msg = QtWidgets.QLabel(
+            "Select the converted data to plot (a converted folder):"
+        )
 
         self.hlayout_one = QtWidgets.QHBoxLayout()
-        self.fil_text = QtWidgets.QLineEdit('', self)
+        self.fil_text = QtWidgets.QLineEdit("", self)
         self.fil_text.setMinimumWidth(400)
         self.fil_text.setReadOnly(True)
         self.hlayout_one.addWidget(self.fil_text)
         self.browse_button = QtWidgets.QPushButton("Browse", self)
         self.hlayout_one.addWidget(self.browse_button)
 
-        self.trim_time_check = QtWidgets.QGroupBox('Trim by time')
+        self.trim_time_check = QtWidgets.QGroupBox("Trim by time")
         self.trim_time_check.setCheckable(True)
         self.trim_time_check.setChecked(False)
         self.hlayout_two = QtWidgets.QHBoxLayout()
-        self.trim_time_start_lbl = QtWidgets.QLabel('Start time (utc seconds)')
+        self.trim_time_start_lbl = QtWidgets.QLabel("Start time (utc seconds)")
         self.hlayout_two.addWidget(self.trim_time_start_lbl)
-        self.trim_time_start = QtWidgets.QLineEdit('', self)
+        self.trim_time_start = QtWidgets.QLineEdit("", self)
         self.hlayout_two.addWidget(self.trim_time_start)
-        self.trim_time_end_lbl = QtWidgets.QLabel('End time (utc seconds)')
+        self.trim_time_end_lbl = QtWidgets.QLabel("End time (utc seconds)")
         self.hlayout_two.addWidget(self.trim_time_end_lbl)
-        self.trim_time_end = QtWidgets.QLineEdit('', self)
+        self.trim_time_end = QtWidgets.QLineEdit("", self)
         self.hlayout_two.addWidget(self.trim_time_end)
-        self.trim_time_datetime_start_lbl = QtWidgets.QLabel('Start time (utc)')
+        self.trim_time_datetime_start_lbl = QtWidgets.QLabel("Start time (utc)")
         self.trim_time_datetime_start_lbl.hide()
         self.hlayout_two.addWidget(self.trim_time_datetime_start_lbl)
         self.trim_time_datetime_start = QtWidgets.QDateTimeEdit(self)
         self.trim_time_datetime_start.setDisplayFormat("MM/dd/yyyy hh:mm:ss")
         self.trim_time_datetime_start.hide()
         self.hlayout_two.addWidget(self.trim_time_datetime_start)
-        self.trim_time_datetime_end_lbl = QtWidgets.QLabel('End time (utc)')
+        self.trim_time_datetime_end_lbl = QtWidgets.QLabel("End time (utc)")
         self.trim_time_datetime_end_lbl.hide()
         self.hlayout_two.addWidget(self.trim_time_datetime_end_lbl)
         self.trim_time_datetime_end = QtWidgets.QDateTimeEdit(self)
@@ -230,37 +261,37 @@ class PlotDataHandler(QtWidgets.QWidget):
         self.hlayout_two.addStretch()
         self.trim_time_check.setLayout(self.hlayout_two)
 
-        self.trim_line_check = QtWidgets.QGroupBox('Trim by line')
+        self.trim_line_check = QtWidgets.QGroupBox("Trim by line")
         self.trim_line_check.setCheckable(True)
         self.trim_line_check.setChecked(False)
         self.hlayout_three = QtWidgets.QHBoxLayout()
-        self.trim_lines_lbl = QtWidgets.QLabel('Line Name')
+        self.trim_lines_lbl = QtWidgets.QLabel("Line Name")
         self.hlayout_three.addWidget(self.trim_lines_lbl)
         self.trim_lines = QtWidgets.QComboBox(self)
         self.hlayout_three.addWidget(self.trim_lines)
         self.trim_line_check.setLayout(self.hlayout_three)
 
         self.hlayout_four = QtWidgets.QHBoxLayout()
-        self.ping_count_label = QtWidgets.QLabel('Ping count')
+        self.ping_count_label = QtWidgets.QLabel("Ping count")
         self.hlayout_four.addWidget(self.ping_count_label)
-        self.ping_count = QtWidgets.QLineEdit('', self)
+        self.ping_count = QtWidgets.QLineEdit("", self)
         self.ping_count.setReadOnly(True)
         self.hlayout_four.addWidget(self.ping_count)
-        self.time_as_label = QtWidgets.QLabel('Time as')
+        self.time_as_label = QtWidgets.QLabel("Time as")
         self.hlayout_four.addWidget(self.time_as_label)
         self.time_as_dropdown = QtWidgets.QComboBox(self)
-        self.time_as_dropdown.addItems(['utc seconds', 'utc datetime'])
+        self.time_as_dropdown.addItems(["utc seconds", "utc datetime"])
         self.hlayout_four.addWidget(self.time_as_dropdown)
         self.hlayout_four.addStretch(2)
 
         self.hlayout_four_one = QtWidgets.QHBoxLayout()
-        self.display_start_time = QtWidgets.QLabel('0.0', self)
+        self.display_start_time = QtWidgets.QLabel("0.0", self)
         self.hlayout_four_one.addWidget(self.display_start_time)
         self.hlayout_four_one.addStretch()
-        self.display_range = QtWidgets.QLabel('(0.0, 0.0)', self)
+        self.display_range = QtWidgets.QLabel("(0.0, 0.0)", self)
         self.hlayout_four_one.addWidget(self.display_range)
         self.hlayout_four_one.addStretch()
-        self.display_end_time = QtWidgets.QLabel('0.0', self)
+        self.display_end_time = QtWidgets.QLabel("0.0", self)
         self.hlayout_four_one.addWidget(self.display_end_time)
 
         self.hlayout_five = QtWidgets.QHBoxLayout()
@@ -271,8 +302,10 @@ class PlotDataHandler(QtWidgets.QWidget):
         self.hlayout_five.addWidget(self.sliderbar)
 
         self.hlayout_six = QtWidgets.QHBoxLayout()
-        self.warning_message = QtWidgets.QLabel('', self)
-        self.warning_message.setStyleSheet("color : {};".format(kluster_variables.error_color))
+        self.warning_message = QtWidgets.QLabel("", self)
+        self.warning_message.setStyleSheet(
+            "color : {};".format(kluster_variables.error_color)
+        )
         self.hlayout_six.addWidget(self.warning_message)
 
         layout.addWidget(self.start_msg)
@@ -290,8 +323,12 @@ class PlotDataHandler(QtWidgets.QWidget):
         self.sliderbar.mouse_move.connect(self.update_from_slider)
         self.trim_time_start.textChanged.connect(self.update_from_trim_time)
         self.trim_time_end.textChanged.connect(self.update_from_trim_time)
-        self.trim_time_datetime_start.dateTimeChanged.connect(self.update_from_trim_datetime)
-        self.trim_time_datetime_end.dateTimeChanged.connect(self.update_from_trim_datetime)
+        self.trim_time_datetime_start.dateTimeChanged.connect(
+            self.update_from_trim_datetime
+        )
+        self.trim_time_datetime_end.dateTimeChanged.connect(
+            self.update_from_trim_datetime
+        )
         self.trim_lines.currentTextChanged.connect(self.update_from_line)
         self.trim_time_check.toggled.connect(self.trim_time_toggled)
         self.trim_line_check.toggled.connect(self.trim_line_toggled)
@@ -308,23 +345,30 @@ class PlotDataHandler(QtWidgets.QWidget):
         You would point at the converted folder using this browse button.
         """
         # dirpath will be None or a string
-        msg, fqpr_path = RegistryHelpers.GetDirFromUserQT(self, RegistryKey='Kluster',
-                                                          Title='Select converted data directory',
-                                                          AppName='\\reghelp')
+        msg, fqpr_path = RegistryHelpers.GetDirFromUserQT(
+            self,
+            RegistryKey="Kluster",
+            Title="Select converted data directory",
+            AppName="\\reghelp",
+        )
         if fqpr_path:
             self.new_fqpr_path(fqpr_path)
             self.initialize_controls()
 
     def store_original_fqpr(self):
-        self.basefqpr = [[rp.copy() for rp in self.fqpr.multibeam.raw_ping],
-                         self.fqpr.multibeam.raw_att.copy()]
-        self.basefqpr.append(deepcopy(self.fqpr.multibeam.raw_ping[0].attrs['multibeam_files']))
+        self.basefqpr = [
+            [rp.copy() for rp in self.fqpr.multibeam.raw_ping],
+            self.fqpr.multibeam.raw_att.copy(),
+        ]
+        self.basefqpr.append(
+            deepcopy(self.fqpr.multibeam.raw_ping[0].attrs["multibeam_files"])
+        )
 
     def load_original_fqpr(self):
         if self.basefqpr:
             self.fqpr.multibeam.raw_ping = self.basefqpr[0]
             self.fqpr.multibeam.raw_att = self.basefqpr[1]
-            self.fqpr.multibeam.raw_ping[0].attrs['multibeam_files'] = self.basefqpr[2]
+            self.fqpr.multibeam.raw_ping[0].attrs["multibeam_files"] = self.basefqpr[2]
             self.basefqpr = None
 
     def update_from_slider(self, first_pos, second_pos):
@@ -334,11 +378,15 @@ class PlotDataHandler(QtWidgets.QWidget):
         if self.fqpr is not None:
             self.slider_mintime = self.fqpr_mintime + first_pos
             self.slider_maxtime = self.fqpr_mintime + second_pos
-            totalpings = self.fqpr.return_total_pings(self.slider_mintime, self.slider_maxtime)
+            totalpings = self.fqpr.return_total_pings(
+                self.slider_mintime, self.slider_maxtime
+            )
             self._set_display_range(self.slider_mintime, self.slider_maxtime)
             self.ping_count.setText(str(totalpings))
             if totalpings == 0:
-                self.warning_message.setText('ERROR: Found 0 total pings for this time range')
+                self.warning_message.setText(
+                    "ERROR: Found 0 total pings for this time range"
+                )
             else:
                 self.ping_count_changed.emit(totalpings)
 
@@ -350,22 +398,33 @@ class PlotDataHandler(QtWidgets.QWidget):
             try:
                 set_mintime = int(float(self.trim_time_start.text()))
                 if not self.fqpr_maxtime >= set_mintime >= self.fqpr_mintime:
-                    self.warning_message.setText('Invalid start time, must be inbetween max and minimum time')
+                    self.warning_message.setText(
+                        "Invalid start time, must be inbetween max and minimum time"
+                    )
                     return
             except ValueError:
                 self.warning_message.setText(
-                    'Invalid start time, must be a number: {}'.format(self.trim_time_start.text()))
+                    "Invalid start time, must be a number: {}".format(
+                        self.trim_time_start.text()
+                    )
+                )
                 return
             try:
                 set_maxtime = int(float(self.trim_time_end.text()))
                 if not self.fqpr_maxtime >= set_maxtime >= self.fqpr_mintime:
-                    self.warning_message.setText('Invalid end time, must be inbetween max and minimum time')
+                    self.warning_message.setText(
+                        "Invalid end time, must be inbetween max and minimum time"
+                    )
                     return
             except ValueError:
-                self.warning_message.setText('Invalid end time, must be a number: {}'.format(self.trim_time_end.text()))
+                self.warning_message.setText(
+                    "Invalid end time, must be a number: {}".format(
+                        self.trim_time_end.text()
+                    )
+                )
                 return
 
-            self.warning_message.setText('')
+            self.warning_message.setText("")
             self._set_new_times(set_mintime, set_maxtime)
 
     def update_from_trim_datetime(self, e):
@@ -377,15 +436,22 @@ class PlotDataHandler(QtWidgets.QWidget):
                 try:  # pyside
                     set_datetime = self.trim_time_datetime_start.dateTime().toPython()
                 except:  # pyqt5
-                    set_datetime = self.trim_time_datetime_start.dateTime().toPyDateTime()
+                    set_datetime = (
+                        self.trim_time_datetime_start.dateTime().toPyDateTime()
+                    )
                 set_datetime = set_datetime.replace(tzinfo=timezone.utc)
                 set_mintime = int(float(set_datetime.timestamp()))
                 if not self.fqpr_maxtime >= set_mintime >= self.fqpr_mintime:
-                    self.warning_message.setText('Invalid start time, must be inbetween max and minimum time')
+                    self.warning_message.setText(
+                        "Invalid start time, must be inbetween max and minimum time"
+                    )
                     return
             except ValueError:
                 self.warning_message.setText(
-                    'Invalid start time, must be a number: {}'.format(self.trim_time_start.text()))
+                    "Invalid start time, must be a number: {}".format(
+                        self.trim_time_start.text()
+                    )
+                )
                 return
             try:
                 try:  # pyside
@@ -395,13 +461,19 @@ class PlotDataHandler(QtWidgets.QWidget):
                 set_datetime = set_datetime.replace(tzinfo=timezone.utc)
                 set_maxtime = int(float(set_datetime.timestamp()))
                 if not self.fqpr_maxtime >= set_maxtime >= self.fqpr_mintime:
-                    self.warning_message.setText('Invalid end time, must be inbetween max and minimum time')
+                    self.warning_message.setText(
+                        "Invalid end time, must be inbetween max and minimum time"
+                    )
                     return
             except ValueError:
-                self.warning_message.setText('Invalid end time, must be a number: {}'.format(self.trim_time_end.text()))
+                self.warning_message.setText(
+                    "Invalid end time, must be a number: {}".format(
+                        self.trim_time_end.text()
+                    )
+                )
                 return
 
-            self.warning_message.setText('')
+            self.warning_message.setText("")
             self._set_new_times(set_mintime, set_maxtime)
 
     def trim_time_toggled(self, state):
@@ -421,8 +493,12 @@ class PlotDataHandler(QtWidgets.QWidget):
             endtme = self.slider_maxtime
             self.trim_time_start.setText(str(starttme))
             self.trim_time_end.setText(str(endtme))
-            self.trim_time_datetime_start.setDateTime(QtCore.QDateTime.fromSecsSinceEpoch(int(starttme), QtCore.QTimeZone(0)))
-            self.trim_time_datetime_end.setDateTime(QtCore.QDateTime.fromSecsSinceEpoch(int(endtme), QtCore.QTimeZone(0)))
+            self.trim_time_datetime_start.setDateTime(
+                QtCore.QDateTime.fromSecsSinceEpoch(int(starttme), QtCore.QTimeZone(0))
+            )
+            self.trim_time_datetime_end.setDateTime(
+                QtCore.QDateTime.fromSecsSinceEpoch(int(endtme), QtCore.QTimeZone(0))
+            )
 
     def trim_line_toggled(self, state):
         """
@@ -458,7 +534,9 @@ class PlotDataHandler(QtWidgets.QWidget):
         self.slider_mintime = starttime
         self.slider_maxtime = endtime
         self._set_display_range(self.slider_mintime, self.slider_maxtime)
-        pingcount = int(self.fqpr.return_total_pings(self.slider_mintime, self.slider_maxtime))
+        pingcount = int(
+            self.fqpr.return_total_pings(self.slider_mintime, self.slider_maxtime)
+        )
         self.ping_count.setText(str(pingcount))
         self.ping_count_changed.emit(pingcount)
 
@@ -475,10 +553,16 @@ class PlotDataHandler(QtWidgets.QWidget):
         """
 
         if self.translate_time:
-            self.display_range.setText(str('({}, {})'.format(datetime.fromtimestamp(mintime, tz=timezone.utc).strftime('%c'),
-                                                             datetime.fromtimestamp(maxtime, tz=timezone.utc).strftime('%c'))))
+            self.display_range.setText(
+                str(
+                    "({}, {})".format(
+                        datetime.fromtimestamp(mintime, tz=timezone.utc).strftime("%c"),
+                        datetime.fromtimestamp(maxtime, tz=timezone.utc).strftime("%c"),
+                    )
+                )
+            )
         else:
-            self.display_range.setText(str('({}, {})'.format(mintime, maxtime)))
+            self.display_range.setText(str("({}, {})".format(mintime, maxtime)))
 
     def _set_display_minmax(self, mintime: int, maxtime: int):
         """
@@ -493,8 +577,12 @@ class PlotDataHandler(QtWidgets.QWidget):
         """
 
         if self.translate_time:
-            self.display_start_time.setText(datetime.fromtimestamp(mintime, tz=timezone.utc).strftime('%c'))
-            self.display_end_time.setText(datetime.fromtimestamp(maxtime, tz=timezone.utc).strftime('%c'))
+            self.display_start_time.setText(
+                datetime.fromtimestamp(mintime, tz=timezone.utc).strftime("%c")
+            )
+            self.display_end_time.setText(
+                datetime.fromtimestamp(maxtime, tz=timezone.utc).strftime("%c")
+            )
         else:
             self.display_start_time.setText(str(mintime))
             self.display_end_time.setText(str(maxtime))
@@ -508,7 +596,7 @@ class PlotDataHandler(QtWidgets.QWidget):
             linename = self.trim_lines.currentText()
             if self.fqpr_line_dict is not None and linename:
                 linetimes = self.fqpr_line_dict[linename]
-                self.warning_message.setText('')
+                self.warning_message.setText("")
                 self._set_new_times(linetimes[0], linetimes[1])
 
     def update_translate_mode(self, mode: str):
@@ -521,7 +609,7 @@ class PlotDataHandler(QtWidgets.QWidget):
             dropdown selection
         """
 
-        if mode == 'utc seconds':
+        if mode == "utc seconds":
             self.trim_time_datetime_start_lbl.hide()
             self.trim_time_start_lbl.show()
             self.trim_time_datetime_start.hide()
@@ -531,7 +619,7 @@ class PlotDataHandler(QtWidgets.QWidget):
             self.trim_time_datetime_end.hide()
             self.trim_time_end.show()
             self.translate_time = False
-        elif mode == 'utc datetime':
+        elif mode == "utc datetime":
             self.trim_time_datetime_start_lbl.show()
             self.trim_time_start_lbl.hide()
             self.trim_time_datetime_start.show()
@@ -557,7 +645,7 @@ class PlotDataHandler(QtWidgets.QWidget):
             else:
                 self.fqpr = reload_data(fqpr_path, skip_dask=True, silent=True)
             self.fil_text.setText(fqpr_path)
-            self.fil_text_additional.setText('')
+            self.fil_text_additional.setText("")
             self.fil_text_additional.hide()
             self.browse_button_additional.hide()
 
@@ -567,7 +655,9 @@ class PlotDataHandler(QtWidgets.QWidget):
             else:
                 self.fqpr_path = None
                 self.add_converted_button.setEnabled(False)
-                self.warning_message.setText('ERROR: Invalid path to converted data store')
+                self.warning_message.setText(
+                    "ERROR: Invalid path to converted data store"
+                )
         except:
             return
 
@@ -585,24 +675,36 @@ class PlotDataHandler(QtWidgets.QWidget):
             if add_fqpr:
                 sysid = self.fqpr.multibeam.raw_ping[0].system_identifier
                 new_sysid = add_fqpr.multibeam.raw_ping[0].system_identifier
-                if sysid == new_sysid:  # both converted data instances need to be from the same sonar
+                if (
+                    sysid == new_sysid
+                ):  # both converted data instances need to be from the same sonar
                     sonartype = self.fqpr.multibeam.raw_ping[0].sonartype
                     new_sonartype = add_fqpr.multibeam.raw_ping[0].sonartype
-                    if sonartype == new_sonartype:  # both converted data instances need to be from the same sonar
+                    if (
+                        sonartype == new_sonartype
+                    ):  # both converted data instances need to be from the same sonar
                         vertref = self.fqpr.multibeam.raw_ping[0].vertical_reference
                         new_vertref = add_fqpr.multibeam.raw_ping[0].vertical_reference
-                        if vertref != new_vertref:  # both converted data instances need to be from the same sonar
-                            self.warning_message.setText('WARNING: The vertical reference in both converted data folders does not match.')
+                        if (
+                            vertref != new_vertref
+                        ):  # both converted data instances need to be from the same sonar
+                            self.warning_message.setText(
+                                "WARNING: The vertical reference in both converted data folders does not match."
+                            )
                         horizcrs = self.fqpr.horizontal_crs
                         new_horizcrs = add_fqpr.horizontal_crs
                         if horizcrs != new_horizcrs:
-                            self.warning_message.setText('WARNING: The coordinate system in both converted data folders does not match.')
+                            self.warning_message.setText(
+                                "WARNING: The coordinate system in both converted data folders does not match."
+                            )
                         self.store_original_fqpr()
                         base_time = self.fqpr.multibeam.raw_ping[0].time.values
                         new_time = add_fqpr.multibeam.raw_ping[0].time.values
                         duplicates = np.intersect1d(new_time, base_time)
                         if duplicates.any():
-                            self.warning_message.setText('ERROR: Found duplicate time stamps between the two converted datasets')
+                            self.warning_message.setText(
+                                "ERROR: Found duplicate time stamps between the two converted datasets"
+                            )
                             return True
                         elif base_time[-1] < new_time[0]:
                             firstfq = self.fqpr
@@ -611,23 +713,52 @@ class PlotDataHandler(QtWidgets.QWidget):
                             firstfq = add_fqpr
                             secondfq = self.fqpr
 
-                        mfiles = deepcopy(self.fqpr.multibeam.raw_ping[0].attrs['multibeam_files'])
-                        mfiles.update(add_fqpr.multibeam.raw_ping[0].attrs['multibeam_files'])
-                        self.fqpr.multibeam.raw_ping[0] = xr.concat([firstfq.multibeam.raw_ping[0], secondfq.multibeam.raw_ping[0]], dim='time')
+                        mfiles = deepcopy(
+                            self.fqpr.multibeam.raw_ping[0].attrs["multibeam_files"]
+                        )
+                        mfiles.update(
+                            add_fqpr.multibeam.raw_ping[0].attrs["multibeam_files"]
+                        )
+                        self.fqpr.multibeam.raw_ping[0] = xr.concat(
+                            [
+                                firstfq.multibeam.raw_ping[0],
+                                secondfq.multibeam.raw_ping[0],
+                            ],
+                            dim="time",
+                        )
                         if len(self.fqpr.multibeam.raw_ping) == 2:
-                            self.fqpr.multibeam.raw_ping[1] = xr.concat([firstfq.multibeam.raw_ping[1], secondfq.multibeam.raw_ping[1]], dim='time')
+                            self.fqpr.multibeam.raw_ping[1] = xr.concat(
+                                [
+                                    firstfq.multibeam.raw_ping[1],
+                                    secondfq.multibeam.raw_ping[1],
+                                ],
+                                dim="time",
+                            )
                         if len(self.fqpr.multibeam.raw_ping) > 2:
-                            raise ValueError('new_additional_fqpr_path: Currently only supporting maximum of 2 heads')
-                        self.fqpr.multibeam.raw_att = xr.concat([firstfq.multibeam.raw_att, secondfq.multibeam.raw_att], dim='time')
-                        self.fqpr.multibeam.raw_ping[0].attrs['multibeam_files'] = mfiles
+                            raise ValueError(
+                                "new_additional_fqpr_path: Currently only supporting maximum of 2 heads"
+                            )
+                        self.fqpr.multibeam.raw_att = xr.concat(
+                            [firstfq.multibeam.raw_att, secondfq.multibeam.raw_att],
+                            dim="time",
+                        )
+                        self.fqpr.multibeam.raw_ping[0].attrs[
+                            "multibeam_files"
+                        ] = mfiles
                     else:
-                        self.warning_message.setText('ERROR: The sonar types must match in both converted data folders')
+                        self.warning_message.setText(
+                            "ERROR: The sonar types must match in both converted data folders"
+                        )
                         return True
                 else:
-                    self.warning_message.setText('ERROR: The serial numbers must match in both converted data folders')
+                    self.warning_message.setText(
+                        "ERROR: The serial numbers must match in both converted data folders"
+                    )
                     return True
             else:
-                self.warning_message.setText('ERROR: Invalid path to converted data store')
+                self.warning_message.setText(
+                    "ERROR: Invalid path to converted data store"
+                )
                 return True
             return False
         except:
@@ -638,8 +769,16 @@ class PlotDataHandler(QtWidgets.QWidget):
         On start up, we initialize all the controls (or clear all controls if the fqpr provided was invalid)
         """
         if self.fqpr is not None:
-            self.fqpr_mintime = int(np.floor(np.min([rp.time.values[0] for rp in self.fqpr.multibeam.raw_ping])))
-            self.fqpr_maxtime = int(np.ceil(np.max([rp.time.values[-1] for rp in self.fqpr.multibeam.raw_ping])))
+            self.fqpr_mintime = int(
+                np.floor(
+                    np.min([rp.time.values[0] for rp in self.fqpr.multibeam.raw_ping])
+                )
+            )
+            self.fqpr_maxtime = int(
+                np.ceil(
+                    np.max([rp.time.values[-1] for rp in self.fqpr.multibeam.raw_ping])
+                )
+            )
             self.slider_mintime = self.fqpr_mintime
             self.slider_maxtime = self.fqpr_maxtime
 
@@ -653,9 +792,15 @@ class PlotDataHandler(QtWidgets.QWidget):
             self.trim_time_end.setText(str(self.fqpr_maxtime))
 
             self.fqpr_line_dict = self.fqpr.multibeam.raw_ping[0].multibeam_files
-            self.fqpr_line_dict = {t: [int(np.max([self.fqpr_mintime, self.fqpr_line_dict[t][0]])),
-                                       int(np.min([self.fqpr_maxtime, np.ceil(self.fqpr_line_dict[t][1])]))] for t in
-                                   self.fqpr_line_dict}
+            self.fqpr_line_dict = {
+                t: [
+                    int(np.max([self.fqpr_mintime, self.fqpr_line_dict[t][0]])),
+                    int(
+                        np.min([self.fqpr_maxtime, np.ceil(self.fqpr_line_dict[t][1])])
+                    ),
+                ]
+                for t in self.fqpr_line_dict
+            }
 
             self.trim_lines.clear()
             self.trim_lines.addItems(sorted(list(self.fqpr_line_dict.keys())))
@@ -672,16 +817,16 @@ class PlotDataHandler(QtWidgets.QWidget):
             self.sliderbar.setRangeLimit(0, 1000)
             self.sliderbar.setRange(20, 200)
 
-            self.display_start_time.setText('0.0')
-            self.display_end_time.setText('0.0')
-            self.display_range.setText('(0.0, 0.0)')
+            self.display_start_time.setText("0.0")
+            self.display_end_time.setText("0.0")
+            self.display_range.setText("(0.0, 0.0)")
 
-            self.trim_time_start.setText('')
-            self.trim_time_end.setText('')
+            self.trim_time_start.setText("")
+            self.trim_time_end.setText("")
 
             self.fqpr_line_dict = None
             self.trim_lines.clear()
-            self.ping_count.setText('')
+            self.ping_count.setText("")
 
             self.ping_count_changed.emit(0)
             self.fqpr_loaded.emit(False)
@@ -712,6 +857,7 @@ class RangeSlider(QtWidgets.QWidget):
     Build a custom slider with two handles, allowing you to specify a range.  Utilize the QStyleOptionSlider
     widget to do so.
     """
+
     mouse_move = Signal(int, int)
 
     def __init__(self, parent=None):
@@ -728,7 +874,11 @@ class RangeSlider(QtWidgets.QWidget):
         self.setTickInterval(1)
 
         self.setSizePolicy(
-            QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Slider)
+            QtWidgets.QSizePolicy(
+                QtWidgets.QSizePolicy.Expanding,
+                QtWidgets.QSizePolicy.Fixed,
+                QtWidgets.QSizePolicy.Slider,
+            )
         )
 
     def setRangeLimit(self, minimum: int, maximum: int):
@@ -766,7 +916,9 @@ class RangeSlider(QtWidgets.QWidget):
         self.opt.initFrom(self)
         self.opt.rect = self.rect()
         self.opt.sliderPosition = 0
-        self.opt.subControls = QtWidgets.QStyle.SC_SliderGroove | QtWidgets.QStyle.SC_SliderTickmarks
+        self.opt.subControls = (
+            QtWidgets.QStyle.SC_SliderGroove | QtWidgets.QStyle.SC_SliderTickmarks
+        )
 
         #   Draw GROOVE
         self.style().drawComplexControl(QtWidgets.QStyle.CC_Slider, self.opt, painter)
@@ -781,14 +933,24 @@ class RangeSlider(QtWidgets.QWidget):
         self.opt.sliderPosition = self.first_position
         x_left_handle = (
             self.style()
-            .subControlRect(QtWidgets.QStyle.CC_Slider, self.opt, QtWidgets.QStyle.SC_SliderHandle, None)
+            .subControlRect(
+                QtWidgets.QStyle.CC_Slider,
+                self.opt,
+                QtWidgets.QStyle.SC_SliderHandle,
+                None,
+            )
             .right()
         )
 
         self.opt.sliderPosition = self.second_position
         x_right_handle = (
             self.style()
-            .subControlRect(QtWidgets.QStyle.CC_Slider, self.opt, QtWidgets.QStyle.SC_SliderHandle, None)
+            .subControlRect(
+                QtWidgets.QStyle.CC_Slider,
+                self.opt,
+                QtWidgets.QStyle.SC_SliderHandle,
+                None,
+            )
             .left()
         )
 
@@ -796,7 +958,12 @@ class RangeSlider(QtWidgets.QWidget):
             QtWidgets.QStyle.CC_Slider, self.opt, QtWidgets.QStyle.SC_SliderGroove, None
         )
 
-        selection = QtCore.QRect(x_left_handle, groove_rect.y(), x_right_handle - x_left_handle, groove_rect.height(),).adjusted(-1, 1, 1, -1)
+        selection = QtCore.QRect(
+            x_left_handle,
+            groove_rect.y(),
+            x_right_handle - x_left_handle,
+            groove_rect.height(),
+        ).adjusted(-1, 1, 1, -1)
 
         painter.drawRect(selection)
 
@@ -844,12 +1011,14 @@ class RangeSlider(QtWidgets.QWidget):
                 self.mouse_move.emit(self.first_position, self.second_position)
 
     def sizeHint(self):
-        """ override """
+        """override"""
         SliderLength = 84
         TickSpace = 5
 
         w = SliderLength
-        h = self.style().pixelMetric(QtWidgets.QStyle.PM_SliderThickness, self.opt, self)
+        h = self.style().pixelMetric(
+            QtWidgets.QStyle.PM_SliderThickness, self.opt, self
+        )
 
         if (
             self.opt.tickPosition & QtWidgets.QSlider.TicksAbove
@@ -859,7 +1028,9 @@ class RangeSlider(QtWidgets.QWidget):
 
         return (
             self.style()
-            .sizeFromContents(QtWidgets.QStyle.CT_Slider, self.opt, QtCore.QSize(w, h), self)
+            .sizeFromContents(
+                QtWidgets.QStyle.CT_Slider, self.opt, QtCore.QSize(w, h), self
+            )
             .expandedTo(QtWidgets.QApplication.globalStrut())
         )
 
@@ -868,6 +1039,7 @@ class DeletableListWidget(QtWidgets.QListWidget):
     """
     Inherit from the ListWidget and allow the user to press delete or backspace key to remove items
     """
+
     files_updated = Signal(bool)
 
     def __init__(self, *args, **kwrds):
@@ -875,14 +1047,21 @@ class DeletableListWidget(QtWidgets.QListWidget):
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
     def keyReleaseEvent(self, event):
-        if event.matches(QtGui.QKeySequence.Delete) or event.matches(QtGui.QKeySequence.Back):
+        if event.matches(QtGui.QKeySequence.Delete) or event.matches(
+            QtGui.QKeySequence.Back
+        ):
             for itm in self.selectedItems():
                 self.takeItem(self.row(itm))
         self.files_updated.emit(True)
 
 
 class TwoListWidget(QtWidgets.QWidget):
-    def __init__(self, title_label: str = '', left_label: str = 'Existing', right_label: str = 'New'):
+    def __init__(
+        self,
+        title_label: str = "",
+        left_label: str = "Existing",
+        right_label: str = "New",
+    ):
         super().__init__()
         self.top_layout = QtWidgets.QVBoxLayout()
         self.main_layout = QtWidgets.QHBoxLayout()
@@ -925,7 +1104,7 @@ class TwoListWidget(QtWidgets.QWidget):
         self.right_button.clicked.connect(self.move_to_right_list)
 
     def _add_data(self, data: str, side: str):
-        if side == 'left':
+        if side == "left":
             widg = self.left_list
         else:
             widg = self.right_list
@@ -934,7 +1113,7 @@ class TwoListWidget(QtWidgets.QWidget):
         widg.addItem(data)
 
     def _remove_data(self, data: str, side: str):
-        if side == 'left':
+        if side == "left":
             widg = self.left_list
         else:
             widg = self.right_list
@@ -946,22 +1125,22 @@ class TwoListWidget(QtWidgets.QWidget):
                 return
 
     def add_left_list(self, data: str):
-        self._add_data(data, 'left')
+        self._add_data(data, "left")
 
     def add_right_list(self, data: str):
-        self._add_data(data, 'right')
+        self._add_data(data, "right")
 
     def move_to_left_list(self, e):
         for itm in self.right_list.selectedItems():
             data = itm.text()
-            self._remove_data(data, 'right')
-            self._add_data(data, 'left')
+            self._remove_data(data, "right")
+            self._add_data(data, "left")
 
     def move_to_right_list(self, e):
         for itm in self.left_list.selectedItems():
             data = itm.text()
-            self._remove_data(data, 'left')
-            self._add_data(data, 'right')
+            self._remove_data(data, "left")
+            self._add_data(data, "right")
 
     def return_left_list_data(self):
         data = []
@@ -994,12 +1173,12 @@ class TwoTreeTreeView(QtWidgets.QTreeView):
         # makes it so no editing is possible with the table
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        self.categories = ['Data']
+        self.categories = ["Data"]
         self.tree_data = {}
         self.shown_layers = []
 
         self.model.clear()
-        self.model.setHorizontalHeaderLabels([''])
+        self.model.setHorizontalHeaderLabels([""])
         for cnt, c in enumerate(self.categories):
             parent = QtGui.QStandardItem(c)
             self.tree_data[c] = [parent]
@@ -1008,42 +1187,49 @@ class TwoTreeTreeView(QtWidgets.QTreeView):
 
     def add_data(self, data: dict):
         for container in data.keys():
-            if container not in self.tree_data['Data'][1:]:
+            if container not in self.tree_data["Data"][1:]:
                 container_child = QtGui.QStandardItem(container)
-                self.tree_data['Data'][0].appendRow(container_child)
+                self.tree_data["Data"][0].appendRow(container_child)
                 for mline in data[container]:
                     line_child = QtGui.QStandardItem(mline)
                     container_child.appendRow([line_child])
-                self.tree_data['Data'].append(container)
+                self.tree_data["Data"].append(container)
             else:
-                idx = self.tree_data['Data'][1:].index(container)
-                container_child = self.tree_data['Data'][0].child(idx)
-                tree_lines = [container_child.child(rw).text() for rw in range(container_child.rowCount())]
+                idx = self.tree_data["Data"][1:].index(container)
+                container_child = self.tree_data["Data"][0].child(idx)
+                tree_lines = [
+                    container_child.child(rw).text()
+                    for rw in range(container_child.rowCount())
+                ]
                 for fq_line in data[container]:
                     if fq_line not in tree_lines:
                         line_child = QtGui.QStandardItem(fq_line)
                         container_child.appendRow([line_child])
 
     def remove_data(self, data: dict):
-        current_container = self.tree_data['Data'][1:]
+        current_container = self.tree_data["Data"][1:]
         for container in data.keys():
             if container in current_container:
-                idx = self.tree_data['Data'][1:].index(container)
-                container_child = self.tree_data['Data'][0].child(idx)
+                idx = self.tree_data["Data"][1:].index(container)
+                container_child = self.tree_data["Data"][0].child(idx)
                 for mline in data[container]:
-                    mline_idx = [idx for idx in range(container_child.rowCount()) if container_child.child(idx).text() == mline]
+                    mline_idx = [
+                        idx
+                        for idx in range(container_child.rowCount())
+                        if container_child.child(idx).text() == mline
+                    ]
                     if mline_idx:
                         container_child.removeRow(mline_idx[0])
                 if container_child.rowCount() == 0:
-                    self.tree_data['Data'][0].removeRow(idx)
-                    self.tree_data['Data'].pop(idx + 1)
+                    self.tree_data["Data"][0].removeRow(idx)
+                    self.tree_data["Data"].pop(idx + 1)
 
     def return_data(self):
         data = {}
-        current_container = self.tree_data['Data'][1:]
+        current_container = self.tree_data["Data"][1:]
         for container in current_container:
-            idx = self.tree_data['Data'][1:].index(container)
-            container_child = self.tree_data['Data'][0].child(idx)
+            idx = self.tree_data["Data"][1:].index(container)
+            container_child = self.tree_data["Data"][0].child(idx)
             data[container] = []
             for i in range(container_child.rowCount()):
                 data[container].append(container_child.child(i).text())
@@ -1051,7 +1237,12 @@ class TwoTreeTreeView(QtWidgets.QTreeView):
 
 
 class TwoTreeWidget(QtWidgets.QWidget):
-    def __init__(self, title_label: str = '', left_label: str = 'Existing', right_label: str = 'New'):
+    def __init__(
+        self,
+        title_label: str = "",
+        left_label: str = "Existing",
+        right_label: str = "New",
+    ):
         super().__init__()
         self.top_layout = QtWidgets.QVBoxLayout()
         self.main_layout = QtWidgets.QHBoxLayout()
@@ -1093,52 +1284,52 @@ class TwoTreeWidget(QtWidgets.QWidget):
         self.right_button.clicked.connect(self.move_to_right_tree)
 
     def _add_data(self, data: dict, side: str):
-        if side == 'left':
+        if side == "left":
             widg = self.left_tree
         else:
             widg = self.right_tree
         widg.add_data(data)
 
     def _remove_data(self, data: dict, side: str):
-        if side == 'left':
+        if side == "left":
             widg = self.left_tree
         else:
             widg = self.right_tree
         widg.remove_data(data)
 
     def add_left_tree(self, data: dict):
-        self._add_data(data, 'left')
+        self._add_data(data, "left")
 
     def add_right_tree(self, data: dict):
-        self._add_data(data, 'right')
+        self._add_data(data, "right")
 
     def move_to_left_tree(self, e):
         for itm in self.right_tree.selectedIndexes():
             top_lvl_name = itm.parent().parent().data()
             mid_lvl_name = itm.parent().data()
             selected_name = itm.data()
-            if top_lvl_name == 'Data':  # they selected a sub item
+            if top_lvl_name == "Data":  # they selected a sub item
                 data = {mid_lvl_name: [selected_name]}
-            elif mid_lvl_name == 'Data':  # they selected a item
+            elif mid_lvl_name == "Data":  # they selected a item
                 data = {selected_name: self.right_tree.return_data()[selected_name]}
             else:
                 continue
-            self._remove_data(data, 'right')
-            self._add_data(data, 'left')
+            self._remove_data(data, "right")
+            self._add_data(data, "left")
 
     def move_to_right_tree(self, e):
         for itm in self.left_tree.selectedIndexes():
             top_lvl_name = itm.parent().parent().data()
             mid_lvl_name = itm.parent().data()
             selected_name = itm.data()
-            if top_lvl_name == 'Data':  # they selected a sub item
+            if top_lvl_name == "Data":  # they selected a sub item
                 data = {mid_lvl_name: [selected_name]}
-            elif mid_lvl_name == 'Data':  # they selected a item
+            elif mid_lvl_name == "Data":  # they selected a item
                 data = {selected_name: self.left_tree.return_data()[selected_name]}
             else:
                 continue
-            self._remove_data(data, 'left')
-            self._add_data(data, 'right')
+            self._remove_data(data, "left")
+            self._add_data(data, "right")
 
     def return_left_tree_data(self):
         return self.left_tree.return_data()
@@ -1156,6 +1347,7 @@ class BrowseListWidget(QtWidgets.QWidget):
     List widget with insert/remove buttons to add or remove browsed file paths.  Will emit a signal on adding/removing
     items so you can connect it to other widgets.
     """
+
     files_updated = Signal(bool)
 
     def __init__(self, parent):
@@ -1164,7 +1356,9 @@ class BrowseListWidget(QtWidgets.QWidget):
         self.layout = QtWidgets.QHBoxLayout()
 
         self.list_widget = DeletableListWidget(self)
-        list_size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        list_size_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred
+        )
         list_size_policy.setHorizontalStretch(2)
         self.list_widget.setSizePolicy(list_size_policy)
         self.layout.addWidget(self.list_widget)
@@ -1186,8 +1380,16 @@ class BrowseListWidget(QtWidgets.QWidget):
         self.remove_button.clicked.connect(self.remove_item)
         self.list_widget.files_updated.connect(self.files_changed)
 
-    def setup(self, mode='file', registry_key='pydro', app_name='browselistwidget', supported_file_extension='*.*',
-              multiselect=True, filebrowse_title='Select files', filebrowse_filter='all files (*.*)'):
+    def setup(
+        self,
+        mode="file",
+        registry_key="pydro",
+        app_name="browselistwidget",
+        supported_file_extension="*.*",
+        multiselect=True,
+        filebrowse_title="Select files",
+        filebrowse_filter="all files (*.*)",
+    ):
         """
         keyword arguments for the widget.
         """
@@ -1198,19 +1400,26 @@ class BrowseListWidget(QtWidgets.QWidget):
         select a file and add it to the list.
         """
         fils = []
-        if self.opts['mode'] == 'file':
-            msg, fils = RegistryHelpers.GetFilenameFromUserQT(self, RegistryKey=self.opts['registry_key'],
-                                                              Title=self.opts['filebrowse_title'],
-                                                              AppName=self.opts['app_name'],
-                                                              bMulti=self.opts['multiselect'], bSave=False,
-                                                              fFilter=self.opts['filebrowse_filter'])
+        if self.opts["mode"] == "file":
+            msg, fils = RegistryHelpers.GetFilenameFromUserQT(
+                self,
+                RegistryKey=self.opts["registry_key"],
+                Title=self.opts["filebrowse_title"],
+                AppName=self.opts["app_name"],
+                bMulti=self.opts["multiselect"],
+                bSave=False,
+                fFilter=self.opts["filebrowse_filter"],
+            )
 
-        elif self.opts['mode'] == 'directory':
-            msg, fils = RegistryHelpers.GetDirFromUserQT(self, RegistryKey=self.opts['registry_key'],
-                                                         Title=self.opts['filebrowse_title'],
-                                                         AppName=self.opts['app_name'])
+        elif self.opts["mode"] == "directory":
+            msg, fils = RegistryHelpers.GetDirFromUserQT(
+                self,
+                RegistryKey=self.opts["registry_key"],
+                Title=self.opts["filebrowse_title"],
+                AppName=self.opts["app_name"],
+            )
             fils = [fils]
-        if fils == ['']:
+        if fils == [""]:
             fils = []
         if fils:
             self.add_new_files(fils)
@@ -1226,22 +1435,27 @@ class BrowseListWidget(QtWidgets.QWidget):
 
         """
         files = sorted(files)
-        supported_ext = self.opts['supported_file_extension']
+        supported_ext = self.opts["supported_file_extension"]
         for f in files:
-            if self.list_widget.findItems(f, QtCore.Qt.MatchExactly):  # no duplicates allowed
+            if self.list_widget.findItems(
+                f, QtCore.Qt.MatchExactly
+            ):  # no duplicates allowed
                 continue
 
-            if self.opts['mode'] == 'file':
+            if self.opts["mode"] == "file":
                 fil_extension = os.path.splitext(f)[1]
-                if supported_ext == '*.*':
+                if supported_ext == "*.*":
                     self.list_widget.addItem(f)
                 elif type(supported_ext) is str and fil_extension == supported_ext:
                     self.list_widget.addItem(f)
                 elif type(supported_ext) is list and fil_extension in supported_ext:
                     self.list_widget.addItem(f)
                 else:
-                    print('{} is not a supported file extension.  Must be a string or list of file extensions.'.format(
-                        supported_ext))
+                    print(
+                        "{} is not a supported file extension.  Must be a string or list of file extensions.".format(
+                            supported_ext
+                        )
+                    )
                     return
             else:
                 self.list_widget.addItem(f)
@@ -1255,7 +1469,9 @@ class BrowseListWidget(QtWidgets.QWidget):
         list
             list of strings for all items in the widget
         """
-        items = [self.list_widget.item(i).text() for i in range(self.list_widget.count())]
+        items = [
+            self.list_widget.item(i).text() for i in range(self.list_widget.count())
+        ]
         return items
 
     def remove_item(self):
@@ -1274,7 +1490,14 @@ class CollapsibleWidget(QtWidgets.QWidget):
     """
     Transcribed to pyside from https://github.com/MichaelVoelkel/qt-collapsible-section/blob/master/Section.cpp
     """
-    def __init__(self, parent: None, title: str, animation_duration: int, set_expanded_height: int = 0):
+
+    def __init__(
+        self,
+        parent: None,
+        title: str,
+        animation_duration: int,
+        set_expanded_height: int = 0,
+    ):
         super().__init__(parent=parent)
 
         self.parent = parent
@@ -1297,15 +1520,25 @@ class CollapsibleWidget(QtWidgets.QWidget):
 
         self.header_line.setFrameShape(QtWidgets.QFrame.HLine)
         self.header_line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.header_line.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
+        self.header_line.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum
+        )
 
-        self.content_area.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.content_area.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         self.content_area.setMaximumHeight(0)
         self.content_area.setMinimumHeight(0)
 
-        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self, b'minimumHeight'))
-        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self, b'maximumHeight'))
-        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self.content_area, b'maximumHeight'))
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self, b"minimumHeight")
+        )
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self, b"maximumHeight")
+        )
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self.content_area, b"maximumHeight")
+        )
 
         self.main_layout.setVerticalSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -1340,7 +1573,9 @@ class CollapsibleWidget(QtWidgets.QWidget):
             collapse_animation.setStartValue(collapsed_height)
             collapse_animation.setEndValue(collapsed_height + content_height)
 
-        content_animation = self.toggle_animation.animationAt(self.toggle_animation.animationCount() - 1)
+        content_animation = self.toggle_animation.animationAt(
+            self.toggle_animation.animationCount() - 1
+        )
         content_animation.setDuration(self.animation_duration)
         content_animation.setStartValue(0)
         content_animation.setEndValue(content_height)
@@ -1350,9 +1585,12 @@ class ManageDialog(SaveStateDialog):
     """
     Dialog contains a summary of an object and some options for altering the data contained within.
     """
+
     update_surface = Signal(str)
 
-    def __init__(self, parent=None, title='', widgetname: str = 'ManageDialog', settings=None):
+    def __init__(
+        self, parent=None, title="", widgetname: str = "ManageDialog", settings=None
+    ):
         super().__init__(parent, settings, widgetname=widgetname)
 
         self.setMinimumWidth(500)
@@ -1363,38 +1601,40 @@ class ManageDialog(SaveStateDialog):
 
         self.basicdata = QtWidgets.QTextEdit()
         self.basicdata.setReadOnly(True)
-        self.basicdata.setText('')
+        self.basicdata.setText("")
         layout.addWidget(self.basicdata)
 
-        self.managelabel = QtWidgets.QLabel('Manage: ')
+        self.managelabel = QtWidgets.QLabel("Manage: ")
         layout.addWidget(self.managelabel)
 
         calclayout = QtWidgets.QHBoxLayout()
-        self.calcbutton = QtWidgets.QPushButton('Calculate')
+        self.calcbutton = QtWidgets.QPushButton("Calculate")
         calclayout.addWidget(self.calcbutton)
         self.calcdropdown = QtWidgets.QComboBox()
         calclayout.addWidget(self.calcdropdown)
-        self.calcanswer = QtWidgets.QLineEdit('')
+        self.calcanswer = QtWidgets.QLineEdit("")
         self.calcanswer.setReadOnly(True)
         calclayout.addWidget(self.calcanswer)
         layout.addLayout(calclayout)
 
         plotlayout = QtWidgets.QHBoxLayout()
-        self.plotbutton = QtWidgets.QPushButton('Plot')
+        self.plotbutton = QtWidgets.QPushButton("Plot")
         plotlayout.addWidget(self.plotbutton)
         self.plotdropdown = QtWidgets.QComboBox()
-        szepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        szepolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
         szepolicy.setHorizontalStretch(2)
         self.plotdropdown.setSizePolicy(szepolicy)
         plotlayout.addWidget(self.plotdropdown)
-        self.bincount_label = QtWidgets.QLabel('Bins')
+        self.bincount_label = QtWidgets.QLabel("Bins")
         plotlayout.addWidget(self.bincount_label)
-        self.bincount = QtWidgets.QLineEdit('100', self)
+        self.bincount = QtWidgets.QLineEdit("100", self)
         plotlayout.addWidget(self.bincount)
         layout.addLayout(plotlayout)
 
         runlayout = QtWidgets.QHBoxLayout()
-        self.runbutton = QtWidgets.QPushButton('Run')
+        self.runbutton = QtWidgets.QPushButton("Run")
         runlayout.addWidget(self.runbutton, 1)
         self.rundropdown = QtWidgets.QComboBox()
         self.rundropdown.addItems([])
@@ -1414,25 +1654,25 @@ class ManageDialog(SaveStateDialog):
         self.plot_tooltip_config(None)
 
     def populate(self, surf):
-        raise NotImplementedError('You must implement this method!')
+        raise NotImplementedError("You must implement this method!")
 
     def calculate_statistic(self, e):
-        raise NotImplementedError('You must implement this method!')
+        raise NotImplementedError("You must implement this method!")
 
     def generate_plot(self, e):
-        raise NotImplementedError('You must implement this method!')
+        raise NotImplementedError("You must implement this method!")
 
     def run_function(self, e):
-        raise NotImplementedError('You must implement this method!')
+        raise NotImplementedError("You must implement this method!")
 
     def calc_tooltip_config(self, e):
-        raise NotImplementedError('You must implement this method!')
+        raise NotImplementedError("You must implement this method!")
 
     def plot_tooltip_config(self, e):
-        raise NotImplementedError('You must implement this method!')
+        raise NotImplementedError("You must implement this method!")
 
     def run_tooltip_config(self, e):
-        raise NotImplementedError('You must implement this method!')
+        raise NotImplementedError("You must implement this method!")
 
 
 class OutWindow(QtWidgets.QMainWindow):
@@ -1443,10 +1683,10 @@ class OutWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle('Test Window')
+        self.setWindowTitle("Test Window")
         self.top_widget = TwoTreeWidget()
-        self.top_widget.add_left_tree({'test': ['1', '2']})
-        self.top_widget.add_right_tree({'test2': ['3', '4'], 'test3': ['5','6','7']})
+        self.top_widget.add_left_tree({"test": ["1", "2"]})
+        self.top_widget.add_right_tree({"test2": ["3", "4"], "test3": ["5", "6", "7"]})
 
         # self.top_widget = PlotDataHandler()
         self.setCentralWidget(self.top_widget)
@@ -1458,7 +1698,7 @@ class OutWindow(QtWidgets.QMainWindow):
         self.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

@@ -43,18 +43,22 @@ class PatchTest:
         self.azimuth = azimuth
         if self.fqpr.multibeam.is_dual_head():
             if sonar_head_index is None:
-                raise ValueError('PatchTest: Sonar head index must be provided if the sonar is a dual head system')
+                raise ValueError(
+                    "PatchTest: Sonar head index must be provided if the sonar is a dual head system"
+                )
             self.sonar_head_index = sonar_head_index
             if sonar_head_index == 0:
                 self.fqpr.multibeam.raw_ping[1] = None
-                self.xyzrph_key = 'port_'
+                self.xyzrph_key = "port_"
             elif sonar_head_index == 1:
                 self.fqpr.multibeam.raw_ping[0] = None
-                self.xyzrph_key = 'stbd_'
+                self.xyzrph_key = "stbd_"
             else:
-                raise ValueError('PatchTest: Sonar head index must be either 0 or 1 for selecting the head to use')
+                raise ValueError(
+                    "PatchTest: Sonar head index must be either 0 or 1 for selecting the head to use"
+                )
         else:
-            self.xyzrph_key = ''
+            self.xyzrph_key = ""
             self.sonar_head_index = 0
 
         self.xyzrph_timestamp = None  # the timestamp in utc seconds for the installation parameters record we use in the patch test
@@ -63,8 +67,12 @@ class PatchTest:
         self.last_adjustment = None  # the last delta for each patch test parameter
         self._convert_parameters()
 
-        self.multibeam_files = self.fqpr.multibeam.raw_ping[0].multibeam_files  # lookup for time/position/azimuth for each line
-        self.multibeam_indexes = None  # the integer index of the line to look up the corresponding points
+        self.multibeam_files = self.fqpr.multibeam.raw_ping[
+            0
+        ].multibeam_files  # lookup for time/position/azimuth for each line
+        self.multibeam_indexes = (
+            None  # the integer index of the line to look up the corresponding points
+        )
         self.points = None  # numpy structured array of all the rotated points we use
         self.min_x = None  # the minimum easting of the points
         self.min_y = None  # the minimum northing of the points
@@ -81,13 +89,21 @@ class PatchTest:
         """
         Run the patch test procedure, saving the adjustments to the result attribute.
         """
-        print('Initializing patch test for lines {}'.format(list(self.multibeam_files.keys())))
+        print(
+            "Initializing patch test for lines {}".format(
+                list(self.multibeam_files.keys())
+            )
+        )
         starttime = perf_counter()
         self._build_initial_points()
         endtime = perf_counter()
-        print('Initialization complete: {}'.format(seconds_to_formatted_string(int(endtime - starttime))))
+        print(
+            "Initialization complete: {}".format(
+                seconds_to_formatted_string(int(endtime - starttime))
+            )
+        )
         for i in range(3):
-            print('****Patch run {} start****'.format(i + 1))
+            print("****Patch run {} start****".format(i + 1))
             starttime = perf_counter()
             self._generate_rotated_points()
             self._grid()
@@ -95,7 +111,11 @@ class PatchTest:
             self._compute_least_squares()
             self._reprocess_points()
             endtime = perf_counter()
-            print('****Patch run {} complete: {}****'.format(i + 1, seconds_to_formatted_string(int(endtime - starttime))))
+            print(
+                "****Patch run {} complete: {}****".format(
+                    i + 1, seconds_to_formatted_string(int(endtime - starttime))
+                )
+            )
 
             # break here for troubleshooting
             # break
@@ -105,16 +125,56 @@ class PatchTest:
         Print the current adjustment value derived in the last least squares operation
         """
 
-        print('Patch test results, run {} times'.format(len(self.updated_parameters)))
-        print('----------------------------')
+        print("Patch test results, run {} times".format(len(self.updated_parameters)))
+        print("----------------------------")
         if self.fqpr is not None and self.lstsq_result is not None:
-            print('Lines: {}\n'.format(list(self.fqpr.multibeam.raw_ping[0].multibeam_files.keys())))
-            print('roll: {}, reliability: {}, variance: {}'.format(self.current_parameters['roll'], self.reliability_factors[-1][0], self.variance[-1][0]))
-            print('pitch: {}, reliability: {}, variance: {}'.format(self.current_parameters['pitch'], self.reliability_factors[-1][1], self.variance[-1][1]))
-            print('heading: {}, reliability: {}, variance: {}'.format(self.current_parameters['heading'], self.reliability_factors[-1][2], self.variance[-1][2]))
-            print('x offset: {}, reliability: {}, variance: {}'.format(self.current_parameters['x_offset'], self.reliability_factors[-1][3], self.variance[-1][3]))
-            print('y offset: {}, reliability: {}, variance: {}'.format(self.current_parameters['y_offset'], self.reliability_factors[-1][4], self.variance[-1][4]))
-            print('horizontal scale factor: {}, reliability: {}, variance: {}'.format(self.current_parameters['hscale_factor'], self.reliability_factors[-1][5], self.variance[-1][5]))
+            print(
+                "Lines: {}\n".format(
+                    list(self.fqpr.multibeam.raw_ping[0].multibeam_files.keys())
+                )
+            )
+            print(
+                "roll: {}, reliability: {}, variance: {}".format(
+                    self.current_parameters["roll"],
+                    self.reliability_factors[-1][0],
+                    self.variance[-1][0],
+                )
+            )
+            print(
+                "pitch: {}, reliability: {}, variance: {}".format(
+                    self.current_parameters["pitch"],
+                    self.reliability_factors[-1][1],
+                    self.variance[-1][1],
+                )
+            )
+            print(
+                "heading: {}, reliability: {}, variance: {}".format(
+                    self.current_parameters["heading"],
+                    self.reliability_factors[-1][2],
+                    self.variance[-1][2],
+                )
+            )
+            print(
+                "x offset: {}, reliability: {}, variance: {}".format(
+                    self.current_parameters["x_offset"],
+                    self.reliability_factors[-1][3],
+                    self.variance[-1][3],
+                )
+            )
+            print(
+                "y offset: {}, reliability: {}, variance: {}".format(
+                    self.current_parameters["y_offset"],
+                    self.reliability_factors[-1][4],
+                    self.variance[-1][4],
+                )
+            )
+            print(
+                "horizontal scale factor: {}, reliability: {}, variance: {}".format(
+                    self.current_parameters["hscale_factor"],
+                    self.reliability_factors[-1][5],
+                    self.variance[-1][5],
+                )
+            )
 
     def _convert_parameters(self):
         """
@@ -124,22 +184,42 @@ class PatchTest:
         """
 
         initial_parameters = self.fqpr.multibeam.xyzrph
-        self.xyzrph_timestamp = list(initial_parameters['roll_sensor_error'].keys())[0]
-        self.initial_parameters = {'roll': float(initial_parameters['rx_' + self.xyzrph_key + 'r'][self.xyzrph_timestamp]),
-                                   'roll_unc': float(initial_parameters['roll_sensor_error'][self.xyzrph_timestamp]),
-                                   'pitch': float(initial_parameters['tx_' + self.xyzrph_key + 'p'][self.xyzrph_timestamp]),
-                                   'pitch_unc': float(initial_parameters['pitch_sensor_error'][self.xyzrph_timestamp]),
-                                   'heading': float(initial_parameters['rx_' + self.xyzrph_key + 'h'][self.xyzrph_timestamp]),
-                                   'heading_unc': float(initial_parameters['heading_sensor_error'][self.xyzrph_timestamp]),
-                                   'x_offset': float(initial_parameters['tx_' + self.xyzrph_key + 'x'][self.xyzrph_timestamp]),
-                                   'x_unc': float(initial_parameters['x_offset_error'][self.xyzrph_timestamp]),
-                                   'y_offset': float(initial_parameters['tx_' + self.xyzrph_key + 'y'][self.xyzrph_timestamp]),
-                                   'y_unc': float(initial_parameters['y_offset_error'][self.xyzrph_timestamp]),
-                                   'hscale_factor': 0.0,
-                                   'hscale_unc': 0.01}
+        self.xyzrph_timestamp = list(initial_parameters["roll_sensor_error"].keys())[0]
+        self.initial_parameters = {
+            "roll": float(
+                initial_parameters["rx_" + self.xyzrph_key + "r"][self.xyzrph_timestamp]
+            ),
+            "roll_unc": float(
+                initial_parameters["roll_sensor_error"][self.xyzrph_timestamp]
+            ),
+            "pitch": float(
+                initial_parameters["tx_" + self.xyzrph_key + "p"][self.xyzrph_timestamp]
+            ),
+            "pitch_unc": float(
+                initial_parameters["pitch_sensor_error"][self.xyzrph_timestamp]
+            ),
+            "heading": float(
+                initial_parameters["rx_" + self.xyzrph_key + "h"][self.xyzrph_timestamp]
+            ),
+            "heading_unc": float(
+                initial_parameters["heading_sensor_error"][self.xyzrph_timestamp]
+            ),
+            "x_offset": float(
+                initial_parameters["tx_" + self.xyzrph_key + "x"][self.xyzrph_timestamp]
+            ),
+            "x_unc": float(initial_parameters["x_offset_error"][self.xyzrph_timestamp]),
+            "y_offset": float(
+                initial_parameters["tx_" + self.xyzrph_key + "y"][self.xyzrph_timestamp]
+            ),
+            "y_unc": float(initial_parameters["y_offset_error"][self.xyzrph_timestamp]),
+            "hscale_factor": 0.0,
+            "hscale_unc": 0.01,
+        }
         self.current_parameters = deepcopy(self.initial_parameters)
 
-    def _compute_reliability(self, roll, pitch, heading, x_offset, y_offset, hscale_factor):
+    def _compute_reliability(
+        self, roll, pitch, heading, x_offset, y_offset, hscale_factor
+    ):
         """
         The reliability factor is our way of assessing the ability of this test dataset to actually generate good parameters.
         It looks at the difference between the last adjustment and the current adjustment, relative to the current working
@@ -169,10 +249,18 @@ class PatchTest:
             self.reliability_factors.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         else:
             newadjust = [roll, pitch, heading, x_offset, y_offset, hscale_factor]
-            curvals = [self.current_parameters['roll'], self.current_parameters['pitch'], self.current_parameters['heading'],
-                       self.current_parameters['x_offset'], self.current_parameters['y_offset'], self.current_parameters['hscale_factor']]
+            curvals = [
+                self.current_parameters["roll"],
+                self.current_parameters["pitch"],
+                self.current_parameters["heading"],
+                self.current_parameters["x_offset"],
+                self.current_parameters["y_offset"],
+                self.current_parameters["hscale_factor"],
+            ]
             rfactors = []
-            for adjust, newadjust, curval in zip(self.last_adjustment, newadjust, curvals):
+            for adjust, newadjust, curval in zip(
+                self.last_adjustment, newadjust, curvals
+            ):
                 if curval == 0:
                     rfactor = 0
                 else:
@@ -185,15 +273,25 @@ class PatchTest:
     def _compute_covariance_matrix(self, finalz):
         try:
             # unit weight is the sum of the residuals divided by the number of points minus the number of parameters
-            unit_weight = np.sum(np.abs(self.points['z'] - finalz)) / (len(finalz) - 6)
+            unit_weight = np.sum(np.abs(self.points["z"] - finalz)) / (len(finalz) - 6)
             var_covar = unit_weight * np.linalg.inv(self.a_matrix)
             # variances are on the diagonal of the variance_covariance matrix
-            self.variance.append([var_covar[0][0], var_covar[1][1], var_covar[2][2],
-                                  var_covar[3][3], var_covar[4][4], var_covar[5][5]])
+            self.variance.append(
+                [
+                    var_covar[0][0],
+                    var_covar[1][1],
+                    var_covar[2][2],
+                    var_covar[3][3],
+                    var_covar[4][4],
+                    var_covar[5][5],
+                ]
+            )
         except:
             self.variance.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-    def _adjust_original_xyzrph(self, roll, pitch, heading, x_offset, y_offset, hscale_factor):
+    def _adjust_original_xyzrph(
+        self, roll, pitch, heading, x_offset, y_offset, hscale_factor
+    ):
         """
         Add the provided values to the xyzrph dictionary that the Fqpr uses during reprocessing.  Also cache the new
         values in the current_parameters dictionary object.
@@ -214,34 +312,51 @@ class PatchTest:
             horizontal scale factor
         """
 
-        print('adjusting by: roll={}, pitch={}, heading={}, x_translation={}, y_translation={}, horizontal_scale_factor={}'.format(roll, pitch, heading, x_offset, y_offset, hscale_factor))
-        self._compute_reliability(roll, pitch, heading, x_offset, y_offset, hscale_factor)
+        print(
+            "adjusting by: roll={}, pitch={}, heading={}, x_translation={}, y_translation={}, horizontal_scale_factor={}".format(
+                roll, pitch, heading, x_offset, y_offset, hscale_factor
+            )
+        )
+        self._compute_reliability(
+            roll, pitch, heading, x_offset, y_offset, hscale_factor
+        )
 
-        tstmp = list(self.fqpr.multibeam.xyzrph['roll_sensor_error'].keys())[0]
-        self.fqpr.multibeam.xyzrph['rx_' + self.xyzrph_key + 'r'][tstmp] += roll
-        self.current_parameters['roll'] += roll
-        self.fqpr.multibeam.xyzrph['tx_' + self.xyzrph_key + 'p'][tstmp] += pitch
-        self.current_parameters['pitch'] += pitch
-        self.fqpr.multibeam.xyzrph['rx_' + self.xyzrph_key + 'h'][tstmp] += heading
-        self.current_parameters['heading'] += heading
+        tstmp = list(self.fqpr.multibeam.xyzrph["roll_sensor_error"].keys())[0]
+        self.fqpr.multibeam.xyzrph["rx_" + self.xyzrph_key + "r"][tstmp] += roll
+        self.current_parameters["roll"] += roll
+        self.fqpr.multibeam.xyzrph["tx_" + self.xyzrph_key + "p"][tstmp] += pitch
+        self.current_parameters["pitch"] += pitch
+        self.fqpr.multibeam.xyzrph["rx_" + self.xyzrph_key + "h"][tstmp] += heading
+        self.current_parameters["heading"] += heading
 
-        self.fqpr.multibeam.xyzrph['tx_' + self.xyzrph_key + 'x'][tstmp] += x_offset
-        self.current_parameters['x_offset'] += x_offset
-        self.fqpr.multibeam.xyzrph['tx_' + self.xyzrph_key + 'y'][tstmp] += y_offset
-        self.current_parameters['y_offset'] += y_offset
+        self.fqpr.multibeam.xyzrph["tx_" + self.xyzrph_key + "x"][tstmp] += x_offset
+        self.current_parameters["x_offset"] += x_offset
+        self.fqpr.multibeam.xyzrph["tx_" + self.xyzrph_key + "y"][tstmp] += y_offset
+        self.current_parameters["y_offset"] += y_offset
 
-        self.current_parameters['hscale_factor'] += hscale_factor
+        self.current_parameters["hscale_factor"] += hscale_factor
 
         self.last_adjustment = [roll, pitch, heading, x_offset, y_offset, hscale_factor]
         # updating the current_parameters also triggers storing the values in the results lists
-        self.updated_parameters.append([self.current_parameters['roll'], self.current_parameters['pitch'],
-                                        self.current_parameters['heading'], self.current_parameters['x_offset'],
-                                        self.current_parameters['y_offset'], self.current_parameters['hscale_factor']])
-        print('reprocessing with: roll={}, pitch={}, heading={}, x_translation={}, y_translation={}'.format(self.fqpr.multibeam.xyzrph['rx_' + self.xyzrph_key + 'r'][tstmp],
-                                                                                                            self.fqpr.multibeam.xyzrph['tx_' + self.xyzrph_key + 'p'][tstmp],
-                                                                                                            self.fqpr.multibeam.xyzrph['rx_' + self.xyzrph_key + 'h'][tstmp],
-                                                                                                            self.fqpr.multibeam.xyzrph['tx_' + self.xyzrph_key + 'x'][tstmp],
-                                                                                                            self.fqpr.multibeam.xyzrph['tx_' + self.xyzrph_key + 'y'][tstmp]))
+        self.updated_parameters.append(
+            [
+                self.current_parameters["roll"],
+                self.current_parameters["pitch"],
+                self.current_parameters["heading"],
+                self.current_parameters["x_offset"],
+                self.current_parameters["y_offset"],
+                self.current_parameters["hscale_factor"],
+            ]
+        )
+        print(
+            "reprocessing with: roll={}, pitch={}, heading={}, x_translation={}, y_translation={}".format(
+                self.fqpr.multibeam.xyzrph["rx_" + self.xyzrph_key + "r"][tstmp],
+                self.fqpr.multibeam.xyzrph["tx_" + self.xyzrph_key + "p"][tstmp],
+                self.fqpr.multibeam.xyzrph["rx_" + self.xyzrph_key + "h"][tstmp],
+                self.fqpr.multibeam.xyzrph["tx_" + self.xyzrph_key + "x"][tstmp],
+                self.fqpr.multibeam.xyzrph["tx_" + self.xyzrph_key + "y"][tstmp],
+            )
+        )
 
     def _build_initial_points(self):
         """
@@ -257,9 +372,14 @@ class PatchTest:
         self.points = None
         self.multibeam_indexes = {}
         for mfilename in self.multibeam_files.keys():
-            data = self.fqpr.subset_variables_by_line(['x', 'y', 'z'], mfilename, filter_by_detection=True)[mfilename]
+            data = self.fqpr.subset_variables_by_line(
+                ["x", "y", "z"], mfilename, filter_by_detection=True
+            )[mfilename]
             x, y, z = data.x.values, data.y.values, data.z.values
-            self.multibeam_indexes[mfilename] = [curr_point_index, curr_point_index + x.size]
+            self.multibeam_indexes[mfilename] = [
+                curr_point_index,
+                curr_point_index + x.size,
+            ]
             curr_point_index = curr_point_index + x.size
             if finalx is None:
                 finalx = x
@@ -270,11 +390,11 @@ class PatchTest:
                 finaly = np.concatenate([finaly, y])
                 finalz = np.concatenate([finalz, z])
         if finalx.any():
-            dtyp = [('x', np.float64), ('y', np.float64), ('z', np.float32)]
+            dtyp = [("x", np.float64), ("y", np.float64), ("z", np.float32)]
             self.points = np.empty(len(finalx), dtype=dtyp)
-            self.points['x'] = finalx
-            self.points['y'] = finaly
-            self.points['z'] = finalz
+            self.points["x"] = finalx
+            self.points["y"] = finaly
+            self.points["z"] = finalz
 
     def _reprocess_points(self):
         """
@@ -290,8 +410,12 @@ class PatchTest:
         x_translation = np.round(float(np.mean(self.lstsq_result[3])), 4)
         y_translation = np.round(float(np.mean(self.lstsq_result[4])), 4)
         hscale_factor = np.round(float(np.mean(self.lstsq_result[4])), 5)
-        self._adjust_original_xyzrph(roll, pitch, heading, x_translation, y_translation, hscale_factor)
-        newfq, _ = reprocess_sounding_selection(self.fqpr, georeference=True, turn_off_dask=False)
+        self._adjust_original_xyzrph(
+            roll, pitch, heading, x_translation, y_translation, hscale_factor
+        )
+        newfq, _ = reprocess_sounding_selection(
+            self.fqpr, georeference=True, turn_off_dask=False
+        )
 
         curr_point_index = 0
         finalx = None
@@ -300,26 +424,39 @@ class PatchTest:
         cached_data = None
         ra = self.fqpr.multibeam.raw_ping[self.sonar_head_index]
         for sector in newfq.intermediate_dat:
-            if 'georef' in newfq.intermediate_dat[sector]:
-                for tstmp in newfq.intermediate_dat[sector]['georef']:
+            if "georef" in newfq.intermediate_dat[sector]:
+                for tstmp in newfq.intermediate_dat[sector]["georef"]:
                     # there should only be one cached_data in intermediate_dat, no need to break here
                     if cached_data is not None:
-                        raise ValueError('PatchTest: reprocessing failed, found multiple cached datasets, which should not happen with one sonar and one xyzrph entry')
-                    cached_data = newfq.intermediate_dat[sector]['georef'][tstmp]
+                        raise ValueError(
+                            "PatchTest: reprocessing failed, found multiple cached datasets, which should not happen with one sonar and one xyzrph entry"
+                        )
+                    cached_data = newfq.intermediate_dat[sector]["georef"][tstmp]
         if cached_data is None:
-            raise ValueError('PatchTest: reprocessing failed, no cached data found')
+            raise ValueError("PatchTest: reprocessing failed, no cached data found")
 
         mfiles = self.fqpr.return_line_dict()
         good_soundings = ra.detectioninfo != kluster_variables.rejected_flag
         for linename in mfiles.keys():
             starttime, endtime = mfiles[linename][0], mfiles[linename][1]
             # valid_index would be the boolean mask for the line we are currently looking at
-            valid_index = np.logical_and(ra.time >= float(starttime), ra.time <= float(endtime))
+            valid_index = np.logical_and(
+                ra.time >= float(starttime), ra.time <= float(endtime)
+            )
             valid_goodsoundings = good_soundings[valid_index, :]
-            x = np.concatenate([c[0][0] for c in cached_data])[valid_index, :][valid_goodsoundings]
-            y = np.concatenate([c[0][1] for c in cached_data])[valid_index, :][valid_goodsoundings]
-            z = np.concatenate([c[0][2] for c in cached_data])[valid_index, :][valid_goodsoundings]
-            self.multibeam_indexes[linename] = [curr_point_index, curr_point_index + x.size]
+            x = np.concatenate([c[0][0] for c in cached_data])[valid_index, :][
+                valid_goodsoundings
+            ]
+            y = np.concatenate([c[0][1] for c in cached_data])[valid_index, :][
+                valid_goodsoundings
+            ]
+            z = np.concatenate([c[0][2] for c in cached_data])[valid_index, :][
+                valid_goodsoundings
+            ]
+            self.multibeam_indexes[linename] = [
+                curr_point_index,
+                curr_point_index + x.size,
+            ]
             curr_point_index = curr_point_index + x.size
             if finalx is None:
                 finalx = np.ravel(x)
@@ -332,11 +469,11 @@ class PatchTest:
         self.fqpr.intermediate_dat = {}
         if finalx.any():
             self._compute_covariance_matrix(finalz)
-            dtyp = [('x', np.float64), ('y', np.float64), ('z', np.float32)]
+            dtyp = [("x", np.float64), ("y", np.float64), ("z", np.float32)]
             self.points = np.empty(len(finalx), dtype=dtyp)
-            self.points['x'] = finalx
-            self.points['y'] = finaly
-            self.points['z'] = finalz
+            self.points["x"] = finalx
+            self.points["y"] = finaly
+            self.points["z"] = finalz
 
     def _generate_rotated_points(self):
         """
@@ -357,33 +494,37 @@ class PatchTest:
         The result is stored in the self.points attribute as a new structured numpy array.
         """
 
-        ang = self.azimuth - 90  # rotations are counter clockwise, we want it eventually facing east
+        ang = (
+            self.azimuth - 90
+        )  # rotations are counter clockwise, we want it eventually facing east
         cos_az = np.cos(np.deg2rad(ang))
         sin_az = np.sin(np.deg2rad(ang))
 
-        print('Rotating points by {} degrees...'.format(ang))
+        print("Rotating points by {} degrees...".format(ang))
         if self.points is not None:
             # normalize the y axis
-            self.points['y'] = self.points['y'] - self.points['y'].min()
+            self.points["y"] = self.points["y"] - self.points["y"].min()
 
             # normalize the x axis
-            self.points['x'] = self.points['x'] - self.points['x'].min()
+            self.points["x"] = self.points["x"] - self.points["x"].min()
 
             # calculate center of rotation, use the origin of the points
             self.min_x = 0
             self.min_y = 0
-            origin_x = self.points['x'] - self.min_x
-            origin_y = self.points['y'] - self.min_y
+            origin_x = self.points["x"] - self.min_x
+            origin_y = self.points["y"] - self.min_y
 
             # rotate according to the provided line azimuth
-            self.points['x'] = self.min_x + cos_az * origin_x - sin_az * origin_y
-            self.points['y'] = self.min_y + sin_az * origin_x + cos_az * origin_y
+            self.points["x"] = self.min_x + cos_az * origin_x - sin_az * origin_y
+            self.points["y"] = self.min_y + sin_az * origin_x + cos_az * origin_y
 
             # flip the y axis to make it +x forward, +y starboard, +z down
             # self.points['y'] = self.points['y'].max() - self.points['y']
 
         else:
-            print('Found no valid points for {}'.format(list(self.multibeam_files.keys())))
+            print(
+                "Found no valid points for {}".format(list(self.multibeam_files.keys()))
+            )
 
     def _grid(self):
         """
@@ -393,11 +534,18 @@ class PatchTest:
         """
 
         if self.points is not None and self.points.size > 0:
-            print('Building in memory grid for {} soundings...'.format(self.points.size))
-            grid_class = create_grid(grid_type='single_resolution')
+            print(
+                "Building in memory grid for {} soundings...".format(self.points.size)
+            )
+            grid_class = create_grid(grid_type="single_resolution")
             for linename in self.multibeam_indexes:
                 idxs = self.multibeam_indexes[linename]
-                grid_class.add_points(self.points[idxs[0]:idxs[1]], linename, [linename], progress_bar=False)
+                grid_class.add_points(
+                    self.points[idxs[0] : idxs[1]],
+                    linename,
+                    [linename],
+                    progress_bar=False,
+                )
             grid_class.grid(progress_bar=False)
             self.grid = grid_class
 
@@ -407,7 +555,9 @@ class PatchTest:
         nn = ~np.isnan(lyr)
         xbounds = np.where(nn.any(axis=1))[0]
         ybounds = np.where(nn.any(axis=0))[0]
-        plt.imshow(lyr[xbounds[0]:xbounds[-1], ybounds[0]:ybounds[-1]], vmin=-1, vmax=1)
+        plt.imshow(
+            lyr[xbounds[0] : xbounds[-1], ybounds[0] : ybounds[-1]], vmin=-1, vmax=1
+        )
 
     def _build_patch_test_values(self):
         """
@@ -419,40 +569,73 @@ class PatchTest:
         """
 
         if self.grid is not None:
-            print('Building patch test matrices...')
+            print("Building patch test matrices...")
             line_layers = list(self.multibeam_indexes.keys())
-            dpth, xslope, yslope, lineone, linetwo = self.grid.get_layers_by_name(['depth', 'x_slope', 'y_slope', line_layers[0], line_layers[1]])
-            self._plot_grid_layer_slope(xslope, 'xslope {}'.format(len(self.reliability_factors)))
-            self._plot_grid_layer_slope(yslope, 'yslope {}'.format(len(self.reliability_factors)))
+            dpth, xslope, yslope, lineone, linetwo = self.grid.get_layers_by_name(
+                ["depth", "x_slope", "y_slope", line_layers[0], line_layers[1]]
+            )
+            self._plot_grid_layer_slope(
+                xslope, "xslope {}".format(len(self.reliability_factors))
+            )
+            self._plot_grid_layer_slope(
+                yslope, "yslope {}".format(len(self.reliability_factors))
+            )
             valid_index = np.logical_and(~np.isnan(lineone), ~np.isnan(linetwo))
             if valid_index.any():
-                xval = np.arange(self.grid.min_x, self.grid.max_x, self.grid.resolutions[0])
-                yval = np.arange(self.grid.min_y, self.grid.max_y, self.grid.resolutions[0])
+                xval = np.arange(
+                    self.grid.min_x, self.grid.max_x, self.grid.resolutions[0]
+                )
+                yval = np.arange(
+                    self.grid.min_y, self.grid.max_y, self.grid.resolutions[0]
+                )
                 grid_rez = self.grid.resolutions[0]
                 # compute the x and y node locations for each grid node in the grid
-                x_node_locs, y_node_locs = np.meshgrid(xval + grid_rez / 2, yval + grid_rez / 2, copy=False)
+                x_node_locs, y_node_locs = np.meshgrid(
+                    xval + grid_rez / 2, yval + grid_rez / 2, copy=False
+                )
 
-                dpth_valid = dpth[valid_index]  # grid depth for all grid nodes where both lines overlap
-                y_node_valid = y_node_locs[valid_index]  # y coordinate for all grid nodes where both lines overlap
-                xslope_valid = xslope[valid_index]  # grid slope partial x for all grid nodes where both lines overlap
-                yslope_valid = yslope[valid_index]  # grid slope partial y for all grid nodes where both lines overlap
-                lineone_valid = lineone[valid_index]  # grid depth for line one for all grid nodes where both lines overlap
-                linetwo_valid = linetwo[valid_index]  # grid slope partial x for all grid nodes where both lines overlap
+                dpth_valid = dpth[
+                    valid_index
+                ]  # grid depth for all grid nodes where both lines overlap
+                y_node_valid = y_node_locs[
+                    valid_index
+                ]  # y coordinate for all grid nodes where both lines overlap
+                xslope_valid = xslope[
+                    valid_index
+                ]  # grid slope partial x for all grid nodes where both lines overlap
+                yslope_valid = yslope[
+                    valid_index
+                ]  # grid slope partial y for all grid nodes where both lines overlap
+                lineone_valid = lineone[
+                    valid_index
+                ]  # grid depth for line one for all grid nodes where both lines overlap
+                linetwo_valid = linetwo[
+                    valid_index
+                ]  # grid slope partial x for all grid nodes where both lines overlap
 
                 # A-matrix is in order of roll, pitch, heading, x_translation, y_translation, horizontal scale factor
-                a_matrix = np.column_stack([yslope_valid * dpth_valid - y_node_valid,
-                                            -xslope_valid * dpth_valid,
-                                            xslope_valid * y_node_valid,
-                                            xslope_valid,
-                                            yslope_valid,
-                                            yslope_valid * y_node_valid])
+                a_matrix = np.column_stack(
+                    [
+                        yslope_valid * dpth_valid - y_node_valid,
+                        -xslope_valid * dpth_valid,
+                        xslope_valid * y_node_valid,
+                        xslope_valid,
+                        yslope_valid,
+                        yslope_valid * y_node_valid,
+                    ]
+                )
                 l_one_matrix = np.column_stack([lineone_valid, linetwo_valid])
                 # p_one can contain 1/grid node uncertainty in the future, currently we leave it out
                 # p_one_matrix = np.identity(self.a_matrix.shape[0])
                 # p_two_matrix = np.identity(6) * [1, 1, 1, 100000, 100000, 1]
-                p_two_matrix = np.identity(6) * [1 / self.initial_parameters['roll_unc'] ** 2, 1 / self.initial_parameters['pitch_unc'] ** 2,
-                                                 1 / self.initial_parameters['heading_unc'] ** 2, 1 / self.initial_parameters['x_unc'],
-                                                 1 / self.initial_parameters['y_unc'] ** 2, 1 / self.initial_parameters['hscale_unc']]
+                p_two_matrix = np.identity(6) * [
+                    1 / self.initial_parameters["roll_unc"] ** 2,
+                    1 / self.initial_parameters["pitch_unc"] ** 2,
+                    1 / self.initial_parameters["heading_unc"] ** 2,
+                    1 / self.initial_parameters["x_unc"],
+                    1 / self.initial_parameters["y_unc"] ** 2,
+                    1 / self.initial_parameters["hscale_unc"],
+                ]
                 # print('weighted by {}'.format([1 / self.initial_parameters['roll_unc'] ** 2, 1 / self.initial_parameters['pitch_unc'] ** 2,
                 #                                1 / self.initial_parameters['heading_unc'] ** 2, 1 / self.initial_parameters['x_unc'],
                 #                                1 / self.initial_parameters['y_unc'] ** 2, 1 / self.initial_parameters['hscale_unc']]))
@@ -461,9 +644,15 @@ class PatchTest:
                 # self.a_matrix = np.dot(a_t, a_matrix)
                 self.b_matrix = np.dot(a_t, l_one_matrix)
             else:
-                print('No valid overlap found for lines: {}'.format(list(self.multibeam_files.keys())))
+                print(
+                    "No valid overlap found for lines: {}".format(
+                        list(self.multibeam_files.keys())
+                    )
+                )
 
     def _compute_least_squares(self):
         if self.a_matrix is not None and self.b_matrix is not None:
-            print('Computing least squares result')
-            self.lstsq_result, residuals, rank, singular = np.linalg.lstsq(self.a_matrix, self.b_matrix, rcond=None)
+            print("Computing least squares result")
+            self.lstsq_result, residuals, rank, singular = np.linalg.lstsq(
+                self.a_matrix, self.b_matrix, rcond=None
+            )

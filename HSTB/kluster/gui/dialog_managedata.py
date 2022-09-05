@@ -4,7 +4,10 @@ import logging
 
 from HSTB.kluster.gui.backends._qt import QtGui, QtCore, QtWidgets, Signal
 from HSTB.kluster.gui.common_widgets import ManageDialog
-from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvasQTAgg,
+    NavigationToolbar2QT as NavigationToolbar,
+)
 import matplotlib.pyplot as plt
 
 
@@ -14,34 +17,39 @@ class ManageDataDialog(ManageDialog):
 
     fqpr = fully qualified ping record, the term for the datastore in kluster
     """
+
     refresh_fqpr = Signal(object, object)
 
     def __init__(self, parent=None, settings=None):
-        super().__init__(parent, 'Manage Surface', 'ManageSurfaceDialog', settings)
+        super().__init__(parent, "Manage Surface", "ManageSurfaceDialog", settings)
 
-        self.calcdropdown.addItems(['distance, meters', 'distance, lnm'])
-        self.rundropdown.addItems(['SVP Editor', 'SVP Map', 'Remove SBET'])
+        self.calcdropdown.addItems(["distance, meters", "distance, lnm"])
+        self.rundropdown.addItems(["SVP Editor", "SVP Map", "Remove SBET"])
         self.fqpr = None
         self.svpdialog = None
 
     def populate(self, fqpr):
         self.fqpr = fqpr
-        self.managelabel.setText('Manage: {}'.format(os.path.split(fqpr.output_folder)[1]))
+        self.managelabel.setText(
+            "Manage: {}".format(os.path.split(fqpr.output_folder)[1])
+        )
         self.basicdata.setText(fqpr.__repr__())
 
     def remove_sbet(self, e):
         if self.fqpr is not None:
-            if 'nav_files' in self.fqpr.multibeam.raw_ping[0].attrs:
+            if "nav_files" in self.fqpr.multibeam.raw_ping[0].attrs:
                 self.set_below()
-                newstate = RemoveSBETDialog(list(self.fqpr.multibeam.raw_ping[0].nav_files.keys())).run()
+                newstate = RemoveSBETDialog(
+                    list(self.fqpr.multibeam.raw_ping[0].nav_files.keys())
+                ).run()
                 if newstate:
                     self.fqpr.remove_post_processed_navigation()
                     self.refresh_fqpr.emit(self.fqpr, self)
                 self.set_on_top()
             else:
-                self.print('No SBET files found', logging.ERROR)
+                self.print("No SBET files found", logging.ERROR)
         else:
-            self.print('No data found', logging.ERROR)
+            self.print("No data found", logging.ERROR)
 
     def remove_svp(self, profilename):
         if self.svpdialog is not None:
@@ -54,26 +62,37 @@ class ManageDataDialog(ManageDialog):
                     self.refresh_fqpr.emit(self.fqpr, self)
                 self.set_on_top()
             else:
-                self.print('Unable to remove the last profile of a dataset', logging.ERROR)
+                self.print(
+                    "Unable to remove the last profile of a dataset", logging.ERROR
+                )
         else:
-            self.print('WARNING: Unable to find svp data dialog', logging.ERROR)
+            self.print("WARNING: Unable to find svp data dialog", logging.ERROR)
 
     def manage_svp(self, e):
         if self.fqpr is not None:
-            profnames, casts, cast_times, castlocations = self.fqpr.return_all_profiles()
+            (
+                profnames,
+                casts,
+                cast_times,
+                castlocations,
+            ) = self.fqpr.return_all_profiles()
             if profnames is not None:
                 self.svpdialog = None
-                self.svpdialog = ManageSVPDialog(profnames, casts, cast_times, castlocations)
+                self.svpdialog = ManageSVPDialog(
+                    profnames, casts, cast_times, castlocations
+                )
                 self.svpdialog.remove_cast_sig.connect(self.remove_svp)
                 self.svpdialog.exec_()
             else:
-                print('No profiles found!')
+                print("No profiles found!")
 
     def svp_map_display(self, e):
         if self.fqpr is not None:
             self.fqpr.plot.plot_sound_velocity_map()
             # set always on top
-            plt.gcf().canvas.manager.window.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+            plt.gcf().canvas.manager.window.setWindowFlags(
+                self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint
+            )
             plt.gcf().canvas.manager.window.show()
 
     def plot_tooltip_config(self, e):
@@ -81,50 +100,66 @@ class ManageDataDialog(ManageDialog):
 
     def calc_tooltip_config(self, e):
         calcname = self.calcdropdown.currentText()
-        if calcname == 'distance, meters':
-            self.calcdropdown.setToolTip('Calculate the total distance of all lines in the container in meters')
-        elif calcname == 'distance, lnm':
-            self.calcdropdown.setToolTip('Calculate the total distance of all lines in the container in linear nautical miles')
+        if calcname == "distance, meters":
+            self.calcdropdown.setToolTip(
+                "Calculate the total distance of all lines in the container in meters"
+            )
+        elif calcname == "distance, lnm":
+            self.calcdropdown.setToolTip(
+                "Calculate the total distance of all lines in the container in linear nautical miles"
+            )
 
     def run_tooltip_config(self, e):
         runname = self.rundropdown.currentText()
-        if runname == 'SVP Editor':
-            self.rundropdown.setToolTip('Run the SVP Editor on all casts in this container.  Removing a cast may create a new processing action.')
-        elif runname == 'SVP Map':
-            self.rundropdown.setToolTip('Build an image of all lines and sound velocity cast locations')
-        elif runname == 'Remove SBET':
-            self.rundropdown.setToolTip('Remove the SBET(s) currently contained in this container.  May create a new processing action.')
+        if runname == "SVP Editor":
+            self.rundropdown.setToolTip(
+                "Run the SVP Editor on all casts in this container.  Removing a cast may create a new processing action."
+            )
+        elif runname == "SVP Map":
+            self.rundropdown.setToolTip(
+                "Build an image of all lines and sound velocity cast locations"
+            )
+        elif runname == "Remove SBET":
+            self.rundropdown.setToolTip(
+                "Remove the SBET(s) currently contained in this container.  May create a new processing action."
+            )
 
     def calculate_statistic(self, e):
         if self.fqpr is not None:
             stat = self.calcdropdown.currentText()
-            if stat in ['distance, meters', 'distance, lnm']:
+            if stat in ["distance, meters", "distance, lnm"]:
                 dist = self.fqpr.total_distance_meters
-            if stat == 'distance, meters':
+            if stat == "distance, meters":
                 self.calcanswer.setText(str(round(dist, 3)))
-            elif stat == 'distance, lnm':
+            elif stat == "distance, lnm":
                 self.calcanswer.setText(str(round(dist * 0.000539957, 3)))
             else:
-                raise ValueError(f'Unrecognized input for calculating statistic: {stat}')
+                raise ValueError(
+                    f"Unrecognized input for calculating statistic: {stat}"
+                )
 
     def generate_plot(self, e):
         pass
 
     def run_function(self, e):
-        if self.rundropdown.currentText() == 'SVP Editor':
+        if self.rundropdown.currentText() == "SVP Editor":
             self.manage_svp(e)
-        elif self.rundropdown.currentText() == 'SVP Map':
+        elif self.rundropdown.currentText() == "SVP Map":
             self.svp_map_display(e)
-        elif self.rundropdown.currentText() == 'Remove SBET':
+        elif self.rundropdown.currentText() == "Remove SBET":
             self.remove_sbet(e)
 
 
 class RemoveSBETDialog(QtWidgets.QMessageBox):
     def __init__(self, navfiles: list, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Remove SBET')
-        self.setText('Remove all SBETs and associated error data from this converted instance?\n\nCurrently includes:\n{}'.format('\n'.join(navfiles)) +
-                     '\n\nWARNING: Removing SBETs will generate a new georeferencing action to reprocess with multibeam navigation.')
+        self.setWindowTitle("Remove SBET")
+        self.setText(
+            "Remove all SBETs and associated error data from this converted instance?\n\nCurrently includes:\n{}".format(
+                "\n".join(navfiles)
+            )
+            + "\n\nWARNING: Removing SBETs will generate a new georeferencing action to reprocess with multibeam navigation."
+        )
         self.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         self.setDefaultButton(QtWidgets.QMessageBox.Yes)
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -140,9 +175,11 @@ class RemoveSBETDialog(QtWidgets.QMessageBox):
 class RemoveSVPDialog(QtWidgets.QMessageBox):
     def __init__(self, profile_name: str, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Remove Sound Velocity Profile')
-        self.setText('Remove the following sound velocity profile?\n\n{}'.format(profile_name) +
-                     '\n\nWARNING: Removing profiles will generate a new sound velocity action to reprocess with the remaining casts.')
+        self.setWindowTitle("Remove Sound Velocity Profile")
+        self.setText(
+            "Remove the following sound velocity profile?\n\n{}".format(profile_name)
+            + "\n\nWARNING: Removing profiles will generate a new sound velocity action to reprocess with the remaining casts."
+        )
         self.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         self.setDefaultButton(QtWidgets.QMessageBox.Yes)
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -156,7 +193,6 @@ class RemoveSVPDialog(QtWidgets.QMessageBox):
 
 
 class MplCanvas(FigureCanvasQTAgg):
-
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
@@ -167,9 +203,9 @@ class MplCanvas(FigureCanvasQTAgg):
     def plot(self, svvalues, depthvalues, profname, title):
         self.axes.clear()
         self.axes.plot(svvalues, depthvalues, label=profname)
-        self.axes.set_title('Sound Velocity Profile, ' + title)
-        self.axes.set_xlabel('Sound Velocity (meters/second)')
-        self.axes.set_ylabel('Depth (meters)')
+        self.axes.set_title("Sound Velocity Profile, " + title)
+        self.axes.set_xlabel("Sound Velocity (meters/second)")
+        self.axes.set_ylabel("Depth (meters)")
         self.axes.invert_yaxis()
         self.axes.legend()
         self.draw()
@@ -179,6 +215,7 @@ class ManageSVPDialog(QtWidgets.QDialog):
     """
     Dialog for managing the sound velocity profiles currently within this kluster converted data instance
     """
+
     remove_cast_sig = Signal(str)
 
     def __init__(self, profnames, casts, cast_times, castlocations, parent=None):
@@ -186,9 +223,11 @@ class ManageSVPDialog(QtWidgets.QDialog):
         self.profnames = profnames  # list of profile names
         self.casts = casts  # list of [depth values, sv values] for each profile
         self.cast_times = cast_times  # list of times in utc seconds for each profile
-        self.cast_locations = castlocations  # list of [latitude, longitude] for each profile
+        self.cast_locations = (
+            castlocations  # list of [latitude, longitude] for each profile
+        )
 
-        self.setWindowTitle('Manage Sound Velocity Profiles')
+        self.setWindowTitle("Manage Sound Velocity Profiles")
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
 
         layout = QtWidgets.QVBoxLayout()
@@ -197,7 +236,7 @@ class ManageSVPDialog(QtWidgets.QDialog):
         toolbar = NavigationToolbar(self.sc, self)
 
         utclayout = QtWidgets.QHBoxLayout()
-        utctimelbl = QtWidgets.QLabel('UTC Timestamp: ')
+        utctimelbl = QtWidgets.QLabel("UTC Timestamp: ")
         utclayout.addWidget(utctimelbl)
         self.utc_time = QtWidgets.QLineEdit()
         self.utc_time.setReadOnly(True)
@@ -205,7 +244,7 @@ class ManageSVPDialog(QtWidgets.QDialog):
         utclayout.addStretch()
 
         utcdatelayout = QtWidgets.QHBoxLayout()
-        utcdatelbl = QtWidgets.QLabel('UTC Date: ')
+        utcdatelbl = QtWidgets.QLabel("UTC Date: ")
         utcdatelayout.addWidget(utcdatelbl)
         self.utc_date = QtWidgets.QLineEdit()
         self.utc_date.setReadOnly(True)
@@ -213,7 +252,7 @@ class ManageSVPDialog(QtWidgets.QDialog):
         utcdatelayout.addStretch()
 
         localdatelayout = QtWidgets.QHBoxLayout()
-        localdatelbl = QtWidgets.QLabel('Local Date: ')
+        localdatelbl = QtWidgets.QLabel("Local Date: ")
         localdatelayout.addWidget(localdatelbl)
         self.local_date = QtWidgets.QLineEdit()
         self.local_date.setReadOnly(True)
@@ -221,7 +260,7 @@ class ManageSVPDialog(QtWidgets.QDialog):
         localdatelayout.addStretch()
 
         castlocationlayout = QtWidgets.QHBoxLayout()
-        castloclabel = QtWidgets.QLabel('Cast Location (latitude, longitude): ')
+        castloclabel = QtWidgets.QLabel("Cast Location (latitude, longitude): ")
         castlocationlayout.addWidget(castloclabel)
         self.cast_location_lat = QtWidgets.QLineEdit()
         self.cast_location_lat.setReadOnly(True)
@@ -233,13 +272,13 @@ class ManageSVPDialog(QtWidgets.QDialog):
 
         buttonlayout = QtWidgets.QHBoxLayout()
         buttonlayout.addStretch()
-        self.previousbutton = QtWidgets.QPushButton('Previous')
+        self.previousbutton = QtWidgets.QPushButton("Previous")
         buttonlayout.addWidget(self.previousbutton)
         buttonlayout.addStretch()
-        self.removebutton = QtWidgets.QPushButton('Delete')
+        self.removebutton = QtWidgets.QPushButton("Delete")
         buttonlayout.addWidget(self.removebutton)
         buttonlayout.addStretch()
-        self.nextbutton = QtWidgets.QPushButton('Next')
+        self.nextbutton = QtWidgets.QPushButton("Next")
         buttonlayout.addWidget(self.nextbutton)
         buttonlayout.addStretch()
 
@@ -294,14 +333,27 @@ class ManageSVPDialog(QtWidgets.QDialog):
     def plot_cast(self):
         index = self.cur_index
         self.utc_time.setText(str(self.cast_times[index]))
-        self.utc_date.setText(datetime.fromtimestamp(float(self.cast_times[index]), tz=timezone.utc).strftime('%c'))
-        self.local_date.setText(datetime.fromtimestamp(float(self.cast_times[index]), tz=timezone.utc).astimezone(datetime.now().astimezone().tzinfo).strftime('%c'))
+        self.utc_date.setText(
+            datetime.fromtimestamp(
+                float(self.cast_times[index]), tz=timezone.utc
+            ).strftime("%c")
+        )
+        self.local_date.setText(
+            datetime.fromtimestamp(float(self.cast_times[index]), tz=timezone.utc)
+            .astimezone(datetime.now().astimezone().tzinfo)
+            .strftime("%c")
+        )
         self.cast_location_lat.setText(str(self.cast_locations[index][0]))
         self.cast_location_lon.setText(str(self.cast_locations[index][1]))
-        self.sc.plot(self.casts[index][1], self.casts[index][0], self.profnames[index], 'Cast #{}'.format(index + 1))
+        self.sc.plot(
+            self.casts[index][1],
+            self.casts[index][0],
+            self.profnames[index],
+            "Cast #{}".format(index + 1),
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

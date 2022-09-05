@@ -17,10 +17,23 @@ class FqprAction:
     builds a new FqprAction that has function=fqpr_convenience.convert_multibeam, with the multibeam files as arguments.  The action is executed
     by fqpr_intelligence.FqprIntel and the files are converted.
     """
-    def __init__(self, priority=None, action_type=None, text=None, tooltip_text=None, input_files=None, output_destination=None,
-                 function=None, args=None, kwargs=None):
+
+    def __init__(
+        self,
+        priority=None,
+        action_type=None,
+        text=None,
+        tooltip_text=None,
+        input_files=None,
+        output_destination=None,
+        function=None,
+        args=None,
+        kwargs=None,
+    ):
         self.priority = priority  # int, lower numbers executed first
-        self.action_type = action_type  # str, something like 'multibeam' or 'navigation'
+        self.action_type = (
+            action_type  # str, something like 'multibeam' or 'navigation'
+        )
         self.text = text  # str, text description of the action
         self.tooltip_text = tooltip_text  # str, summary of the action for the tooltip
         self.input_files = input_files  # list, list of str paths to the input files, empty for actions like 'process multibeam' that has no files associated with it
@@ -34,10 +47,12 @@ class FqprAction:
         self.is_running = False  # True if action is running
 
     def __str__(self):
-        return '{}'.format(self.text)
+        return "{}".format(self.text)
 
     def __repr__(self):
-        return 'FqprAction (Priority {}, {}): {}'.format(self.priority, self.action_type, self.text)
+        return "FqprAction (Priority {}, {}): {}".format(
+            self.priority, self.action_type, self.text
+        )
 
     def set(self, key, value):
         self.__setattr__(key, value)
@@ -70,11 +85,15 @@ class FqprActionContainer:
         self.parent = parent  # fqpr_intelligence.FqprIntel
         self.actions = []  # list of FqprActions
         self.unmatched = {}  # dict of unmatched files: reason unmatched
-        self._observers = []  # list of functions bound to the class that are executed when actions list changes
+        self._observers = (
+            []
+        )  # list of functions bound to the class that are executed when actions list changes
 
     def __repr__(self):
         unique_types = list(set([x.action_type for x in self.actions]))
-        return 'FqprActionContainer: {} actions of types: {}'.format(len(self.actions), unique_types)
+        return "FqprActionContainer: {} actions of types: {}".format(
+            len(self.actions), unique_types
+        )
 
     def _update_actions(self):
         """
@@ -114,13 +133,13 @@ class FqprActionContainer:
                     ar.multibeam.client = client
                     action.args[cnt] = ar
             if action.kwargs:
-                if 'client' in action.kwargs:
-                    action.kwargs['client'] = client
-                if 'fqpr_inst' in action.kwargs:
-                    action.kwargs['fqpr_inst'].client = client
-                    action.kwargs['fqpr_inst'].multibeam.client = client
-                if 'skip_dask' in action.kwargs:
-                    action.kwargs['skip_dask'] = client is None
+                if "client" in action.kwargs:
+                    action.kwargs["client"] = client
+                if "fqpr_inst" in action.kwargs:
+                    action.kwargs["fqpr_inst"].client = client
+                    action.kwargs["fqpr_inst"].multibeam.client = client
+                if "skip_dask" in action.kwargs:
+                    action.kwargs["skip_dask"] = client is None
 
     def add_action(self, action: FqprAction):
         """
@@ -173,7 +192,7 @@ class FqprActionContainer:
                     try:
                         action.set(key, value)
                     except:
-                        print('Unable to set action {} to {}'.format(key, value))
+                        print("Unable to set action {} to {}".format(key, value))
             self._update_actions()
 
     def update_action_from_list(self, action_type: str, action_destination_list: list):
@@ -277,10 +296,12 @@ class FqprActionContainer:
             output = action.output
             return output
         else:
-            print('FqprActionContainer: no actions found.')
+            print("FqprActionContainer: no actions found.")
 
 
-def build_multibeam_action(destination: str, line_list: list, client: Client = None, settings: dict = None):
+def build_multibeam_action(
+    destination: str, line_list: list, client: Client = None, settings: dict = None
+):
     """
     Construct a convert multibeam action using the provided data
 
@@ -307,25 +328,34 @@ def build_multibeam_action(destination: str, line_list: list, client: Client = N
         skip_dask = True
     args = [line_list]
     if settings:
-        allowed_kwargs = ['parallel_write', 'vdatum_directory']
+        allowed_kwargs = ["parallel_write", "vdatum_directory"]
         existing_kwargs = list(settings.keys())
         [settings.pop(ky) for ky in existing_kwargs if ky not in allowed_kwargs]
     else:
         settings = {}
-    settings['input_datum'] = None
-    settings['outfold'] = destination
-    settings['client'] = client
-    settings['skip_dask'] = skip_dask
-    settings['show_progress'] = True
+    settings["input_datum"] = None
+    settings["outfold"] = destination
+    settings["client"] = client
+    settings["skip_dask"] = skip_dask
+    settings["show_progress"] = True
 
-    action = FqprAction(priority=1, action_type='multibeam', output_destination=destination, input_files=line_list,
-                        text='Convert {} multibeam lines to {}'.format(len(line_list), destination),
-                        tooltip_text='\n'.join(line_list), function=fqpr_convenience.convert_multibeam, args=args,
-                        kwargs=settings)
+    action = FqprAction(
+        priority=1,
+        action_type="multibeam",
+        output_destination=destination,
+        input_files=line_list,
+        text="Convert {} multibeam lines to {}".format(len(line_list), destination),
+        tooltip_text="\n".join(line_list),
+        function=fqpr_convenience.convert_multibeam,
+        args=args,
+        kwargs=settings,
+    )
     return action
 
 
-def update_kwargs_for_multibeam(destination: str, line_list: list, client: Client = None, settings: dict = None):
+def update_kwargs_for_multibeam(
+    destination: str, line_list: list, client: Client = None, settings: dict = None
+):
     """
     Build a dictionary of updated settings for an existing multibeam action, use this with FqprActionContainer to
     update the action.
@@ -349,15 +379,26 @@ def update_kwargs_for_multibeam(destination: str, line_list: list, client: Clien
 
     args = [line_list, None, destination, client, False, True]
     if settings:
-        allowed_kwargs = ['parallel_write', 'vdatum_directory']
+        allowed_kwargs = ["parallel_write", "vdatum_directory"]
         existing_kwargs = list(settings.keys())
         [settings.pop(ky) for ky in existing_kwargs if ky not in allowed_kwargs]
-    update_settings = {'input_files': line_list, 'text': 'Convert {} multibeam lines to {}'.format(len(line_list), destination),
-                       'tooltip_text': '\n'.join(line_list), 'args': args, 'kwargs': settings}
+    update_settings = {
+        "input_files": line_list,
+        "text": "Convert {} multibeam lines to {}".format(len(line_list), destination),
+        "tooltip_text": "\n".join(line_list),
+        "args": args,
+        "kwargs": settings,
+    }
     return update_settings
 
 
-def build_nav_action(destination: str, fqpr_instance: fqpr_generation.Fqpr, navfiles: list, error_files: list, log_files: list):
+def build_nav_action(
+    destination: str,
+    fqpr_instance: fqpr_generation.Fqpr,
+    navfiles: list,
+    error_files: list,
+    log_files: list,
+):
     """
     Generate a new import navigation (from POSPac SBET) action
 
@@ -381,16 +422,28 @@ def build_nav_action(destination: str, fqpr_instance: fqpr_generation.Fqpr, navf
     """
 
     args = [fqpr_instance, navfiles]
-    kwargs = {'errorfiles': error_files, 'logfiles': log_files}
-    action = FqprAction(priority=2, action_type='navigation', output_destination=destination,
-                        input_files=navfiles + error_files + log_files, text='Import navigation to {}'.format(destination),
-                        tooltip_text='\n'.join(navfiles), function=fqpr_convenience.import_processed_navigation,
-                        args=args, kwargs=kwargs)
+    kwargs = {"errorfiles": error_files, "logfiles": log_files}
+    action = FqprAction(
+        priority=2,
+        action_type="navigation",
+        output_destination=destination,
+        input_files=navfiles + error_files + log_files,
+        text="Import navigation to {}".format(destination),
+        tooltip_text="\n".join(navfiles),
+        function=fqpr_convenience.import_processed_navigation,
+        args=args,
+        kwargs=kwargs,
+    )
     return action
 
 
-def update_kwargs_for_navigation(destination: str, fqpr_instance: fqpr_generation.Fqpr, navfiles: list, error_files: list,
-                                 log_files: list):
+def update_kwargs_for_navigation(
+    destination: str,
+    fqpr_instance: fqpr_generation.Fqpr,
+    navfiles: list,
+    error_files: list,
+    log_files: list,
+):
     """
     Build a dictionary of updated settings for an existing import navigation action, use this with FqprActionContainer to
     update the action.
@@ -415,13 +468,20 @@ def update_kwargs_for_navigation(destination: str, fqpr_instance: fqpr_generatio
     """
 
     args = [fqpr_instance, navfiles]
-    kwargs = {'errorfiles': error_files, 'logfiles': log_files}
-    update_settings = {'input_files': navfiles + error_files + log_files, 'text': 'Import navigation to {}'.format(destination),
-                       'tooltip_text': '\n'.join(navfiles), 'args': args, 'kwargs': kwargs}
+    kwargs = {"errorfiles": error_files, "logfiles": log_files}
+    update_settings = {
+        "input_files": navfiles + error_files + log_files,
+        "text": "Import navigation to {}".format(destination),
+        "tooltip_text": "\n".join(navfiles),
+        "args": args,
+        "kwargs": kwargs,
+    }
     return update_settings
 
 
-def build_svp_action(destination: str, fqpr_instance: fqpr_generation.Fqpr, svfiles: list):
+def build_svp_action(
+    destination: str, fqpr_instance: fqpr_generation.Fqpr, svfiles: list
+):
     """
     Generate a new sound velocity import action, supports caris svp files
 
@@ -441,14 +501,22 @@ def build_svp_action(destination: str, fqpr_instance: fqpr_generation.Fqpr, svfi
     """
 
     args = [fqpr_instance, svfiles]
-    action = FqprAction(priority=3, action_type='svp', output_destination=destination,
-                        input_files=svfiles, text='Import sound velocity to {}'.format(destination),
-                        tooltip_text='\n'.join(svfiles), function=fqpr_convenience.import_sound_velocity,
-                        args=args)
+    action = FqprAction(
+        priority=3,
+        action_type="svp",
+        output_destination=destination,
+        input_files=svfiles,
+        text="Import sound velocity to {}".format(destination),
+        tooltip_text="\n".join(svfiles),
+        function=fqpr_convenience.import_sound_velocity,
+        args=args,
+    )
     return action
 
 
-def update_kwargs_for_svp(destination: str, fqpr_instance: fqpr_generation.Fqpr, svfiles: list):
+def update_kwargs_for_svp(
+    destination: str, fqpr_instance: fqpr_generation.Fqpr, svfiles: list
+):
     """
     Build a dictionary of updated settings for an existing import sound velocity action, use this with FqprActionContainer to
     update the action.
@@ -469,12 +537,22 @@ def update_kwargs_for_svp(destination: str, fqpr_instance: fqpr_generation.Fqpr,
     """
 
     args = [fqpr_instance, svfiles]
-    update_settings = {'input_files': svfiles, 'text': 'Import sound velocity to {}'.format(destination),
-                       'tooltip_text': '\n'.join(svfiles), 'args': args}
+    update_settings = {
+        "input_files": svfiles,
+        "text": "Import sound velocity to {}".format(destination),
+        "tooltip_text": "\n".join(svfiles),
+        "args": args,
+    }
     return update_settings
 
 
-def build_processing_action(destination: str, args: list, kwargs: dict, settings: dict = None, force_epsg: bool = False):
+def build_processing_action(
+    destination: str,
+    args: list,
+    kwargs: dict,
+    settings: dict = None,
+    force_epsg: bool = False,
+):
     """
     Generate a new processing action, using the return from fqpr_generation.Fqpr.return_next_action.  This method will
     provide the correct sequence of processing steps that this Fqpr instance needs.
@@ -502,36 +580,64 @@ def build_processing_action(destination: str, args: list, kwargs: dict, settings
     # update the default processing kwargs for settings
     if settings:
         for ky, val in settings.items():
-            if ky in ['use_epsg', 'use_coord', 'epsg', 'coord_system'] and force_epsg:  # rely on the existing chosen parameters
+            if (
+                ky in ["use_epsg", "use_coord", "epsg", "coord_system"] and force_epsg
+            ):  # rely on the existing chosen parameters
                 continue
             kwargs[ky] = val
 
-    if 'only_this_line' in kwargs and kwargs['only_this_line']:
-        source = '{} ({})'.format(os.path.split(destination)[1], kwargs['only_this_line'])
+    if "only_this_line" in kwargs and kwargs["only_this_line"]:
+        source = "{} ({})".format(
+            os.path.split(destination)[1], kwargs["only_this_line"]
+        )
     else:
-        source = '{}'.format(os.path.split(destination)[1])
+        source = "{}".format(os.path.split(destination)[1])
 
-    if kwargs['run_orientation'] and kwargs['run_beam_vec'] and kwargs['run_svcorr'] and kwargs['run_georef'] and kwargs['run_tpu']:
-        text = 'Run all processing on {}'.format(source)
-    elif kwargs['run_beam_vec'] and kwargs['run_svcorr'] and kwargs['run_georef'] and kwargs['run_tpu']:
-        text = 'Process {} starting with beam correction'.format(source)
-    elif kwargs['run_svcorr'] and kwargs['run_georef'] and kwargs['run_tpu']:
-        text = 'Process {} starting with sound velocity'.format(source)
-    elif kwargs['run_georef'] and kwargs['run_tpu']:
-        text = 'Process {} starting with georeferencing'.format(source)
-    elif kwargs['run_tpu']:
-        text = 'Process {} only computing TPU'.format(source)
+    if (
+        kwargs["run_orientation"]
+        and kwargs["run_beam_vec"]
+        and kwargs["run_svcorr"]
+        and kwargs["run_georef"]
+        and kwargs["run_tpu"]
+    ):
+        text = "Run all processing on {}".format(source)
+    elif (
+        kwargs["run_beam_vec"]
+        and kwargs["run_svcorr"]
+        and kwargs["run_georef"]
+        and kwargs["run_tpu"]
+    ):
+        text = "Process {} starting with beam correction".format(source)
+    elif kwargs["run_svcorr"] and kwargs["run_georef"] and kwargs["run_tpu"]:
+        text = "Process {} starting with sound velocity".format(source)
+    elif kwargs["run_georef"] and kwargs["run_tpu"]:
+        text = "Process {} starting with georeferencing".format(source)
+    elif kwargs["run_tpu"]:
+        text = "Process {} only computing TPU".format(source)
     else:
-        text = 'Process {} with custom setup'.format(source)
+        text = "Process {} with custom setup".format(source)
 
-    action = FqprAction(priority=5, action_type='processing', output_destination=destination,
-                        input_files=[], text=text,
-                        tooltip_text='{}'.format(destination), function=fqpr_convenience.process_multibeam,
-                        args=args, kwargs=kwargs)
+    action = FqprAction(
+        priority=5,
+        action_type="processing",
+        output_destination=destination,
+        input_files=[],
+        text=text,
+        tooltip_text="{}".format(destination),
+        function=fqpr_convenience.process_multibeam,
+        args=args,
+        kwargs=kwargs,
+    )
     return action
 
 
-def update_kwargs_for_processing(destination: str, args: list, kwargs: dict, settings: dict = None, force_epsg: bool = False):
+def update_kwargs_for_processing(
+    destination: str,
+    args: list,
+    kwargs: dict,
+    settings: dict = None,
+    force_epsg: bool = False,
+):
     """
     Build a dictionary of updated settings for an existing processing action, use this with FqprActionContainer to
     update the action.
@@ -559,34 +665,55 @@ def update_kwargs_for_processing(destination: str, args: list, kwargs: dict, set
     # update the default processing kwargs for settings
     if settings:
         for ky, val in settings.items():
-            if ky in ['use_epsg', 'use_coord', 'epsg', 'coord_system'] and force_epsg:  # rely on the existing chosen parameters
+            if (
+                ky in ["use_epsg", "use_coord", "epsg", "coord_system"] and force_epsg
+            ):  # rely on the existing chosen parameters
                 continue
             kwargs[ky] = val
 
-    if 'only_this_line' in kwargs and kwargs['only_this_line']:
-        source = '{} ({})'.format(os.path.split(destination)[1], kwargs['only_this_line'])
+    if "only_this_line" in kwargs and kwargs["only_this_line"]:
+        source = "{} ({})".format(
+            os.path.split(destination)[1], kwargs["only_this_line"]
+        )
     else:
-        source = '{}'.format(os.path.split(destination)[1])
+        source = "{}".format(os.path.split(destination)[1])
 
-    if kwargs['run_orientation'] and kwargs['run_beam_vec'] and kwargs['run_svcorr'] and kwargs['run_georef'] and kwargs['run_tpu']:
-        text = 'Run all processing on {}'.format(source)
-    elif kwargs['run_beam_vec'] and kwargs['run_svcorr'] and kwargs['run_georef'] and kwargs['run_tpu']:
-        text = 'Process {} starting with beam correction'.format(source)
-    elif kwargs['run_svcorr'] and kwargs['run_georef'] and kwargs['run_tpu']:
-        text = 'Process {} starting with sound velocity'.format(source)
-    elif kwargs['run_georef'] and kwargs['run_tpu']:
-        text = 'Process {} starting with georeferencing'.format(source)
-    elif kwargs['run_tpu']:
-        text = 'Process {} only computing TPU'.format(source)
+    if (
+        kwargs["run_orientation"]
+        and kwargs["run_beam_vec"]
+        and kwargs["run_svcorr"]
+        and kwargs["run_georef"]
+        and kwargs["run_tpu"]
+    ):
+        text = "Run all processing on {}".format(source)
+    elif (
+        kwargs["run_beam_vec"]
+        and kwargs["run_svcorr"]
+        and kwargs["run_georef"]
+        and kwargs["run_tpu"]
+    ):
+        text = "Process {} starting with beam correction".format(source)
+    elif kwargs["run_svcorr"] and kwargs["run_georef"] and kwargs["run_tpu"]:
+        text = "Process {} starting with sound velocity".format(source)
+    elif kwargs["run_georef"] and kwargs["run_tpu"]:
+        text = "Process {} starting with georeferencing".format(source)
+    elif kwargs["run_tpu"]:
+        text = "Process {} only computing TPU".format(source)
     else:
-        text = 'Process {} with custom setup'.format(source)
+        text = "Process {} with custom setup".format(source)
 
-    update_settings = {'text': text, 'args': args, 'kwargs': kwargs}
+    update_settings = {"text": text, "args": args, "kwargs": kwargs}
     return update_settings
 
 
-def build_surface_action(destination: str, surface_instance: fqpr_convenience.BathyGrid, add_fqpr: list = None,
-                         add_lines: list = None, remove_fqpr: list = None, remove_lines: list = None):
+def build_surface_action(
+    destination: str,
+    surface_instance: fqpr_convenience.BathyGrid,
+    add_fqpr: list = None,
+    add_lines: list = None,
+    remove_fqpr: list = None,
+    remove_lines: list = None,
+):
     """
     Generate a new update surface action, adding multibeam files (or removing multibeam files) and regridding
 
@@ -614,16 +741,34 @@ def build_surface_action(destination: str, surface_instance: fqpr_convenience.Ba
     """
 
     args = [surface_instance]
-    kwargs = {'add_fqpr': add_fqpr, 'add_lines': add_lines, 'remove_fqpr': remove_fqpr, 'remove_lines': remove_lines}
-    action = FqprAction(priority=10, action_type='gridding', output_destination=destination,
-                        input_files=[], text='Update surface {}'.format(destination),
-                        tooltip_text='{}'.format(destination), function=fqpr_convenience.update_surface,
-                        args=args, kwargs=kwargs)
+    kwargs = {
+        "add_fqpr": add_fqpr,
+        "add_lines": add_lines,
+        "remove_fqpr": remove_fqpr,
+        "remove_lines": remove_lines,
+    }
+    action = FqprAction(
+        priority=10,
+        action_type="gridding",
+        output_destination=destination,
+        input_files=[],
+        text="Update surface {}".format(destination),
+        tooltip_text="{}".format(destination),
+        function=fqpr_convenience.update_surface,
+        args=args,
+        kwargs=kwargs,
+    )
     return action
 
 
-def update_kwargs_for_surface(destination: str, surface_instance: fqpr_convenience.BathyGrid, add_fqpr: list = None,
-                              add_lines: list = None, remove_fqpr: list = None, remove_lines: list = None):
+def update_kwargs_for_surface(
+    destination: str,
+    surface_instance: fqpr_convenience.BathyGrid,
+    add_fqpr: list = None,
+    add_lines: list = None,
+    remove_fqpr: list = None,
+    remove_lines: list = None,
+):
     """
     Build a dictionary of updated settings for an existing update surface action, use this with FqprActionContainer to
     update the action.
@@ -652,8 +797,17 @@ def update_kwargs_for_surface(destination: str, surface_instance: fqpr_convenien
     """
 
     args = [surface_instance]
-    kwargs = {'add_fqpr': add_fqpr, 'add_lines': add_lines, 'remove_fqpr': remove_fqpr, 'remove_lines': remove_lines}
-    ttext = '{}'.format(destination)
-    update_settings = {'text': 'Update surface {}'.format(destination),
-                       'tooltip_text': ttext, 'args': args, 'kwargs': kwargs}
+    kwargs = {
+        "add_fqpr": add_fqpr,
+        "add_lines": add_lines,
+        "remove_fqpr": remove_fqpr,
+        "remove_lines": remove_lines,
+    }
+    ttext = "{}".format(destination)
+    update_settings = {
+        "text": "Update surface {}".format(destination),
+        "tooltip_text": ttext,
+        "args": args,
+        "kwargs": kwargs,
+    }
     return update_settings

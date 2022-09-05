@@ -10,13 +10,13 @@ class KlusterConsole(console.ConsoleWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.setWindowTitle('Kluster Console')
-        self.runCmd('import os, sys')
-        self.runCmd('from HSTB.kluster.fqpr_convenience import *')
+        self.setWindowTitle("Kluster Console")
+        self.runCmd("import os, sys")
+        self.runCmd("from HSTB.kluster.fqpr_convenience import *")
         self.runCmd("print('Python %s on %s' % (sys.version, sys.platform))")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

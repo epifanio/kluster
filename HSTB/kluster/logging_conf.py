@@ -31,7 +31,11 @@ class LoggerClass:
 
         if self.logger is not None:
             if not isinstance(loglvl, int):
-                raise ValueError('Log level must be an int (see logging enum), found {}'.format(loglvl))
+                raise ValueError(
+                    "Log level must be an int (see logging enum), found {}".format(
+                        loglvl
+                    )
+                )
             self.logger.log(loglvl, msg)
         elif self.silent:
             pass
@@ -43,6 +47,7 @@ class StdErrFilter(logging.Filter):
     """
     filter out messages that are not CRITICAL or ERROR or WARNING
     """
+
     def filter(self, rec):
         return rec.levelno in (logging.CRITICAL, logging.ERROR, logging.WARNING)
 
@@ -51,6 +56,7 @@ class StdOutFilter(logging.Filter):
     """
     filter out messages that are not DEBUG or INFO
     """
+
     def filter(self, rec):
         return rec.levelno in (logging.DEBUG, logging.INFO)
 
@@ -71,9 +77,9 @@ def return_log_name(timestamped: bool = False):
     """
 
     if not timestamped:
-        return 'logfile.txt'
+        return "logfile.txt"
     else:
-        return 'logfile_{}.txt'.format(int(datetime.utcnow().timestamp()))
+        return "logfile_{}.txt".format(int(datetime.utcnow().timestamp()))
 
 
 def return_logger(name, logfile: str = None):
@@ -100,8 +106,8 @@ def return_logger(name, logfile: str = None):
 
     """
     global log_counter
-    fmat = '%(asctime)s - %(levelname)s - %(message)s'
-    logger = logging.getLogger(name + str('_') + str(log_counter))
+    fmat = "%(asctime)s - %(levelname)s - %(message)s"
+    logger = logging.getLogger(name + str("_") + str(log_counter))
     log_counter += 1
     logger.setLevel(loglevel)
 
@@ -153,7 +159,9 @@ def logger_remove_file_handlers(logger: logging.Logger):
     return logger
 
 
-def add_file_handler(logger: logging.Logger, logfile: str, remove_existing: bool = True):
+def add_file_handler(
+    logger: logging.Logger, logfile: str, remove_existing: bool = True
+):
     """
     Take an existing logger and add a new file handler to it, to save the log output to file.  If you remove_existing,
     will remove all existing file handlers from the logger.
@@ -176,7 +184,7 @@ def add_file_handler(logger: logging.Logger, logfile: str, remove_existing: bool
         logger_remove_file_handlers(logger)
     filelogger = logging.FileHandler(logfile)
     filelogger.setLevel(loglevel)
-    fmat = '%(asctime)s - %(levelname)s - %(message)s'
+    fmat = "%(asctime)s - %(levelname)s - %(message)s"
     filelogger.setFormatter(logging.Formatter(fmat))
     logger.addHandler(filelogger)
     return logger

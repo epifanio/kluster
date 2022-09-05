@@ -33,7 +33,12 @@ class FqprExport:
         """
         self.fqpr = fqpr
 
-    def _generate_export_data(self, ping_dataset: xr.Dataset, filter_by_detection: bool = True, z_pos_down: bool = True):
+    def _generate_export_data(
+        self,
+        ping_dataset: xr.Dataset,
+        filter_by_detection: bool = True,
+        z_pos_down: bool = True,
+    ):
         """
         Take the georeferenced data in the multibeam.raw_ping datasets held by fqpr_generation.Fqpr (ping_dataset is one of those
         raw_ping datasets) and build the necessary arrays for exporting.
@@ -75,19 +80,19 @@ class FqprExport:
         """
 
         uncertainty_included = False
-        nan_mask = ~np.isnan(ping_dataset['x'])
-        x_stck = ping_dataset['x'][nan_mask]
-        y_stck = ping_dataset['y'][nan_mask]
-        z_stck = ping_dataset['z'][nan_mask]
-        if 'tvu' in ping_dataset:
+        nan_mask = ~np.isnan(ping_dataset["x"])
+        x_stck = ping_dataset["x"][nan_mask]
+        y_stck = ping_dataset["y"][nan_mask]
+        z_stck = ping_dataset["z"][nan_mask]
+        if "tvu" in ping_dataset:
             uncertainty_included = True
-            vunc_stck = ping_dataset['tvu'][nan_mask]
-            hunc_stck = ping_dataset['thu'][nan_mask]
+            vunc_stck = ping_dataset["tvu"][nan_mask]
+            hunc_stck = ping_dataset["thu"][nan_mask]
 
         # build mask with kongsberg detection info
         classification = None
         valid_detections = None
-        if 'detectioninfo' in ping_dataset:
+        if "detectioninfo" in ping_dataset:
             dinfo = ping_dataset.detectioninfo
             filter_stck = dinfo.values[nan_mask]
             # filter_idx, filter_stck = stack_nan_array(dinfo, stack_dims=('time', 'beam'))
@@ -106,12 +111,16 @@ class FqprExport:
             if uncertainty_included:
                 vunc = vunc_stck[valid_detections]
                 hunc = hunc_stck[valid_detections]
-            print('{} total soundings, {} retained, {} filtered'.format(tot, tot_valid, tot_invalid))
+            print(
+                "{} total soundings, {} retained, {} filtered".format(
+                    tot, tot_valid, tot_invalid
+                )
+            )
         else:
             x = x_stck
             y = y_stck
             z = z_stck
-            if 'detectioninfo' in ping_dataset:
+            if "detectioninfo" in ping_dataset:
                 classification = filter_stck
             if uncertainty_included:
                 vunc = vunc_stck
@@ -121,7 +130,17 @@ class FqprExport:
         if not z_pos_down:
             z = z * -1
 
-        return x, y, z, hunc, vunc, nan_mask, classification, valid_detections, uncertainty_included
+        return (
+            x,
+            y,
+            z,
+            hunc,
+            vunc,
+            nan_mask,
+            classification,
+            valid_detections,
+            uncertainty_included,
+        )
 
     def _validate_export(self, output_directory: str, file_format: str):
         """
@@ -146,34 +165,55 @@ class FqprExport:
             file suffix if applicable
         """
 
-        if 'x' not in self.fqpr.multibeam.raw_ping[0]:
-            self.fqpr.logger.error('export_pings_to_file: No xyz data found, please run All Processing - Georeference Soundings first.')
-            raise ValueError('export_pings_to_file: No xyz data found, please run All Processing - Georeference Soundings first.')
-        if file_format == 'entwine' and not is_pydro():
-            self.fqpr.logger.error('export_pings_to_file: Only pydro environments support entwine tile building.  Please see https://entwine.io/configuration.html for instructions on installing entwine if you wish to use entwine outside of Kluster.  Kluster exported las files will work with the entwine build command')
-            raise ValueError('export_pings_to_file: Only pydro environments support entwine tile building.  Please see https://entwine.io/configuration.html for instructions on installing entwine if you wish to use entwine outside of Kluster.  Kluster exported las files will work with the entwine build command')
+        if "x" not in self.fqpr.multibeam.raw_ping[0]:
+            self.fqpr.logger.error(
+                "export_pings_to_file: No xyz data found, please run All Processing - Georeference Soundings first."
+            )
+            raise ValueError(
+                "export_pings_to_file: No xyz data found, please run All Processing - Georeference Soundings first."
+            )
+        if file_format == "entwine" and not is_pydro():
+            self.fqpr.logger.error(
+                "export_pings_to_file: Only pydro environments support entwine tile building.  Please see https://entwine.io/configuration.html for instructions on installing entwine if you wish to use entwine outside of Kluster.  Kluster exported las files will work with the entwine build command"
+            )
+            raise ValueError(
+                "export_pings_to_file: Only pydro environments support entwine tile building.  Please see https://entwine.io/configuration.html for instructions on installing entwine if you wish to use entwine outside of Kluster.  Kluster exported las files will work with the entwine build command"
+            )
 
         if output_directory is None:
             output_directory = self.fqpr.multibeam.converted_pth
 
-        entwine_fldr_path = ''
-        if file_format == 'csv':
+        entwine_fldr_path = ""
+        if file_format == "csv":
             chunksize = kluster_variables.pings_per_csv
-            fldr_path, suffix = _create_folder(output_directory, 'csv_export')
-        elif file_format == 'las':
+            fldr_path, suffix = _create_folder(output_directory, "csv_export")
+        elif file_format == "las":
             chunksize = kluster_variables.pings_per_las
-            fldr_path, suffix = _create_folder(output_directory, 'las_export')
-        elif file_format == 'entwine':
+            fldr_path, suffix = _create_folder(output_directory, "las_export")
+        elif file_format == "entwine":
             chunksize = kluster_variables.pings_per_las
-            fldr_path, suffix = _create_folder(output_directory, 'las_export')
-            entwine_fldr_path, _ = _create_folder(output_directory, 'entwine_export')
+            fldr_path, suffix = _create_folder(output_directory, "las_export")
+            entwine_fldr_path, _ = _create_folder(output_directory, "entwine_export")
         else:
-            self.fqpr.logger.error('export_pings_to_file: Only csv, las and entwine format options supported at this time')
-            raise ValueError('export_pings_to_file: Only csv, las and entwine format options supported at this time')
+            self.fqpr.logger.error(
+                "export_pings_to_file: Only csv, las and entwine format options supported at this time"
+            )
+            raise ValueError(
+                "export_pings_to_file: Only csv, las and entwine format options supported at this time"
+            )
         return chunksize, fldr_path, entwine_fldr_path, suffix
 
-    def export_lines_to_file(self, linenames: list = None, output_directory: str = None, file_format: str = 'csv', csv_delimiter=' ',
-                             filter_by_detection: bool = True, format_type: str = 'xyz', z_pos_down: bool = True, export_by_identifiers: bool = True):
+    def export_lines_to_file(
+        self,
+        linenames: list = None,
+        output_directory: str = None,
+        file_format: str = "csv",
+        csv_delimiter=" ",
+        filter_by_detection: bool = True,
+        format_type: str = "xyz",
+        z_pos_down: bool = True,
+        export_by_identifiers: bool = True,
+    ):
         """
         Take each provided line name and export it to the file_format provided
 
@@ -204,9 +244,11 @@ class FqprExport:
             list of written file paths
         """
 
-        self.fqpr.logger.info('****Exporting xyz data to {}****'.format(file_format))
+        self.fqpr.logger.info("****Exporting xyz data to {}****".format(file_format))
         starttime = perf_counter()
-        chunksize, fldr_path, entwine_fldr_path, suffix = self._validate_export(output_directory, file_format)
+        chunksize, fldr_path, entwine_fldr_path, suffix = self._validate_export(
+            output_directory, file_format
+        )
         if not chunksize:
             return []
         if linenames is None:
@@ -215,24 +257,61 @@ class FqprExport:
         totalfiles = []
         for linename in linenames:
             try:
-                data_dict = self.fqpr.subset_variables_by_line(['x', 'y', 'z', 'thu', 'tvu', 'frequency', 'txsector_beam', 'detectioninfo'], [linename], filter_by_detection=filter_by_detection)
+                data_dict = self.fqpr.subset_variables_by_line(
+                    [
+                        "x",
+                        "y",
+                        "z",
+                        "thu",
+                        "tvu",
+                        "frequency",
+                        "txsector_beam",
+                        "detectioninfo",
+                    ],
+                    [linename],
+                    filter_by_detection=filter_by_detection,
+                )
             except:
-                data_dict = self.fqpr.subset_variables_by_line(['x', 'y', 'z', 'frequency', 'txsector_beam', 'detectioninfo'], [linename], filter_by_detection=filter_by_detection)
-            if data_dict:  # we could get the data_dict for all lines at once, but we do it line by line to avoid memory issues
+                data_dict = self.fqpr.subset_variables_by_line(
+                    ["x", "y", "z", "frequency", "txsector_beam", "detectioninfo"],
+                    [linename],
+                    filter_by_detection=filter_by_detection,
+                )
+            if (
+                data_dict
+            ):  # we could get the data_dict for all lines at once, but we do it line by line to avoid memory issues
                 line_rp = data_dict[linename]
                 new_files = []
-                if file_format == 'csv':
-                    new_files = self._export_pings_to_csv(rp=line_rp, output_directory=fldr_path, suffix=suffix, csv_delimiter=csv_delimiter, filter_by_detection=False,
-                                                          z_pos_down=z_pos_down, export_by_identifiers=export_by_identifiers, format_type=format_type,
-                                                          base_name=os.path.splitext(linename)[0])
-                elif file_format in ['las', 'entwine']:
-                    new_files = self._export_pings_to_las(rp=line_rp, output_directory=fldr_path, suffix=suffix, filter_by_detection=False,
-                                                          export_by_identifiers=export_by_identifiers, base_name=os.path.splitext(linename)[0])
+                if file_format == "csv":
+                    new_files = self._export_pings_to_csv(
+                        rp=line_rp,
+                        output_directory=fldr_path,
+                        suffix=suffix,
+                        csv_delimiter=csv_delimiter,
+                        filter_by_detection=False,
+                        z_pos_down=z_pos_down,
+                        export_by_identifiers=export_by_identifiers,
+                        format_type=format_type,
+                        base_name=os.path.splitext(linename)[0],
+                    )
+                elif file_format in ["las", "entwine"]:
+                    new_files = self._export_pings_to_las(
+                        rp=line_rp,
+                        output_directory=fldr_path,
+                        suffix=suffix,
+                        filter_by_detection=False,
+                        export_by_identifiers=export_by_identifiers,
+                        base_name=os.path.splitext(linename)[0],
+                    )
                 if new_files:
                     totalfiles += new_files
 
         endtime = perf_counter()
-        self.fqpr.logger.info('****Exporting xyz data to {} complete: {}****\n'.format(file_format, seconds_to_formatted_string(int(endtime - starttime))))
+        self.fqpr.logger.info(
+            "****Exporting xyz data to {} complete: {}****\n".format(
+                file_format, seconds_to_formatted_string(int(endtime - starttime))
+            )
+        )
         return totalfiles
 
     def _export_tracklines_to_geopackage(self, linenames: list, output_file: str):
@@ -241,23 +320,37 @@ class FqprExport:
         and data according to the latitude/longitude of that line.
         """
 
-        self.fqpr.logger.info('****Exporting tracklines to geopackage****')
+        self.fqpr.logger.info("****Exporting tracklines to geopackage****")
         starttime = perf_counter()
-        vl = VectorLayer(output_file, 'GPKG', kluster_variables.qgis_epsg, update=True)
+        vl = VectorLayer(output_file, "GPKG", kluster_variables.qgis_epsg, update=True)
         for line in linenames:
             if line in self.fqpr.multibeam.raw_ping[0].multibeam_files:
-                line_start_time, line_end_time = self.fqpr.multibeam.raw_ping[0].multibeam_files[line][0],\
-                                                 self.fqpr.multibeam.raw_ping[0].multibeam_files[line][1]
+                line_start_time, line_end_time = (
+                    self.fqpr.multibeam.raw_ping[0].multibeam_files[line][0],
+                    self.fqpr.multibeam.raw_ping[0].multibeam_files[line][1],
+                )
                 nav = self.fqpr.return_navigation(line_start_time, line_end_time)
                 if nav is not None:
-                    vl.write_to_layer(line, np.column_stack([nav.longitude.values, nav.latitude.values]), 2)  # ogr.wkbLineString
+                    vl.write_to_layer(
+                        line,
+                        np.column_stack([nav.longitude.values, nav.latitude.values]),
+                        2,
+                    )  # ogr.wkbLineString
                 else:
-                    print(f'export_lines_to_geopackage: unable to access raw navigation for line {line}')
+                    print(
+                        f"export_lines_to_geopackage: unable to access raw navigation for line {line}"
+                    )
         vl.close()
         endtime = perf_counter()
-        self.fqpr.logger.info('****Exporting tracklines to geopackage complete: {}****\n'.format(seconds_to_formatted_string(int(endtime - starttime))))
+        self.fqpr.logger.info(
+            "****Exporting tracklines to geopackage complete: {}****\n".format(
+                seconds_to_formatted_string(int(endtime - starttime))
+            )
+        )
 
-    def export_tracklines_to_file(self, linenames: list = None, output_file: str = None, file_format: str = 'GPKG'):
+    def export_tracklines_to_file(
+        self, linenames: list = None, output_file: str = None, file_format: str = "GPKG"
+    ):
         """
         Export the navigation to vector file, where each trackline is a new feature.
 
@@ -271,23 +364,37 @@ class FqprExport:
             OGR format for the written file, currently only supports GPKG
         """
 
-        if 'latitude' not in self.fqpr.multibeam.raw_ping[0] or 'longitude' not in self.fqpr.multibeam.raw_ping[0]:
-            self.fqpr.logger.error('export_tracklines_to_file: No latitude/longitude data found.')
+        if (
+            "latitude" not in self.fqpr.multibeam.raw_ping[0]
+            or "longitude" not in self.fqpr.multibeam.raw_ping[0]
+        ):
+            self.fqpr.logger.error(
+                "export_tracklines_to_file: No latitude/longitude data found."
+            )
             return
         if output_file is None:
             output_directory = self.fqpr.multibeam.converted_pth
-            output_file = os.path.join(output_directory, 'tracklines.gpkg')
+            output_file = os.path.join(output_directory, "tracklines.gpkg")
         if linenames is None:
             linenames = list(self.fqpr.multibeam.raw_ping[0].multibeam_files.keys())
 
-        if file_format == 'GPKG':
+        if file_format == "GPKG":
             self._export_tracklines_to_geopackage(linenames, output_file)
         else:
-            self.fqpr.logger.error('export_tracklines_to_file: file format {} is not supported, currently we only support GPKG')
+            self.fqpr.logger.error(
+                "export_tracklines_to_file: file format {} is not supported, currently we only support GPKG"
+            )
 
-    def export_pings_to_file(self, output_directory: str = None, file_format: str = 'csv', csv_delimiter=' ',
-                             filter_by_detection: bool = True, format_type: str = 'xyz', z_pos_down: bool = True,
-                             export_by_identifiers: bool = True):
+    def export_pings_to_file(
+        self,
+        output_directory: str = None,
+        file_format: str = "csv",
+        csv_delimiter=" ",
+        filter_by_detection: bool = True,
+        format_type: str = "xyz",
+        z_pos_down: bool = True,
+        export_by_identifiers: bool = True,
+    ):
         """
         Uses the output of georef_along_across_depth to build sounding exports.  Currently you can export to csv, las or
         entwine file formats, see file_format argument.  This will use all soundings in the dataset.
@@ -325,47 +432,85 @@ class FqprExport:
             list of written file paths
         """
 
-        chunksize, fldr_path, entwine_fldr_path, suffix = self._validate_export(output_directory, file_format)
+        chunksize, fldr_path, entwine_fldr_path, suffix = self._validate_export(
+            output_directory, file_format
+        )
         if not chunksize:
             return []
 
-        self.fqpr.logger.info('****Exporting xyz data to {}****'.format(file_format))
+        self.fqpr.logger.info("****Exporting xyz data to {}****".format(file_format))
         starttime = perf_counter()
         chunk_count = 0
         written_files = []
         for rp in self.fqpr.multibeam.raw_ping:
-            self.fqpr.logger.info('Operating on system {}'.format(rp.system_identifier))
+            self.fqpr.logger.info("Operating on system {}".format(rp.system_identifier))
             # build list of lists for the mintime and maxtime (inclusive) for each chunk, each chunk will contain number of pings equal to chunksize
-            chunktimes = [[float(rp.time.isel(time=int(i * chunksize))), float(rp.time.isel(time=int(min((i + 1) * chunksize - 1, rp.time.size - 1))))] for i in range(int(np.ceil(rp.time.size / 75000)))]
+            chunktimes = [
+                [
+                    float(rp.time.isel(time=int(i * chunksize))),
+                    float(
+                        rp.time.isel(
+                            time=int(min((i + 1) * chunksize - 1, rp.time.size - 1))
+                        )
+                    ),
+                ]
+                for i in range(int(np.ceil(rp.time.size / 75000)))
+            ]
             for mintime, maxtime in chunktimes:
                 chunk_count += 1
                 if suffix:
-                    new_suffix = suffix + '_{}'.format(chunk_count)
+                    new_suffix = suffix + "_{}".format(chunk_count)
                 else:
-                    new_suffix = '{}'.format(chunk_count)
+                    new_suffix = "{}".format(chunk_count)
                 new_files = None
-                slice_rp = slice_xarray_by_dim(rp, dimname='time', start_time=mintime, end_time=maxtime)
+                slice_rp = slice_xarray_by_dim(
+                    rp, dimname="time", start_time=mintime, end_time=maxtime
+                )
 
-                if file_format == 'csv':
-                    new_files = self._export_pings_to_csv(rp=slice_rp, output_directory=fldr_path, suffix=new_suffix, csv_delimiter=csv_delimiter,
-                                                          filter_by_detection=filter_by_detection, z_pos_down=z_pos_down,
-                                                          export_by_identifiers=export_by_identifiers, format_type=format_type)
-                elif file_format in ['las', 'entwine']:
-                    new_files = self._export_pings_to_las(rp=slice_rp, output_directory=fldr_path, suffix=new_suffix, filter_by_detection=filter_by_detection,
-                                                          export_by_identifiers=export_by_identifiers)
+                if file_format == "csv":
+                    new_files = self._export_pings_to_csv(
+                        rp=slice_rp,
+                        output_directory=fldr_path,
+                        suffix=new_suffix,
+                        csv_delimiter=csv_delimiter,
+                        filter_by_detection=filter_by_detection,
+                        z_pos_down=z_pos_down,
+                        export_by_identifiers=export_by_identifiers,
+                        format_type=format_type,
+                    )
+                elif file_format in ["las", "entwine"]:
+                    new_files = self._export_pings_to_las(
+                        rp=slice_rp,
+                        output_directory=fldr_path,
+                        suffix=new_suffix,
+                        filter_by_detection=filter_by_detection,
+                        export_by_identifiers=export_by_identifiers,
+                    )
                 if new_files:
                     written_files += new_files
-            if file_format == 'entwine':
+            if file_format == "entwine":
                 build_entwine_points(fldr_path, entwine_fldr_path)
                 written_files = [entwine_fldr_path]
 
         endtime = perf_counter()
-        self.fqpr.logger.info('****Exporting xyz data to {} complete: {}****\n'.format(file_format, seconds_to_formatted_string(int(endtime - starttime))))
+        self.fqpr.logger.info(
+            "****Exporting xyz data to {} complete: {}****\n".format(
+                file_format, seconds_to_formatted_string(int(endtime - starttime))
+            )
+        )
 
         return written_files
 
-    def export_soundings_to_file(self, datablock: list, output_directory: str = None, file_format: str = 'csv', csv_delimiter=' ',
-                                 filter_by_detection: bool = True, format_type: str = 'xyz', z_pos_down: bool = True):
+    def export_soundings_to_file(
+        self,
+        datablock: list,
+        output_directory: str = None,
+        file_format: str = "csv",
+        csv_delimiter=" ",
+        filter_by_detection: bool = True,
+        format_type: str = "xyz",
+        z_pos_down: bool = True,
+    ):
         """
         A convenience method for exporting the data currently in the Kluster Points View to file.
 
@@ -395,23 +540,44 @@ class FqprExport:
             list of written file paths
         """
 
-        chunksize, fldr_path, entwine_fldr_path, suffix = self._validate_export(output_directory, file_format)
+        chunksize, fldr_path, entwine_fldr_path, suffix = self._validate_export(
+            output_directory, file_format
+        )
         if not chunksize:
             return []
-        if format_type == 'xyzhv':
-            raise NotImplementedError('xyzhv not currently supported, as horizontal uncertainty is not available within the Points View')
+        if format_type == "xyzhv":
+            raise NotImplementedError(
+                "xyzhv not currently supported, as horizontal uncertainty is not available within the Points View"
+            )
 
-        self.fqpr.logger.info('****Exporting xyz data to {}****'.format(file_format))
+        self.fqpr.logger.info("****Exporting xyz data to {}****".format(file_format))
         starttime = perf_counter()
         written_files = []
         if datablock:
             try:
-                base_name = os.path.split(self.fqpr.multibeam.converted_pth)[1] + '_pointsview'
-                sounding_id, head_index, x, y, z, tvu, rejected, pointtime, beam, linename = datablock
+                base_name = (
+                    os.path.split(self.fqpr.multibeam.converted_pth)[1] + "_pointsview"
+                )
+                (
+                    sounding_id,
+                    head_index,
+                    x,
+                    y,
+                    z,
+                    tvu,
+                    rejected,
+                    pointtime,
+                    beam,
+                    linename,
+                ) = datablock
             except:
-                raise ValueError('export_soundings_to_file: datablock should be length 9 with sounding_id, x, y, z, tvu, rejected, pointtime, beam, linename, found length {}'.format(len(datablock)))
+                raise ValueError(
+                    "export_soundings_to_file: datablock should be length 9 with sounding_id, x, y, z, tvu, rejected, pointtime, beam, linename, found length {}".format(
+                        len(datablock)
+                    )
+                )
             if not x.any():
-                print('export_soundings_to_file: no sounding data provided to export')
+                print("export_soundings_to_file: no sounding data provided to export")
                 return written_files
 
             unc_included = False
@@ -426,41 +592,61 @@ class FqprExport:
                     tvu = tvu[valid_detections]
                 rejected = rejected[valid_detections]
 
-            if file_format in ['las', 'entwine']:
+            if file_format in ["las", "entwine"]:
                 z_pos_down = False
             if not z_pos_down:
                 z = z * -1
 
-            if file_format == 'csv':
+            if file_format == "csv":
                 if suffix:
-                    dest_path = os.path.join(fldr_path, '{}_{}.csv'.format(base_name, suffix))
+                    dest_path = os.path.join(
+                        fldr_path, "{}_{}.csv".format(base_name, suffix)
+                    )
                 else:
-                    dest_path = os.path.join(fldr_path, base_name + '.csv')
-                self.fqpr.logger.info('writing to {}'.format(dest_path))
-                if format_type == 'xyzv':
-                    self._csv_write(x, y, z, dest_path, csv_delimiter, vertical_uncertainty=tvu)
+                    dest_path = os.path.join(fldr_path, base_name + ".csv")
+                self.fqpr.logger.info("writing to {}".format(dest_path))
+                if format_type == "xyzv":
+                    self._csv_write(
+                        x, y, z, dest_path, csv_delimiter, vertical_uncertainty=tvu
+                    )
                 else:
                     self._csv_write(x, y, z, dest_path, csv_delimiter)
             else:
                 if suffix:
-                    dest_path = os.path.join(fldr_path, '{}_{}.las'.format(base_name, suffix))
+                    dest_path = os.path.join(
+                        fldr_path, "{}_{}.las".format(base_name, suffix)
+                    )
                 else:
-                    dest_path = os.path.join(fldr_path, base_name + '.las')
-                self.fqpr.logger.info('writing to {}'.format(dest_path))
+                    dest_path = os.path.join(fldr_path, base_name + ".las")
+                self.fqpr.logger.info("writing to {}".format(dest_path))
                 self._las_write(x, y, z, tvu, rejected, unc_included, dest_path)
 
-            if file_format == 'entwine':
+            if file_format == "entwine":
                 build_entwine_points(fldr_path, entwine_fldr_path)
                 written_files = [entwine_fldr_path]
         else:
-            print('export_soundings_to_file: no sounding data provided to export')
+            print("export_soundings_to_file: no sounding data provided to export")
         endtime = perf_counter()
-        self.fqpr.logger.info('****Exporting xyz data to {} complete: {}****\n'.format(file_format, seconds_to_formatted_string(int(endtime - starttime))))
+        self.fqpr.logger.info(
+            "****Exporting xyz data to {} complete: {}****\n".format(
+                file_format, seconds_to_formatted_string(int(endtime - starttime))
+            )
+        )
 
         return written_files
 
-    def _export_pings_to_csv(self, rp: xr.Dataset, output_directory: str = None, suffix: str = None, csv_delimiter: str = ' ', filter_by_detection: bool = True,
-                             z_pos_down: bool = True, export_by_identifiers: bool = True, format_type: str = 'xyz', base_name: str = None):
+    def _export_pings_to_csv(
+        self,
+        rp: xr.Dataset,
+        output_directory: str = None,
+        suffix: str = None,
+        csv_delimiter: str = " ",
+        filter_by_detection: bool = True,
+        z_pos_down: bool = True,
+        export_by_identifiers: bool = True,
+        format_type: str = "xyz",
+        base_name: str = None,
+    ):
         """
         Method for exporting pings to csv files.  See export_pings_to_file to use.
 
@@ -494,53 +680,121 @@ class FqprExport:
 
         written_files = []
 
-        if filter_by_detection and 'detectioninfo' not in rp:
-            self.fqpr.logger.error('_export_pings_to_csv: Unable to filter by detection type, detectioninfo not found')
+        if filter_by_detection and "detectioninfo" not in rp:
+            self.fqpr.logger.error(
+                "_export_pings_to_csv: Unable to filter by detection type, detectioninfo not found"
+            )
             return
         if not base_name:
             base_name = os.path.split(rp.output_path)[1]
-        if 'sounding' not in rp.coords:  # check if this is already stacked, if not, stack
-            rp = rp.stack({'sounding': ('time', 'beam')})
+        if (
+            "sounding" not in rp.coords
+        ):  # check if this is already stacked, if not, stack
+            rp = rp.stack({"sounding": ("time", "beam")})
         if export_by_identifiers:
             for freq in np.unique(rp.frequency):
                 subset_rp = rp.where(rp.frequency == freq, drop=True)
                 for secid in np.unique(subset_rp.txsector_beam).astype(np.int32):
-                    sec_subset_rp = subset_rp.where(subset_rp.txsector_beam == secid, drop=True)
+                    sec_subset_rp = subset_rp.where(
+                        subset_rp.txsector_beam == secid, drop=True
+                    )
                     if suffix:
-                        dest_path = os.path.join(output_directory, '{}_{}_{}_{}.csv'.format(base_name, secid, freq, suffix))
+                        dest_path = os.path.join(
+                            output_directory,
+                            "{}_{}_{}_{}.csv".format(base_name, secid, freq, suffix),
+                        )
                     else:
-                        dest_path = os.path.join(output_directory, '{}_{}_{}.csv'.format(base_name, secid, freq))
-                    self.fqpr.logger.info('writing to {}'.format(dest_path))
-                    export_data = self._generate_export_data(sec_subset_rp, filter_by_detection=filter_by_detection, z_pos_down=z_pos_down)
-                    x, y, z, hunc, vunc, nan_mask, classification, valid_detections, uncertainty_included = export_data
-                    if format_type == 'xyzhv':
-                        self._csv_write(x, y, z, dest_path, csv_delimiter, horizontal_uncertainty=hunc, vertical_uncertainty=vunc)
-                    elif format_type == 'xyzv':
-                        self._csv_write(x, y, z, dest_path, csv_delimiter, vertical_uncertainty=vunc)
+                        dest_path = os.path.join(
+                            output_directory,
+                            "{}_{}_{}.csv".format(base_name, secid, freq),
+                        )
+                    self.fqpr.logger.info("writing to {}".format(dest_path))
+                    export_data = self._generate_export_data(
+                        sec_subset_rp,
+                        filter_by_detection=filter_by_detection,
+                        z_pos_down=z_pos_down,
+                    )
+                    (
+                        x,
+                        y,
+                        z,
+                        hunc,
+                        vunc,
+                        nan_mask,
+                        classification,
+                        valid_detections,
+                        uncertainty_included,
+                    ) = export_data
+                    if format_type == "xyzhv":
+                        self._csv_write(
+                            x,
+                            y,
+                            z,
+                            dest_path,
+                            csv_delimiter,
+                            horizontal_uncertainty=hunc,
+                            vertical_uncertainty=vunc,
+                        )
+                    elif format_type == "xyzv":
+                        self._csv_write(
+                            x, y, z, dest_path, csv_delimiter, vertical_uncertainty=vunc
+                        )
                     else:
                         self._csv_write(x, y, z, dest_path, csv_delimiter)
                     written_files.append(dest_path)
 
         else:
             if suffix:
-                dest_path = os.path.join(output_directory, '{}_{}.csv'.format(base_name, suffix))
+                dest_path = os.path.join(
+                    output_directory, "{}_{}.csv".format(base_name, suffix)
+                )
             else:
-                dest_path = os.path.join(output_directory, base_name + '.csv')
-            self.fqpr.logger.info('writing to {}'.format(dest_path))
-            export_data = self._generate_export_data(rp, filter_by_detection=filter_by_detection, z_pos_down=z_pos_down)
-            x, y, z, hunc, vunc, nan_mask, classification, valid_detections, uncertainty_included = export_data
-            if format_type == 'xyzhv':
-                self._csv_write(x, y, z, dest_path, csv_delimiter, horizontal_uncertainty=hunc, vertical_uncertainty=vunc)
-            elif format_type == 'xyzv':
-                self._csv_write(x, y, z, dest_path, csv_delimiter, vertical_uncertainty=vunc)
+                dest_path = os.path.join(output_directory, base_name + ".csv")
+            self.fqpr.logger.info("writing to {}".format(dest_path))
+            export_data = self._generate_export_data(
+                rp, filter_by_detection=filter_by_detection, z_pos_down=z_pos_down
+            )
+            (
+                x,
+                y,
+                z,
+                hunc,
+                vunc,
+                nan_mask,
+                classification,
+                valid_detections,
+                uncertainty_included,
+            ) = export_data
+            if format_type == "xyzhv":
+                self._csv_write(
+                    x,
+                    y,
+                    z,
+                    dest_path,
+                    csv_delimiter,
+                    horizontal_uncertainty=hunc,
+                    vertical_uncertainty=vunc,
+                )
+            elif format_type == "xyzv":
+                self._csv_write(
+                    x, y, z, dest_path, csv_delimiter, vertical_uncertainty=vunc
+                )
             else:
                 self._csv_write(x, y, z, dest_path, csv_delimiter)
             written_files.append(dest_path)
 
         return written_files
 
-    def _csv_write(self, x: xr.DataArray, y: xr.DataArray, z: xr.DataArray, dest_path: str, delimiter: str,
-                   horizontal_uncertainty: xr.DataArray = None, vertical_uncertainty: xr.DataArray = None):
+    def _csv_write(
+        self,
+        x: xr.DataArray,
+        y: xr.DataArray,
+        z: xr.DataArray,
+        dest_path: str,
+        delimiter: str,
+        horizontal_uncertainty: xr.DataArray = None,
+        vertical_uncertainty: xr.DataArray = None,
+    ):
         """
         Write the data to csv
 
@@ -568,32 +822,57 @@ class FqprExport:
         """
 
         if horizontal_uncertainty is not None and vertical_uncertainty is not None:
-            np.savetxt(dest_path, np.c_[x, y, z, horizontal_uncertainty, vertical_uncertainty],
-                       fmt=['%3.3f', '%2.3f', '%4.3f', '%4.3f', '%4.3f'],
-                       delimiter=delimiter,
-                       header='easting{}northing{}depth{}horizontal_uncertainty{}vertical_uncertainty'.format(delimiter, delimiter, delimiter, delimiter),
-                       comments='')
+            np.savetxt(
+                dest_path,
+                np.c_[x, y, z, horizontal_uncertainty, vertical_uncertainty],
+                fmt=["%3.3f", "%2.3f", "%4.3f", "%4.3f", "%4.3f"],
+                delimiter=delimiter,
+                header="easting{}northing{}depth{}horizontal_uncertainty{}vertical_uncertainty".format(
+                    delimiter, delimiter, delimiter, delimiter
+                ),
+                comments="",
+            )
         elif horizontal_uncertainty is not None:
-            np.savetxt(dest_path, np.c_[x, y, z, horizontal_uncertainty],
-                       fmt=['%3.3f', '%2.3f', '%4.3f', '%4.3f'],
-                       delimiter=delimiter,
-                       header='easting{}northing{}depth{}horizontal_uncertainty'.format(delimiter, delimiter, delimiter),
-                       comments='')
+            np.savetxt(
+                dest_path,
+                np.c_[x, y, z, horizontal_uncertainty],
+                fmt=["%3.3f", "%2.3f", "%4.3f", "%4.3f"],
+                delimiter=delimiter,
+                header="easting{}northing{}depth{}horizontal_uncertainty".format(
+                    delimiter, delimiter, delimiter
+                ),
+                comments="",
+            )
         elif vertical_uncertainty is not None:
-            np.savetxt(dest_path, np.c_[x, y, z, vertical_uncertainty],
-                       fmt=['%3.3f', '%2.3f', '%4.3f', '%4.3f'],
-                       delimiter=delimiter,
-                       header='easting{}northing{}depth{}vertical_uncertainty'.format(delimiter, delimiter, delimiter),
-                       comments='')
+            np.savetxt(
+                dest_path,
+                np.c_[x, y, z, vertical_uncertainty],
+                fmt=["%3.3f", "%2.3f", "%4.3f", "%4.3f"],
+                delimiter=delimiter,
+                header="easting{}northing{}depth{}vertical_uncertainty".format(
+                    delimiter, delimiter, delimiter
+                ),
+                comments="",
+            )
         else:
-            np.savetxt(dest_path, np.c_[x, y, z],
-                       fmt=['%3.3f', '%2.3f', '%4.3f'],
-                       delimiter=delimiter,
-                       header='easting{}northing{}depth'.format(delimiter, delimiter),
-                       comments='')
+            np.savetxt(
+                dest_path,
+                np.c_[x, y, z],
+                fmt=["%3.3f", "%2.3f", "%4.3f"],
+                delimiter=delimiter,
+                header="easting{}northing{}depth".format(delimiter, delimiter),
+                comments="",
+            )
 
-    def _export_pings_to_las(self, rp: xr.Dataset, output_directory: str = None, suffix: str = '', filter_by_detection: bool = True,
-                             export_by_identifiers: bool = True, base_name: str = None):
+    def _export_pings_to_las(
+        self,
+        rp: xr.Dataset,
+        output_directory: str = None,
+        suffix: str = "",
+        filter_by_detection: bool = True,
+        export_by_identifiers: bool = True,
+        base_name: str = None,
+    ):
         """
         Uses the output of georef_along_across_depth to build sounding exports.  Currently you can export to csv or las
         file formats, see file_format argument.
@@ -634,40 +913,92 @@ class FqprExport:
         if not base_name:
             base_name = os.path.split(rp.output_path)[1]
 
-        if filter_by_detection and 'detectioninfo' not in rp:
-            self.fqpr.logger.error('_export_pings_to_las: Unable to filter by detection type, detectioninfo not found')
+        if filter_by_detection and "detectioninfo" not in rp:
+            self.fqpr.logger.error(
+                "_export_pings_to_las: Unable to filter by detection type, detectioninfo not found"
+            )
             return
-        if 'sounding' not in rp.coords:  # check if this is already stacked, if not, stack
-            rp = rp.stack({'sounding': ('time', 'beam')})
+        if (
+            "sounding" not in rp.coords
+        ):  # check if this is already stacked, if not, stack
+            rp = rp.stack({"sounding": ("time", "beam")})
         if export_by_identifiers:
             for freq in np.unique(rp.frequency):
                 subset_rp = rp.where(rp.frequency == freq, drop=True)
                 for secid in np.unique(subset_rp.txsector_beam).astype(np.int32):
-                    sec_subset_rp = subset_rp.where(subset_rp.txsector_beam == secid, drop=True)
+                    sec_subset_rp = subset_rp.where(
+                        subset_rp.txsector_beam == secid, drop=True
+                    )
                     if suffix:
-                        dest_path = os.path.join(output_directory, '{}_{}_{}_{}.las'.format(base_name, secid, freq, suffix))
+                        dest_path = os.path.join(
+                            output_directory,
+                            "{}_{}_{}_{}.las".format(base_name, secid, freq, suffix),
+                        )
                     else:
-                        dest_path = os.path.join(output_directory, '{}_{}_{}.las'.format(base_name, secid, freq))
-                    self.fqpr.logger.info('writing to {}'.format(dest_path))
-                    export_data = self._generate_export_data(sec_subset_rp, filter_by_detection=filter_by_detection, z_pos_down=z_pos_down)
-                    x, y, z, hunc, vunc, nan_mask, classification, valid_detections, uncertainty_included = export_data
-                    self._las_write(x, y, z, vunc, classification, uncertainty_included, dest_path)
+                        dest_path = os.path.join(
+                            output_directory,
+                            "{}_{}_{}.las".format(base_name, secid, freq),
+                        )
+                    self.fqpr.logger.info("writing to {}".format(dest_path))
+                    export_data = self._generate_export_data(
+                        sec_subset_rp,
+                        filter_by_detection=filter_by_detection,
+                        z_pos_down=z_pos_down,
+                    )
+                    (
+                        x,
+                        y,
+                        z,
+                        hunc,
+                        vunc,
+                        nan_mask,
+                        classification,
+                        valid_detections,
+                        uncertainty_included,
+                    ) = export_data
+                    self._las_write(
+                        x, y, z, vunc, classification, uncertainty_included, dest_path
+                    )
                     written_files.append(dest_path)
         else:
             if suffix:
-                dest_path = os.path.join(output_directory, '{}_{}.las'.format(base_name, suffix))
+                dest_path = os.path.join(
+                    output_directory, "{}_{}.las".format(base_name, suffix)
+                )
             else:
-                dest_path = os.path.join(output_directory, base_name + '.las')
-            self.fqpr.logger.info('writing to {}'.format(dest_path))
-            export_data = self._generate_export_data(rp, filter_by_detection=filter_by_detection, z_pos_down=z_pos_down)
-            x, y, z, hunc, vunc, nan_mask, classification, valid_detections, uncertainty_included = export_data
-            self._las_write(x, y, z, vunc, classification, uncertainty_included, dest_path)
+                dest_path = os.path.join(output_directory, base_name + ".las")
+            self.fqpr.logger.info("writing to {}".format(dest_path))
+            export_data = self._generate_export_data(
+                rp, filter_by_detection=filter_by_detection, z_pos_down=z_pos_down
+            )
+            (
+                x,
+                y,
+                z,
+                hunc,
+                vunc,
+                nan_mask,
+                classification,
+                valid_detections,
+                uncertainty_included,
+            ) = export_data
+            self._las_write(
+                x, y, z, vunc, classification, uncertainty_included, dest_path
+            )
             written_files.append(dest_path)
 
         return written_files
 
-    def _las_write(self, x: xr.DataArray, y: xr.DataArray, z: xr.DataArray, uncertainty: xr.DataArray,
-                   classification: np.array, uncertainty_included: bool, dest_path: str):
+    def _las_write(
+        self,
+        x: xr.DataArray,
+        y: xr.DataArray,
+        z: xr.DataArray,
+        uncertainty: xr.DataArray,
+        classification: np.array,
+        uncertainty_included: bool,
+        dest_path: str,
+    ):
         """
         Write the data to LAS format
 
@@ -703,13 +1034,21 @@ class FqprExport:
             z = np.round(z, 3)
 
         try:
-            vlrs = [laspy.header.VLR(user_id='LASF_Projection', record_id=2112, description='OGC Coordinate System WKT',
-                                     record_data=self.fqpr.horizontal_crs.to_wkt().encode('utf-8'))]
+            vlrs = [
+                laspy.header.VLR(
+                    user_id="LASF_Projection",
+                    record_id=2112,
+                    description="OGC Coordinate System WKT",
+                    record_data=self.fqpr.horizontal_crs.to_wkt().encode("utf-8"),
+                )
+            ]
         except Exception as e:
-            print('_las_write: Unable to build the Coordinate System VLR: {}'.format(e))
+            print("_las_write: Unable to build the Coordinate System VLR: {}".format(e))
 
         try:  # pre laspy 2.0
-            hdr = laspy.header.Header(file_version=1.4, point_format=6)  # pt format 3 includes GPS time
+            hdr = laspy.header.Header(
+                file_version=1.4, point_format=6
+            )  # pt format 3 includes GPS time
             hdr.x_scale = 0.01  # xyz precision, las stores data as int
             hdr.y_scale = 0.01
             hdr.z_scale = 0.001
@@ -722,15 +1061,23 @@ class FqprExport:
                 hdr.vlrs = vlrs
                 hdr.wkt = 1
             except Exception as e:
-                print('_las_write: Unable to set the Coordinate system to the Header VLR: {}'.format(e))
+                print(
+                    "_las_write: Unable to set the Coordinate system to the Header VLR: {}".format(
+                        e
+                    )
+                )
 
-            outfile = laspy.file.File(dest_path, mode='w', header=hdr)
+            outfile = laspy.file.File(dest_path, mode="w", header=hdr)
             outfile.x = x
             outfile.y = y
             outfile.z = z
             if classification is not None:
-                classification[np.where(classification < 2)] = 1  # 1 = Unclassified according to LAS spec
-                classification[np.where(classification == 2)] = 7  # 7 = Low Point (noise) according to LAS spec
+                classification[
+                    np.where(classification < 2)
+                ] = 1  # 1 = Unclassified according to LAS spec
+                classification[
+                    np.where(classification == 2)
+                ] = 7  # 7 = Low Point (noise) according to LAS spec
                 outfile.classification = classification.astype(np.int8)
             # if uncertainty_included:  # putting it in Intensity for now as integer mm, Intensity is an int16 field
             #     outfile.intensity = (uncertainty.values * 1000).astype(np.int16)
@@ -738,21 +1085,33 @@ class FqprExport:
             outfile.close()
         except:  # the new way starting in 2.0
             las = laspy.create(file_version="1.4", point_format=6)
-            las.header.offsets = [np.floor(float(x.min())), np.floor(float(y.min())), np.floor(float(z.min()))]
+            las.header.offsets = [
+                np.floor(float(x.min())),
+                np.floor(float(y.min())),
+                np.floor(float(z.min())),
+            ]
             las.header.scales = [0.01, 0.01, 0.001]
 
             try:
                 las.header.vlrs = vlrs
                 las.header.global_encoding.wkt = 1
             except Exception as e:
-                print('_las_write: Unable to set the Coordinate system to the Header VLR: {}'.format(e))
+                print(
+                    "_las_write: Unable to set the Coordinate system to the Header VLR: {}".format(
+                        e
+                    )
+                )
 
             las.x = x
             las.y = y
             las.z = z
             if classification is not None:
-                classification[np.where(classification < 2)] = 1  # 1 = Unclassified according to LAS spec
-                classification[np.where(classification == 2)] = 7  # 7 = Low Point (noise) according to LAS spec
+                classification[
+                    np.where(classification < 2)
+                ] = 1  # 1 = Unclassified according to LAS spec
+                classification[
+                    np.where(classification == 2)
+                ] = 7  # 7 = Low Point (noise) according to LAS spec
                 las.classification = classification.astype(np.int8)
             if uncertainty_included:
                 pass
@@ -762,8 +1121,14 @@ class FqprExport:
                 # las.uncertainty = uncertainty.values
             las.write(dest_path)
 
-    def export_variable_to_csv(self, dataset_name: str, var_name: str, dest_path: str, reduce_method: str = None,
-                               zero_centered: bool = False):
+    def export_variable_to_csv(
+        self,
+        dataset_name: str,
+        var_name: str,
+        dest_path: str,
+        reduce_method: str = None,
+        zero_centered: bool = False,
+    ):
         """
         Export the given variable to csv, writing to the provided path
 
@@ -783,59 +1148,101 @@ class FqprExport:
         """
 
         videntifiers = [rp.system_identifier for rp in self.fqpr.multibeam.raw_ping]
-        if dataset_name in ['multibeam', 'raw navigation', 'processed navigation']:
+        if dataset_name in ["multibeam", "raw navigation", "processed navigation"]:
             var_array = [rp[var_name] for rp in self.fqpr.multibeam.raw_ping]
-        elif dataset_name == 'attitude':
+        elif dataset_name == "attitude":
             var_array = [self.fqpr.multibeam.raw_att[var_name]]
         else:
-            raise ValueError('export_variable_to_csv: Unable to find variable in dataset: {}, {}'.format(dataset_name, var_name))
+            raise ValueError(
+                "export_variable_to_csv: Unable to find variable in dataset: {}, {}".format(
+                    dataset_name, var_name
+                )
+            )
 
-        tstmp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        tstmp = datetime.now().strftime("%Y%m%d_%H%M%S")
         for cnt, varray in enumerate(var_array):
-            vpath = os.path.splitext(dest_path)[0] + '_{}.csv'.format(videntifiers[cnt])
+            vpath = os.path.splitext(dest_path)[0] + "_{}.csv".format(videntifiers[cnt])
             vbeam = None
-            if varray.dims == ('time', 'beam'):  # we are currently ignoring the tx/rx variables (time, beam, xyz)
-                if reduce_method == 'mean':
+            if varray.dims == (
+                "time",
+                "beam",
+            ):  # we are currently ignoring the tx/rx variables (time, beam, xyz)
+                if reduce_method == "mean":
                     try:
                         varray = varray.mean(axis=1)
                     except:
-                        print('Export: Unable to reduce {} using algorithm {} during export'.format(var_name, reduce_method))
-                        varray = varray.stack({'sounding': ('time', 'beam')})
+                        print(
+                            "Export: Unable to reduce {} using algorithm {} during export".format(
+                                var_name, reduce_method
+                            )
+                        )
+                        varray = varray.stack({"sounding": ("time", "beam")})
                         vbeam = varray.beam.values
-                elif reduce_method == 'nadir':
+                elif reduce_method == "nadir":
                     nadir_beam_num = int((varray.beam.shape[0] / 2) - 1)
                     varray = varray.isel(beam=nadir_beam_num)
-                elif reduce_method == 'port_outer_beam':
+                elif reduce_method == "port_outer_beam":
                     varray = varray.isel(beam=0)
-                elif reduce_method == 'starboard_outer_beam':
+                elif reduce_method == "starboard_outer_beam":
                     last_beam_num = int((varray.beam.shape[0]) - 1)
                     varray = varray.isel(beam=last_beam_num)
                 else:
-                    varray = varray.stack({'sounding': ('time', 'beam')})
+                    varray = varray.stack({"sounding": ("time", "beam")})
                     vbeam = varray.beam.values
             if zero_centered:
                 try:
-                    varray = (varray - varray.mean())
+                    varray = varray - varray.mean()
                 except:
-                    print('Export: Unable to zero center {}'.format(var_name))
+                    print("Export: Unable to zero center {}".format(var_name))
             vtime = varray.time.values
             varray = varray.values
             if os.path.exists(vpath):
-                vpath = os.path.splitext(vpath)[0] + '_{}.csv'.format(tstmp)
+                vpath = os.path.splitext(vpath)[0] + "_{}.csv".format(tstmp)
             if vbeam is None:
                 try:
-                    np.savetxt(vpath, np.c_[vtime, varray], delimiter=',', header='{},{}'.format('time', var_name),
-                               fmt=[kluster_variables.variable_format_str['time'], kluster_variables.variable_format_str[var_name]], comments='')
+                    np.savetxt(
+                        vpath,
+                        np.c_[vtime, varray],
+                        delimiter=",",
+                        header="{},{}".format("time", var_name),
+                        fmt=[
+                            kluster_variables.variable_format_str["time"],
+                            kluster_variables.variable_format_str[var_name],
+                        ],
+                        comments="",
+                    )
                 except:
-                    np.savetxt(vpath, np.c_[vtime, varray], delimiter=',', header='{},{}'.format('time', var_name),
-                               fmt='%s', comments='')  # stacked array is a string type when you mix dtypes, %s is the only thing that works
+                    np.savetxt(
+                        vpath,
+                        np.c_[vtime, varray],
+                        delimiter=",",
+                        header="{},{}".format("time", var_name),
+                        fmt="%s",
+                        comments="",
+                    )  # stacked array is a string type when you mix dtypes, %s is the only thing that works
             else:
                 try:
-                    np.savetxt(vpath, np.c_[vtime, vbeam, varray], delimiter=',', header='time,beam,{}'.format(var_name),
-                               fmt=[kluster_variables.variable_format_str['time'], kluster_variables.variable_format_str['beam'], kluster_variables.variable_format_str[var_name]], comments='')
+                    np.savetxt(
+                        vpath,
+                        np.c_[vtime, vbeam, varray],
+                        delimiter=",",
+                        header="time,beam,{}".format(var_name),
+                        fmt=[
+                            kluster_variables.variable_format_str["time"],
+                            kluster_variables.variable_format_str["beam"],
+                            kluster_variables.variable_format_str[var_name],
+                        ],
+                        comments="",
+                    )
                 except:
-                    np.savetxt(vpath, np.c_[vtime, vbeam, varray], delimiter=',', header='time,beam,{}'.format(var_name),
-                               fmt='%s', comments='')  # stacked array is a string type when you mix dtypes, %s is the only thing that works
+                    np.savetxt(
+                        vpath,
+                        np.c_[vtime, vbeam, varray],
+                        delimiter=",",
+                        header="time,beam,{}".format(var_name),
+                        fmt="%s",
+                        comments="",
+                    )  # stacked array is a string type when you mix dtypes, %s is the only thing that works
 
     def export_dataset_to_csv(self, dataset_name: str, dest_path: str):
         """
@@ -850,54 +1257,66 @@ class FqprExport:
         """
 
         videntifiers = [rp.system_identifier for rp in self.fqpr.multibeam.raw_ping]
-        if dataset_name == 'multibeam':
+        if dataset_name == "multibeam":
             dataset_array = [rp for rp in self.fqpr.multibeam.raw_ping]
-        elif dataset_name == 'raw navigation':
+        elif dataset_name == "raw navigation":
             dataset_array = [self.fqpr.multibeam.return_raw_navigation()]
-        elif dataset_name == 'processed navigation':
-            dataset_array = [self.fqpr.sbet_navigation
-                             ]
-        elif dataset_name == 'attitude':
+        elif dataset_name == "processed navigation":
+            dataset_array = [self.fqpr.sbet_navigation]
+        elif dataset_name == "attitude":
             dataset_array = [self.fqpr.multibeam.raw_att]
         else:
-            raise ValueError('export_dataset_to_csv: Unable to find dataset: {}'.format(dataset_name))
+            raise ValueError(
+                "export_dataset_to_csv: Unable to find dataset: {}".format(dataset_name)
+            )
 
-        tstmp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        tstmp = datetime.now().strftime("%Y%m%d_%H%M%S")
         for cnt, dset in enumerate(dataset_array):
             varrs = [dset.time.values]
-            vnames = ['time']
-            vpath = os.path.splitext(dest_path)[0] + '_{}.csv'.format(videntifiers[cnt])
+            vnames = ["time"]
+            vpath = os.path.splitext(dest_path)[0] + "_{}.csv".format(videntifiers[cnt])
             for dvar in dset.variables:
-                if dvar not in ['time', 'beam', 'xyz', 'tx', 'rx']:
+                if dvar not in ["time", "beam", "xyz", "tx", "rx"]:
                     dvar_data = dset[dvar]
-                    if dvar_data.dims == ('time', 'beam'):  # we are currently ignoring the tx/rx variables (time, beam, xyz)
+                    if dvar_data.dims == (
+                        "time",
+                        "beam",
+                    ):  # we are currently ignoring the tx/rx variables (time, beam, xyz)
                         if np.issubdtype(dvar_data.dtype, np.floating):
-                            vnames.append('mean_{}'.format(dvar))
-                            varrs.append(dvar_data.mean(dim='beam').values)
-                        elif np.issubdtype(dvar_data.dtype, np.string_) or np.issubdtype(dvar_data.dtype, np.unicode_):
-                            vnames.append('nadir_{}'.format(dvar))
+                            vnames.append("mean_{}".format(dvar))
+                            varrs.append(dvar_data.mean(dim="beam").values)
+                        elif np.issubdtype(
+                            dvar_data.dtype, np.string_
+                        ) or np.issubdtype(dvar_data.dtype, np.unicode_):
+                            vnames.append("nadir_{}".format(dvar))
                             nadir_beam_num = int((dvar_data.beam.shape[0] / 2) - 1)
                             varrs.append(dvar_data.isel(beam=nadir_beam_num).values)
                         else:
-                            vnames.append('median_{}'.format(dvar))
+                            vnames.append("median_{}".format(dvar))
                             varrs.append(np.median(dvar_data, axis=1))
-                    elif dvar_data.dims == ('time', ):
+                    elif dvar_data.dims == ("time",):
                         vnames.append(dvar)
                         varrs.append(dvar_data.values)
             if os.path.exists(vpath):
-                vpath = os.path.splitext(vpath)[0] + '_{}.csv'.format(tstmp)
-            np.savetxt(vpath, np.column_stack(varrs), delimiter=',', header=','.join(vnames), fmt='%s',  # with an array with floats, strings, int, we just save with string format
-                       comments='')
+                vpath = os.path.splitext(vpath)[0] + "_{}.csv".format(tstmp)
+            np.savetxt(
+                vpath,
+                np.column_stack(varrs),
+                delimiter=",",
+                header=",".join(vnames),
+                fmt="%s",  # with an array with floats, strings, int, we just save with string format
+                comments="",
+            )
 
 
 def _create_folder(output_directory, fldrname):
-    tstmp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    tstmp = datetime.now().strftime("%Y%m%d_%H%M%S")
     try:
-        suffix = ''
+        suffix = ""
         fldr_path = os.path.join(output_directory, fldrname)
         os.mkdir(fldr_path)
     except FileExistsError:
         suffix = tstmp
-        fldr_path = os.path.join(output_directory, fldrname + '_{}'.format(tstmp))
+        fldr_path = os.path.join(output_directory, fldrname + "_{}".format(tstmp))
         os.mkdir(fldr_path)
     return fldr_path, suffix

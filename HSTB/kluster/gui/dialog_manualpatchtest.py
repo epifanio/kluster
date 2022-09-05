@@ -6,19 +6,25 @@ from HSTB.kluster.gui.common_widgets import SaveStateDialog
 
 
 class PrePatchDialog(SaveStateDialog):
-    def __init__(self, parent=None, title='', settings=None):
-        super().__init__(parent, settings, widgetname='PrePatchDialog')
+    def __init__(self, parent=None, title="", settings=None):
+        super().__init__(parent, settings, widgetname="PrePatchDialog")
 
-        self.setWindowTitle('Patch Test')
+        self.setWindowTitle("Patch Test")
 
         self.main_layout = QtWidgets.QVBoxLayout()
 
         self.instructions_layout = QtWidgets.QVBoxLayout()
-        self.instructions = QtWidgets.QLabel('Select the installation parameter entries you would like to use in the patch test.')
+        self.instructions = QtWidgets.QLabel(
+            "Select the installation parameter entries you would like to use in the patch test."
+        )
         self.instructions_layout.addWidget(self.instructions)
-        self.instructions_two = QtWidgets.QLabel('The selected entries MUST match in roll, pitch, heading, X, Y, Z, latency, serial number and head')
+        self.instructions_two = QtWidgets.QLabel(
+            "The selected entries MUST match in roll, pitch, heading, X, Y, Z, latency, serial number and head"
+        )
         self.instructions_layout.addWidget(self.instructions_two)
-        self.instructions_three = QtWidgets.QLabel('Data processed with the selected entries will be included in the Patch Test.  Otherwise, the data will be excluded')
+        self.instructions_three = QtWidgets.QLabel(
+            "Data processed with the selected entries will be included in the Patch Test.  Otherwise, the data will be excluded"
+        )
         self.instructions_layout.addWidget(self.instructions_three)
         self.main_layout.addLayout(self.instructions_layout)
 
@@ -26,17 +32,19 @@ class PrePatchDialog(SaveStateDialog):
         self.main_layout.addWidget(self.xyzrph_list)
 
         self.hlayout_msg = QtWidgets.QHBoxLayout()
-        self.warning_message = QtWidgets.QLabel('', self)
-        self.warning_message.setStyleSheet("color : {};".format(kluster_variables.error_color))
+        self.warning_message = QtWidgets.QLabel("", self)
+        self.warning_message.setStyleSheet(
+            "color : {};".format(kluster_variables.error_color)
+        )
         self.hlayout_msg.addWidget(self.warning_message)
         self.main_layout.addLayout(self.hlayout_msg)
 
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.addStretch(1)
-        self.ok_button = QtWidgets.QPushButton('Load', self)
+        self.ok_button = QtWidgets.QPushButton("Load", self)
         self.button_layout.addWidget(self.ok_button)
         self.button_layout.addStretch(1)
-        self.cancel_button = QtWidgets.QPushButton('Cancel', self)
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
         self.button_layout.addWidget(self.cancel_button)
         self.button_layout.addStretch(1)
         self.main_layout.addLayout(self.button_layout)
@@ -71,47 +79,80 @@ class PrePatchDialog(SaveStateDialog):
         self.prefixes = []
         for fq, serialnum, fq_time_segs, xyzrec, sysid, head, vfname in datablock:
             refpt = fq.multibeam.return_prefix_for_rp()
-            refpt = ['tx' if rp == 0 else 'rx' for rp in refpt]
+            refpt = ["tx" if rp == 0 else "rx" for rp in refpt]
             self.fqprs.append(fq)
             self.serial_numbers.append(serialnum)
             self.time_segments.append(fq_time_segs)
             self.xyzrec.append(xyzrec)
             self.sysids.append(sysid)
             self.headindexes.append(head)
-            tstmp = list(xyzrec['waterline'].keys())[0]
-            tstmp_fmt = datetime.fromtimestamp(int(tstmp)).strftime('%m/%d/%Y %H%M')
+            tstmp = list(xyzrec["waterline"].keys())[0]
+            tstmp_fmt = datetime.fromtimestamp(int(tstmp)).strftime("%m/%d/%Y %H%M")
             if fq.multibeam.is_dual_head():
                 if int(head) == 0:
-                    head_fmt = 'PORT'
-                    roll = xyzrec['rx_port_r'][tstmp]
-                    pitch = xyzrec['tx_port_p'][tstmp]
-                    heading = xyzrec['rx_port_h'][tstmp]
-                    xlever = xyzrec[refpt[0] + '_port_x'][tstmp]
-                    ylever = xyzrec[refpt[1] + '_port_y'][tstmp]
-                    zlever = xyzrec[refpt[2] + '_port_z'][tstmp]
-                    self.prefixes.append(['rx_port_r', 'tx_port_p', 'rx_port_h', refpt[0] + '_port_x', refpt[1] + '_port_y', refpt[2] + '_port_z', 'latency'])
+                    head_fmt = "PORT"
+                    roll = xyzrec["rx_port_r"][tstmp]
+                    pitch = xyzrec["tx_port_p"][tstmp]
+                    heading = xyzrec["rx_port_h"][tstmp]
+                    xlever = xyzrec[refpt[0] + "_port_x"][tstmp]
+                    ylever = xyzrec[refpt[1] + "_port_y"][tstmp]
+                    zlever = xyzrec[refpt[2] + "_port_z"][tstmp]
+                    self.prefixes.append(
+                        [
+                            "rx_port_r",
+                            "tx_port_p",
+                            "rx_port_h",
+                            refpt[0] + "_port_x",
+                            refpt[1] + "_port_y",
+                            refpt[2] + "_port_z",
+                            "latency",
+                        ]
+                    )
                 elif int(head) == 1:
-                    head_fmt = 'STARBOARD'
-                    roll = xyzrec['rx_stbd_r'][tstmp]
-                    pitch = xyzrec['tx_stbd_p'][tstmp]
-                    heading = xyzrec['rx_stbd_h'][tstmp]
-                    xlever = xyzrec[refpt[0] + '_stbd_x'][tstmp]
-                    ylever = xyzrec[refpt[1] + '_stbd_y'][tstmp]
-                    zlever = xyzrec[refpt[2] + '_stbd_z'][tstmp]
-                    self.prefixes.append(['rx_stbd_r', 'tx_stbd_p', 'rx_stbd_h', refpt[0] + '_stbd_x', refpt[1] + '_stbd_y', refpt[2] + '_stbd_z', 'latency'])
+                    head_fmt = "STARBOARD"
+                    roll = xyzrec["rx_stbd_r"][tstmp]
+                    pitch = xyzrec["tx_stbd_p"][tstmp]
+                    heading = xyzrec["rx_stbd_h"][tstmp]
+                    xlever = xyzrec[refpt[0] + "_stbd_x"][tstmp]
+                    ylever = xyzrec[refpt[1] + "_stbd_y"][tstmp]
+                    zlever = xyzrec[refpt[2] + "_stbd_z"][tstmp]
+                    self.prefixes.append(
+                        [
+                            "rx_stbd_r",
+                            "tx_stbd_p",
+                            "rx_stbd_h",
+                            refpt[0] + "_stbd_x",
+                            refpt[1] + "_stbd_y",
+                            refpt[2] + "_stbd_z",
+                            "latency",
+                        ]
+                    )
                 else:
                     raise NotImplementedError(
-                        'Only head indices 0 and 1 supported, we expect max 2 heads, got: {}'.format(head))
+                        "Only head indices 0 and 1 supported, we expect max 2 heads, got: {}".format(
+                            head
+                        )
+                    )
             else:
-                roll = xyzrec['rx_r'][tstmp]
-                pitch = xyzrec['tx_p'][tstmp]
-                heading = xyzrec['rx_h'][tstmp]
-                xlever = xyzrec[refpt[0] + '_x'][tstmp]
-                ylever = xyzrec[refpt[1] + '_y'][tstmp]
-                zlever = xyzrec[refpt[2] + '_z'][tstmp]
-                self.prefixes.append(['rx_r', 'tx_p', 'rx_h', refpt[0] + '_x', refpt[1] + '_y', refpt[2] + '_z', 'latency'])
-                head_fmt = 'N/A'
-            latency = xyzrec['latency'][tstmp]
+                roll = xyzrec["rx_r"][tstmp]
+                pitch = xyzrec["tx_p"][tstmp]
+                heading = xyzrec["rx_h"][tstmp]
+                xlever = xyzrec[refpt[0] + "_x"][tstmp]
+                ylever = xyzrec[refpt[1] + "_y"][tstmp]
+                zlever = xyzrec[refpt[2] + "_z"][tstmp]
+                self.prefixes.append(
+                    [
+                        "rx_r",
+                        "tx_p",
+                        "rx_h",
+                        refpt[0] + "_x",
+                        refpt[1] + "_y",
+                        refpt[2] + "_z",
+                        "latency",
+                    ]
+                )
+                head_fmt = "N/A"
+            latency = xyzrec["latency"][tstmp]
             self.timestamps.append(tstmp)
             self.timestamps_formatted.append(tstmp_fmt)
             self.headindexes_formatted.append(head_fmt)
@@ -122,8 +163,22 @@ class PrePatchDialog(SaveStateDialog):
             self.y_lever.append(ylever)
             self.z_lever.append(zlever)
             self.latency.append(latency)
-            self.xyzrph_list.add_line([sysid, serialnum, tstmp_fmt, tstmp, head_fmt, roll, pitch, heading, xlever,
-                                       ylever, zlever, latency])
+            self.xyzrph_list.add_line(
+                [
+                    sysid,
+                    serialnum,
+                    tstmp_fmt,
+                    tstmp,
+                    head_fmt,
+                    roll,
+                    pitch,
+                    heading,
+                    xlever,
+                    ylever,
+                    zlever,
+                    latency,
+                ]
+            )
 
     def return_selected(self):
         self.canceled = False
@@ -141,29 +196,47 @@ class PrePatchDialog(SaveStateDialog):
             if chkd:
                 selected_rows.append(row)
         err = False
-        msg = ''
+        msg = ""
         if len(selected_rows) > 1:
             base_sel_row = selected_rows[0]
             for i in range(len(selected_rows) - 1):
                 next_sel = selected_rows[i + 1]
                 if self.roll[base_sel_row] != self.roll[next_sel]:
-                    msg = 'Roll does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "Roll does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
                 elif self.pitch[base_sel_row] != self.pitch[next_sel]:
-                    msg = 'Pitch does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "Pitch does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
                 elif self.heading[base_sel_row] != self.heading[next_sel]:
-                    msg = 'Heading does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "Heading does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
                 elif self.x_lever[base_sel_row] != self.x_lever[next_sel]:
-                    msg = 'X Lever Arm does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "X Lever Arm does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
                 elif self.y_lever[base_sel_row] != self.y_lever[next_sel]:
-                    msg = 'Y Lever Arm does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "Y Lever Arm does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
                 elif self.z_lever[base_sel_row] != self.z_lever[next_sel]:
-                    msg = 'Z Lever Arm does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "Z Lever Arm does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
                 elif self.latency[base_sel_row] != self.latency[next_sel]:
-                    msg = 'Latency does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "Latency does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
                 elif self.serial_numbers[base_sel_row] != self.serial_numbers[next_sel]:
-                    msg = 'Serial Number does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "Serial Number does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
                 elif self.headindexes[base_sel_row] != self.headindexes[next_sel]:
-                    msg = 'Sonar Head does not match between rows {} and {}!'.format(base_sel_row + 1, next_sel + 1)
+                    msg = "Sonar Head does not match between rows {} and {}!".format(
+                        base_sel_row + 1, next_sel + 1
+                    )
         if msg:
             err = True
         return selected_rows, err, msg
@@ -195,8 +268,24 @@ class PrePatchDialog(SaveStateDialog):
             zlever = self.z_lever[self.selected_data[0]]
             latency = self.latency[self.selected_data[0]]
             prefixes = self.prefixes[self.selected_data[0]]
-            return [total_fqpr, total_systemids, model_number, serial_number, total_dates, total_timestamps, total_timesegments, \
-                    head, roll, pitch, heading, xlever, ylever, zlever, latency, prefixes]
+            return [
+                total_fqpr,
+                total_systemids,
+                model_number,
+                serial_number,
+                total_dates,
+                total_timestamps,
+                total_timesegments,
+                head,
+                roll,
+                pitch,
+                heading,
+                xlever,
+                ylever,
+                zlever,
+                latency,
+                prefixes,
+            ]
         except:
             return None
 
@@ -204,11 +293,11 @@ class PrePatchDialog(SaveStateDialog):
         self.canceled = True
         self.accept()
 
-    def err_message(self, text: str = ''):
+    def err_message(self, text: str = ""):
         if text:
-            self.warning_message.setText('ERROR: ' + text)
+            self.warning_message.setText("ERROR: " + text)
         else:
-            self.warning_message.setText('')
+            self.warning_message.setText("")
 
 
 class XyzrphList(QtWidgets.QTableWidget):
@@ -218,7 +307,21 @@ class XyzrphList(QtWidgets.QTableWidget):
         # makes it so no editing is possible with the table
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        self.headr = ['', 'Container', r'S/N', 'Record Time', 'Record Time UTC', 'Head', 'RX Roll', 'TX Pitch', 'RX Heading', 'X Lever', 'Y Lever', 'Z Lever', 'Latency']
+        self.headr = [
+            "",
+            "Container",
+            r"S/N",
+            "Record Time",
+            "Record Time UTC",
+            "Head",
+            "RX Roll",
+            "TX Pitch",
+            "RX Heading",
+            "X Lever",
+            "Y Lever",
+            "Z Lever",
+            "Latency",
+        ]
         self.setColumnCount(13)
         self.setHorizontalHeaderLabels(self.headr)
         self.setColumnWidth(0, 20)
@@ -273,31 +376,45 @@ class ManualPatchTestWidget(QtWidgets.QWidget):
         # shouldn't ever see this, but just in case, these are the defaults before we added the reference point identifier
         #  in kluster 0.9, align with the old Kongsberg only workflow
         if prefixes is None:
-            prefixes = ['rx', 'tx', 'rx', 'tx', 'tx', 'tx']
+            prefixes = ["rx", "tx", "rx", "tx", "tx", "tx"]
 
-        self.setWindowTitle('Patch Test')
+        self.setWindowTitle("Patch Test")
 
         self.main_layout = QtWidgets.QVBoxLayout()
 
         config_layout = QtWidgets.QHBoxLayout()
         config_layout_labels = QtWidgets.QVBoxLayout()
         config_layout_controls = QtWidgets.QVBoxLayout()
-        configtxt = QtWidgets.QLabel('Vessel File: ')
-        self.config_name = QtWidgets.QLabel('')
-        sourcestxt = QtWidgets.QLabel('Sources: ')
-        self.sources = QtWidgets.QLabel('')
-        self.serial_descrip = QtWidgets.QLabel('S/N: ')
+        configtxt = QtWidgets.QLabel("Vessel File: ")
+        self.config_name = QtWidgets.QLabel("")
+        sourcestxt = QtWidgets.QLabel("Sources: ")
+        self.sources = QtWidgets.QLabel("")
+        self.serial_descrip = QtWidgets.QLabel("S/N: ")
         self.serial_select = QtWidgets.QLabel()
-        self.model_descrip = QtWidgets.QLabel('Model: ')
-        self.model_select = QtWidgets.QLabel('')
-        time_descrip = QtWidgets.QLabel('UTC Date: ')
+        self.model_descrip = QtWidgets.QLabel("Model: ")
+        self.model_select = QtWidgets.QLabel("")
+        time_descrip = QtWidgets.QLabel("UTC Date: ")
         self.time_select = QtWidgets.QLabel()
-        timestamp_descrip = QtWidgets.QLabel('UTC Timestamp: ')
+        timestamp_descrip = QtWidgets.QLabel("UTC Timestamp: ")
         self.timestamp_select = QtWidgets.QLabel()
 
-        for lbl in [configtxt, sourcestxt, self.model_descrip, self.serial_descrip, time_descrip, timestamp_descrip]:
+        for lbl in [
+            configtxt,
+            sourcestxt,
+            self.model_descrip,
+            self.serial_descrip,
+            time_descrip,
+            timestamp_descrip,
+        ]:
             config_layout_labels.addWidget(lbl)
-        for widg in [self.config_name, self.sources, self.model_select, self.serial_select, self.time_select, self.timestamp_select]:
+        for widg in [
+            self.config_name,
+            self.sources,
+            self.model_select,
+            self.serial_select,
+            self.time_select,
+            self.timestamp_select,
+        ]:
             config_layout_controls.addWidget(widg)
         config_layout.addLayout(config_layout_labels)
         config_layout.addLayout(config_layout_controls)
@@ -306,60 +423,72 @@ class ManualPatchTestWidget(QtWidgets.QWidget):
         attdevices_layout = QtWidgets.QHBoxLayout()
 
         roll_layout = QtWidgets.QVBoxLayout()
-        self.xlever_label = QtWidgets.QLabel(' {} X Lever Arm (+ Forward)'.format(prefixes[3][:2].upper()))
+        self.xlever_label = QtWidgets.QLabel(
+            " {} X Lever Arm (+ Forward)".format(prefixes[3][:2].upper())
+        )
         roll_layout.addWidget(self.xlever_label)
         xlspinbox = QtWidgets.QHBoxLayout()
         self.xlever_spinbox = PatchSpinBox()
         xlspinbox.addWidget(self.xlever_spinbox)
-        self.xlever_difference = QtWidgets.QLabel('0.000')
+        self.xlever_difference = QtWidgets.QLabel("0.000")
         xlspinbox.addWidget(self.xlever_difference)
         roll_layout.addLayout(xlspinbox)
-        self.roll_label = QtWidgets.QLabel('{} Roll (+ Port Up)'.format(prefixes[0][:2].upper()))
+        self.roll_label = QtWidgets.QLabel(
+            "{} Roll (+ Port Up)".format(prefixes[0][:2].upper())
+        )
         roll_layout.addWidget(self.roll_label)
         rspinbox = QtWidgets.QHBoxLayout()
         self.roll_spinbox = PatchSpinBox()
         rspinbox.addWidget(self.roll_spinbox)
-        self.roll_difference = QtWidgets.QLabel('0.000')
+        self.roll_difference = QtWidgets.QLabel("0.000")
         rspinbox.addWidget(self.roll_difference)
         roll_layout.addLayout(rspinbox)
         attdevices_layout.addLayout(roll_layout)
 
         attdevices_layout.addStretch()
         pitch_layout = QtWidgets.QVBoxLayout()
-        self.ylever_label = QtWidgets.QLabel('{} Y Lever Arm (+ Starboard)'.format(prefixes[4][:2].upper()))
+        self.ylever_label = QtWidgets.QLabel(
+            "{} Y Lever Arm (+ Starboard)".format(prefixes[4][:2].upper())
+        )
         pitch_layout.addWidget(self.ylever_label)
         ylspinbox = QtWidgets.QHBoxLayout()
         self.ylever_spinbox = PatchSpinBox()
         ylspinbox.addWidget(self.ylever_spinbox)
-        self.ylever_difference = QtWidgets.QLabel('0.000')
+        self.ylever_difference = QtWidgets.QLabel("0.000")
         ylspinbox.addWidget(self.ylever_difference)
         pitch_layout.addLayout(ylspinbox)
-        self.pitch_label = QtWidgets.QLabel('{} Pitch (+ Bow Up)'.format(prefixes[1][:2].upper()))
+        self.pitch_label = QtWidgets.QLabel(
+            "{} Pitch (+ Bow Up)".format(prefixes[1][:2].upper())
+        )
         pitch_layout.addWidget(self.pitch_label)
         pspinbox = QtWidgets.QHBoxLayout()
         self.pitch_spinbox = PatchSpinBox()
         pspinbox.addWidget(self.pitch_spinbox)
-        self.pitch_difference = QtWidgets.QLabel('0.000')
+        self.pitch_difference = QtWidgets.QLabel("0.000")
         pspinbox.addWidget(self.pitch_difference)
         pitch_layout.addLayout(pspinbox)
         attdevices_layout.addLayout(pitch_layout)
         attdevices_layout.addStretch()
 
         heading_layout = QtWidgets.QVBoxLayout()
-        self.zlever_label = QtWidgets.QLabel('{} Z Lever Arm (+ Down)'.format(prefixes[5][:2].upper()))
+        self.zlever_label = QtWidgets.QLabel(
+            "{} Z Lever Arm (+ Down)".format(prefixes[5][:2].upper())
+        )
         heading_layout.addWidget(self.zlever_label)
         zlspinbox = QtWidgets.QHBoxLayout()
         self.zlever_spinbox = PatchSpinBox()
         zlspinbox.addWidget(self.zlever_spinbox)
-        self.zlever_difference = QtWidgets.QLabel('0.000')
+        self.zlever_difference = QtWidgets.QLabel("0.000")
         zlspinbox.addWidget(self.zlever_difference)
         heading_layout.addLayout(zlspinbox)
-        self.heading_label = QtWidgets.QLabel('{} Heading (+ Clockwise)'.format(prefixes[2][:2].upper()))
+        self.heading_label = QtWidgets.QLabel(
+            "{} Heading (+ Clockwise)".format(prefixes[2][:2].upper())
+        )
         heading_layout.addWidget(self.heading_label)
         hspinbox = QtWidgets.QHBoxLayout()
         self.heading_spinbox = PatchSpinBox()
         hspinbox.addWidget(self.heading_spinbox)
-        self.heading_difference = QtWidgets.QLabel('0.000')
+        self.heading_difference = QtWidgets.QLabel("0.000")
         hspinbox.addWidget(self.heading_difference)
         heading_layout.addLayout(hspinbox)
         attdevices_layout.addLayout(heading_layout)
@@ -367,12 +496,12 @@ class ManualPatchTestWidget(QtWidgets.QWidget):
 
         latencydevices_layout = QtWidgets.QHBoxLayout()
         latency_layout = QtWidgets.QVBoxLayout()
-        self.latency_label = QtWidgets.QLabel('Motion Latency (seconds)')
+        self.latency_label = QtWidgets.QLabel("Motion Latency (seconds)")
         latency_layout.addWidget(self.latency_label)
         llspinbox = QtWidgets.QHBoxLayout()
         self.latency_spinbox = PatchSpinBox()
         llspinbox.addWidget(self.latency_spinbox)
-        self.latency_difference = QtWidgets.QLabel('0.000')
+        self.latency_difference = QtWidgets.QLabel("0.000")
         llspinbox.addWidget(self.latency_difference)
         latency_layout.addLayout(llspinbox)
         latencydevices_layout.addLayout(latency_layout)
@@ -380,17 +509,21 @@ class ManualPatchTestWidget(QtWidgets.QWidget):
 
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.addStretch(1)
-        self.update_button = QtWidgets.QPushButton('Update', self)
+        self.update_button = QtWidgets.QPushButton("Update", self)
         self.button_layout.addWidget(self.update_button)
-        self.close_button = QtWidgets.QPushButton('Close', self)
+        self.close_button = QtWidgets.QPushButton("Close", self)
         self.button_layout.addWidget(self.close_button)
         self.button_layout.addStretch(1)
         self.button_layout.addStretch(1)
 
-        self.explanation = QtWidgets.QLabel('Adjust the sonar transmitter (TX) / receiver (RX) values below:')
+        self.explanation = QtWidgets.QLabel(
+            "Adjust the sonar transmitter (TX) / receiver (RX) values below:"
+        )
 
-        instruct = 'Update will adjust the data displayed in Points View.  Will not save the changes to disk.\n\n' +\
-                   'Use the Setup - Vessel Offsets tool to update the processed data with the new offsets/angles.'
+        instruct = (
+            "Update will adjust the data displayed in Points View.  Will not save the changes to disk.\n\n"
+            + "Use the Setup - Vessel Offsets tool to update the processed data with the new offsets/angles."
+        )
         self.instructions = QtWidgets.QLabel(instruct)
 
         self.main_layout.addLayout(config_layout)
@@ -453,24 +586,70 @@ class ManualPatchTestWidget(QtWidgets.QWidget):
         return self.zlever_spinbox.value()
 
     def show_differences(self, diff):
-        diffs = [self.xlever_difference, self.ylever_difference, self.zlever_difference, self.roll_difference, self.pitch_difference, self.heading_difference, self.latency_difference]
-        origs = [self.original_xlever, self.original_ylever, self.original_zlever, self.original_roll, self.original_pitch, self.original_heading, self.original_latency]
-        spboxes = [self.xlever_spinbox, self.ylever_spinbox, self.zlever_spinbox, self.roll_spinbox, self.pitch_spinbox, self.heading_spinbox, self.latency_spinbox]
+        diffs = [
+            self.xlever_difference,
+            self.ylever_difference,
+            self.zlever_difference,
+            self.roll_difference,
+            self.pitch_difference,
+            self.heading_difference,
+            self.latency_difference,
+        ]
+        origs = [
+            self.original_xlever,
+            self.original_ylever,
+            self.original_zlever,
+            self.original_roll,
+            self.original_pitch,
+            self.original_heading,
+            self.original_latency,
+        ]
+        spboxes = [
+            self.xlever_spinbox,
+            self.ylever_spinbox,
+            self.zlever_spinbox,
+            self.roll_spinbox,
+            self.pitch_spinbox,
+            self.heading_spinbox,
+            self.latency_spinbox,
+        ]
         for dif, orig, spbox in zip(diffs, origs, spboxes):
             newdif = spbox.value() - orig
-            dif.setText('{:.3f}'.format(newdif))
+            dif.setText("{:.3f}".format(newdif))
             if round(newdif, 3) == 0:
                 dif.setStyleSheet("QLabel { background-color : white; color : black; }")
-                dif.setText('0.000')
+                dif.setText("0.000")
             elif newdif < 0:
-                dif.setStyleSheet("QLabel { background-color : white; color : " + kluster_variables.warning_color + "; }")
+                dif.setStyleSheet(
+                    "QLabel { background-color : white; color : "
+                    + kluster_variables.warning_color
+                    + "; }"
+                )
             elif newdif > 0:
-                dif.setStyleSheet("QLabel { background-color : white; color : " + kluster_variables.pass_color + "; }")
+                dif.setStyleSheet(
+                    "QLabel { background-color : white; color : "
+                    + kluster_variables.pass_color
+                    + "; }"
+                )
             else:
                 dif.setStyleSheet("QLabel { background-color : white; color : black; }")
 
-    def populate(self, vesselfile: str, sources: str, model: str, serialnum: str, utcdate: str, utctimestamp: str,
-                 roll: float, pitch: float, heading: float, xlever: float, ylever: float, zlever: float, latency: float):
+    def populate(
+        self,
+        vesselfile: str,
+        sources: str,
+        model: str,
+        serialnum: str,
+        utcdate: str,
+        utctimestamp: str,
+        roll: float,
+        pitch: float,
+        heading: float,
+        xlever: float,
+        ylever: float,
+        zlever: float,
+        latency: float,
+    ):
         self.config_name.setText(str(vesselfile))
         self.sources.setText(str(sources))
         self.model_select.setText(str(model))
@@ -498,7 +677,7 @@ class ManualPatchTestWidget(QtWidgets.QWidget):
         self.new_offsets_angles.emit(False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

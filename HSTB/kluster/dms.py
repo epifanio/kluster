@@ -30,7 +30,7 @@ def dms2dd(d: float, m: float, s: float):
         m = float(m)
         s = float(s)
 
-    dd = abs(float(d)) + float(m)/60 + float(s)/(60 * 60)
+    dd = abs(float(d)) + float(m) / 60 + float(s) / (60 * 60)
     return dd * sign
 
 
@@ -87,18 +87,24 @@ def parse_dms_to_dd(dms: str):
     # split by any non-digit, non-letter character except - sign
     parts = re.split(r"[^\w-]+", dms)
     direct = 1
-    directions_included = {'N': 1, 'E': 1, 'W': -1, 'S': -1}
-    if parts[-1] in directions_included:  # someone included dir with space, ex: "80:38:06.57 W"
+    directions_included = {"N": 1, "E": 1, "W": -1, "S": -1}
+    if (
+        parts[-1] in directions_included
+    ):  # someone included dir with space, ex: "80:38:06.57 W"
         direct = directions_included[parts[-1]]
         parts = parts[:-1]
-    elif parts[-1][-1] in directions_included:  # someone included dir without space, ex: "80:38:06.57W"
+    elif (
+        parts[-1][-1] in directions_included
+    ):  # someone included dir without space, ex: "80:38:06.57W"
         direct = directions_included[parts[-1][-1]]
         parts[-1] = parts[-1][:-1].rstrip()
 
-    if parts[0][0] != '-':
-        parts[0] = int(parts[0]) * direct  # add negative if direction was included as a letter but not as sign for deg
+    if parts[0][0] != "-":
+        parts[0] = (
+            int(parts[0]) * direct
+        )  # add negative if direction was included as a letter but not as sign for deg
 
-    dd = ''
+    dd = ""
     if len(parts) == 4:  # milliseconds given, ex: "-80:38:06.57"
         dec_secs = int(parts[2]) + (int(parts[3]) / (10.0 ** len(parts[3].rstrip())))
         dd = dms2dd(float(parts[0]), float(parts[1]), float(dec_secs))
@@ -132,11 +138,15 @@ def return_zone_from_min_max_long(minlon: float, maxlon: float, minlat: float):
     minlon_zone = str(int(np.ceil((minlon + 180) / 6)))
 
     if minlat > 0:
-        zone_ident = 'N'
+        zone_ident = "N"
     else:
-        zone_ident = 'S'
+        zone_ident = "S"
 
     if int(maxlon_zone) != int(minlon_zone):
-        print('Spanning more than one UTM zone: MIN {}, MAX {}'.format(minlon_zone, maxlon_zone))
+        print(
+            "Spanning more than one UTM zone: MIN {}, MAX {}".format(
+                minlon_zone, maxlon_zone
+            )
+        )
 
     return maxlon_zone + zone_ident

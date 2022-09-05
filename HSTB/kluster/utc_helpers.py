@@ -3,7 +3,7 @@ import time
 import calendar
 
 # Caris 1980 epoch
-_epoch = calendar.timegm(datetime.strptime('1980-001', '%Y-%j').timetuple())
+_epoch = calendar.timegm(datetime.strptime("1980-001", "%Y-%j").timetuple())
 
 
 def julian_day_time_to_utctimestamp(j_year, j_day, h, m, s):
@@ -52,7 +52,7 @@ def calendar_day_time_to_utctimestamp(c_year, c_mon, c_day, h, m, s):
 def PyTmStoHMSX(secs):
     """
     Convert seconds to hours-minutes-seconds-milliseconds
-    
+
     Parameters
     ----------
     secs: float, time in seconds
@@ -82,7 +82,7 @@ def PyTmYJDtoMD(yr, day):
     list, [month as int, day as int]
     """
 
-    tt = datetime.strptime('%04d-%03d' % (yr, day), '%Y-%j').timetuple()
+    tt = datetime.strptime("%04d-%03d" % (yr, day), "%Y-%j").timetuple()
     return [tt.tm_mon, tt.tm_mday]
 
 
@@ -101,7 +101,9 @@ def PyTmYMDtoJD(year, month, day):
     int, julian day number
     """
 
-    tt = datetime.strptime('%04d-%02d-%02d' % (year, month, day), '%Y-%m-%d').timetuple()
+    tt = datetime.strptime(
+        "%04d-%02d-%02d" % (year, month, day), "%Y-%m-%d"
+    ).timetuple()
     return tt.tm_yday
 
 
@@ -171,7 +173,9 @@ def PyTmYDStoUTCs80(y, d, s):
     timestamp: int, seconds since 1980 epoch
     """
     h, m, s, x = PyTmStoHMSX(s)
-    dt = datetime.strptime('%04d-%03dT%02d:%02d:%02d' % (y, d, h, m, s), '%Y-%jT%H:%M:%S')
+    dt = datetime.strptime(
+        "%04d-%03dT%02d:%02d:%02d" % (y, d, h, m, s), "%Y-%jT%H:%M:%S"
+    )
     tt = dt.timetuple()
 
     if y > 2012 or (y == 2012 and d >= 183):
@@ -308,7 +312,7 @@ def PyTmYDSplusS(y, d, s, add_sec):
 
     s80 = PyTmYDStoUTCs80(y, d, s)
     s80 += add_sec
-    return PyTmUTCs80toYDS(s80)    
+    return PyTmUTCs80toYDS(s80)
 
 
 def UTCs80ToDateTime(t):
@@ -326,9 +330,9 @@ def UTCs80ToDateTime(t):
     """
     year, d, s = PyTmUTCs80toYDS(t)
     hour, minute, sec, x = PyTmStoHMSX(s)
-    month, day = PyTmYJDtoMD(year,d)
+    month, day = PyTmYJDtoMD(year, d)
     try:
-        return datetime(*[year, month, day, hour, minute, sec, int(x*1000000)])
+        return datetime(*[year, month, day, hour, minute, sec, int(x * 1000000)])
     except ValueError:
         while sec > 59:
             sec -= 60
@@ -340,7 +344,7 @@ def UTCs80ToDateTime(t):
             hour -= 24
             d = d + 1
             month, day = PyTmYJDtoMD(year, d)
-        return datetime(*[year, month, day, hour, minute, sec, int(x*1000000)])
+        return datetime(*[year, month, day, hour, minute, sec, int(x * 1000000)])
 
 
 def DateTimeToUTCs80(dt):
@@ -358,5 +362,5 @@ def DateTimeToUTCs80(dt):
     """
     y = dt.year
     d = PyTmYMDtoJD(y, dt.month, dt.day)
-    s = PyTmHMSXtoS(dt.hour, dt.minute, dt.second, dt.microsecond/1000000.0)
+    s = PyTmHMSXtoS(dt.hour, dt.minute, dt.second, dt.microsecond / 1000000.0)
     return PyTmYDStoUTCs80(y, d, s)

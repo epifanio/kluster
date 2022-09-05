@@ -13,16 +13,35 @@ from HSTB.kluster import kluster_variables
 
 from bathygrid.bgrid import BathyGrid
 
-pulseform_translator = {'CW': 'CW', 'FM': 'FM', 'MIX': 'MixFM_CW'}
-pingmode_translator = {'VS': 'VeryShallow', 'SH': 'Shallow', 'ME': 'Medium', 'DE': 'Deep', 'VD': 'VeryDeep',
-                       'ED': 'ExtraDeep',
-                       'DR': 'Deeper', 'XD': 'ExtremeDeep', 'VSm': 'VeryShallowManual', 'SHm': 'ShallowManual',
-                       'MEm': 'MediumManual',
-                       'DEm': 'DeepManual', 'VDm': 'VeryDeepManual', 'EDm': 'ExtraDeepManual', 'DRm': 'DeeperManual',
-                       'XDm': 'ExtremeDeepManual'}
-pulselength_translator = {'vsCW': 'VeryShortCW', 'shCW': 'ShortCW', 'meCW': 'MediumCW', 'loCW': 'LongCW',
-                          'vlCW': 'VeryLongCW',
-                          'elCW': 'ExtraLongCW', 'shFM': 'ShortFM', 'loFM': 'LongFM'}
+pulseform_translator = {"CW": "CW", "FM": "FM", "MIX": "MixFM_CW"}
+pingmode_translator = {
+    "VS": "VeryShallow",
+    "SH": "Shallow",
+    "ME": "Medium",
+    "DE": "Deep",
+    "VD": "VeryDeep",
+    "ED": "ExtraDeep",
+    "DR": "Deeper",
+    "XD": "ExtremeDeep",
+    "VSm": "VeryShallowManual",
+    "SHm": "ShallowManual",
+    "MEm": "MediumManual",
+    "DEm": "DeepManual",
+    "VDm": "VeryDeepManual",
+    "EDm": "ExtraDeepManual",
+    "DRm": "DeeperManual",
+    "XDm": "ExtremeDeepManual",
+}
+pulselength_translator = {
+    "vsCW": "VeryShortCW",
+    "shCW": "ShortCW",
+    "meCW": "MediumCW",
+    "loCW": "LongCW",
+    "vlCW": "VeryLongCW",
+    "elCW": "ExtraLongCW",
+    "shFM": "ShortFM",
+    "loFM": "LongFM",
+}
 
 
 class BaseTest:
@@ -45,7 +64,11 @@ class BaseTest:
             self.sonartype = self.fqpr.multibeam.raw_ping[0].sonartype
             self.serialnum = self.fqpr.multibeam.raw_ping[0].system_identifier
         except:
-            raise ValueError('{}: Unable to read from provided fqpr instance: {}'.format(self.name, self.fqpr))
+            raise ValueError(
+                "{}: Unable to read from provided fqpr instance: {}".format(
+                    self.name, self.fqpr
+                )
+            )
 
     def _build_groups(self, mode):
         """
@@ -66,21 +89,24 @@ class BaseTest:
             the plot label
         """
 
-        if mode == 'frequency':
+        if mode == "frequency":
             groups = self.unique_freqs
             comparison = self.frequency
-            lbl = 'Frequency={}Hz'
-        elif mode == 'mode':
+            lbl = "Frequency={}Hz"
+        elif mode == "mode":
             groups = self.unique_modeone
             comparison = self.modeone
-            lbl = 'mode={}'
-        elif mode == 'modetwo':
+            lbl = "mode={}"
+        elif mode == "modetwo":
             groups = self.unique_modetwo
             comparison = self.modetwo
-            lbl = 'mode={}'
+            lbl = "mode={}"
         else:
             raise ValueError(
-                '{}: {} not supported, must be one of "frequency", "mode", "modetwo"'.format(self.name, mode))
+                '{}: {} not supported, must be one of "frequency", "mode", "modetwo"'.format(
+                    self.name, mode
+                )
+            )
         return groups, comparison, lbl
 
     def _round_frequency_ident(self):
@@ -127,17 +153,17 @@ class BaseTest:
             the eventual plot label for this plot modified
         """
 
-        if mode == 'frequency' and self.round_frequency:
+        if mode == "frequency" and self.round_frequency:
             grp = int(grp / 1000)
-            lbl = 'Frequency={}kHz'
+            lbl = "Frequency={}kHz"
         elif grp in pingmode_translator:
-            lbl = 'PingMode={}'
+            lbl = "PingMode={}"
             grp = pingmode_translator[grp]
         elif grp in pulseform_translator:
-            lbl = 'PulseForm={}'
+            lbl = "PulseForm={}"
             grp = pulseform_translator[grp]
         elif grp in pulselength_translator:
-            lbl = 'PulseLength={}'
+            lbl = "PulseLength={}"
             grp = pulselength_translator[grp]
         return lbl, grp
 
@@ -153,16 +179,71 @@ class BaseTest:
             maximum depth of all points
         """
 
-        plt.plot([totalmindepth, totalmaxdepth], [totalmindepth, totalmaxdepth], '--', c='dimgray', label='2X Water Depth')
-        plt.plot([-totalmindepth, -totalmaxdepth], [totalmindepth, totalmaxdepth], '--', c='dimgray')
-        plt.plot([totalmindepth * 1.5, totalmaxdepth * 1.5], [totalmindepth, totalmaxdepth], '--', c='gray', label='3X Water Depth')
-        plt.plot([-totalmindepth * 1.5, -totalmaxdepth * 1.5], [totalmindepth, totalmaxdepth], '--', c='gray')
-        plt.plot([totalmindepth * 2, totalmaxdepth * 2], [totalmindepth, totalmaxdepth], '--', c='darkgray', label='4X Water Depth')
-        plt.plot([-totalmindepth * 2, -totalmaxdepth * 2], [totalmindepth, totalmaxdepth], '--', c='darkgray')
-        plt.plot([totalmindepth * 2.5, totalmaxdepth * 2.5], [totalmindepth, totalmaxdepth], '--', c='silver', label='5X Water Depth')
-        plt.plot([-totalmindepth * 2.5, -totalmaxdepth * 2.5], [totalmindepth, totalmaxdepth], '--', c='silver')
-        plt.plot([totalmindepth * 3, totalmaxdepth * 3], [totalmindepth, totalmaxdepth], '--', c='lightgray', label='6X Water Depth')
-        plt.plot([-totalmindepth * 3, -totalmaxdepth * 3], [totalmindepth, totalmaxdepth], '--', c='lightgray')
+        plt.plot(
+            [totalmindepth, totalmaxdepth],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="dimgray",
+            label="2X Water Depth",
+        )
+        plt.plot(
+            [-totalmindepth, -totalmaxdepth],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="dimgray",
+        )
+        plt.plot(
+            [totalmindepth * 1.5, totalmaxdepth * 1.5],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="gray",
+            label="3X Water Depth",
+        )
+        plt.plot(
+            [-totalmindepth * 1.5, -totalmaxdepth * 1.5],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="gray",
+        )
+        plt.plot(
+            [totalmindepth * 2, totalmaxdepth * 2],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="darkgray",
+            label="4X Water Depth",
+        )
+        plt.plot(
+            [-totalmindepth * 2, -totalmaxdepth * 2],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="darkgray",
+        )
+        plt.plot(
+            [totalmindepth * 2.5, totalmaxdepth * 2.5],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="silver",
+            label="5X Water Depth",
+        )
+        plt.plot(
+            [-totalmindepth * 2.5, -totalmaxdepth * 2.5],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="silver",
+        )
+        plt.plot(
+            [totalmindepth * 3, totalmaxdepth * 3],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="lightgray",
+            label="6X Water Depth",
+        )
+        plt.plot(
+            [-totalmindepth * 3, -totalmaxdepth * 3],
+            [totalmindepth, totalmaxdepth],
+            "--",
+            c="lightgray",
+        )
 
 
 class ExtinctionTest(BaseTest):
@@ -175,7 +256,7 @@ class ExtinctionTest(BaseTest):
     """
 
     def __init__(self, fqpr, round_frequency: bool = True):
-        super().__init__(fqpr, 'ExtinctionTest')
+        super().__init__(fqpr, "ExtinctionTest")
         self.round_frequency = round_frequency
 
         self.alongtrack = None
@@ -194,13 +275,23 @@ class ExtinctionTest(BaseTest):
         Load and preprocess the data from the fqpr instance
         """
 
-        print('Loading data for extinction test')
+        print("Loading data for extinction test")
         try:
-            dset = self.fqpr.subset_variables(['acrosstrack', 'depthoffset', 'detectioninfo', 'frequency', 'mode', 'modetwo'],
-                                              skip_subset_by_time=True)
+            dset = self.fqpr.subset_variables(
+                [
+                    "acrosstrack",
+                    "depthoffset",
+                    "detectioninfo",
+                    "frequency",
+                    "mode",
+                    "modetwo",
+                ],
+                skip_subset_by_time=True,
+            )
         except KeyError:
             print(
-                "Unable to find 'acrosstrack' and 'depthoffset' in given fqpr instance.  Are you sure you've run svcorrect?")
+                "Unable to find 'acrosstrack' and 'depthoffset' in given fqpr instance.  Are you sure you've run svcorrect?"
+            )
             return
 
         maxbeam = dset.beam.shape[0]
@@ -245,7 +336,12 @@ class ExtinctionTest(BaseTest):
         self.unique_modeone = [x for x in np.unique(self.modeone) if x]
         self.unique_modetwo = [x for x in np.unique(self.modetwo) if x]
 
-    def plot(self, mode: str = 'frequency', depth_bin_size: float = 1.0, filter_incomplete_swaths: bool = True):
+    def plot(
+        self,
+        mode: str = "frequency",
+        depth_bin_size: float = 1.0,
+        filter_incomplete_swaths: bool = True,
+    ):
         """
         Deprecated, left in case you want to experiment with this approach.  See plotv2.
 
@@ -264,7 +360,7 @@ class ExtinctionTest(BaseTest):
         """
 
         if self.acrosstrack is None or self.depth is None:
-            print('Data was not successfully loaded, ExtinctionTest must be recreated')
+            print("Data was not successfully loaded, ExtinctionTest must be recreated")
             return
 
         fig = plt.figure()
@@ -277,7 +373,7 @@ class ExtinctionTest(BaseTest):
 
         colors = iter(cm.rainbow(np.linspace(0, 1, len(groups))))
         for grp in groups:
-            print('Building plot for {}={}'.format(mode, grp))
+            print("Building plot for {}={}".format(mode, grp))
             idx = comparison == grp
             atrack_by_idx = self.acrosstrack[idx]
             dpth_by_idx = self.depth[idx]
@@ -293,14 +389,28 @@ class ExtinctionTest(BaseTest):
             totalmaxacross = max(maxacross, totalmaxacross)
 
             # maintain at least 5 bins just to make a halfway decent plot if they pick a bad bin size
-            bins = np.linspace(mindepth, maxdepth, max(int((maxdepth - mindepth) / depth_bin_size), 5))
+            bins = np.linspace(
+                mindepth, maxdepth, max(int((maxdepth - mindepth) / depth_bin_size), 5)
+            )
             dpth_indices = np.digitize(dpth_by_idx, bins) - 1
 
             min_across = np.array(
-                [atrack_by_idx[dpth_indices == i].min() for i in range(len(bins) - 1) if i in dpth_indices])
+                [
+                    atrack_by_idx[dpth_indices == i].min()
+                    for i in range(len(bins) - 1)
+                    if i in dpth_indices
+                ]
+            )
             max_across = np.array(
-                [atrack_by_idx[dpth_indices == i].max() for i in range(len(bins) - 1) if i in dpth_indices])
-            dpth_vals = np.array([bins[i] for i in range(len(bins) - 1) if i in dpth_indices])
+                [
+                    atrack_by_idx[dpth_indices == i].max()
+                    for i in range(len(bins) - 1)
+                    if i in dpth_indices
+                ]
+            )
+            dpth_vals = np.array(
+                [bins[i] for i in range(len(bins) - 1) if i in dpth_indices]
+            )
 
             # filter by those areas where the freq is not found on port and starboard sides
             if filter_incomplete_swaths:
@@ -317,13 +427,23 @@ class ExtinctionTest(BaseTest):
         self._plot_depth_guidelines(totalmindepth, totalmaxdepth)
         plt.xlim(-totalmaxacross * 1.3, totalmaxacross * 1.3)
         plt.gca().invert_yaxis()
-        plt.title('{} (SN{}): {} by {}'.format(self.sonartype, self.serialnum, self.name, mode))
-        plt.xlabel('AcrossTrack Distance (meters)')
-        plt.ylabel('Depth (meters, +down)')
+        plt.title(
+            "{} (SN{}): {} by {}".format(
+                self.sonartype, self.serialnum, self.name, mode
+            )
+        )
+        plt.xlabel("AcrossTrack Distance (meters)")
+        plt.ylabel("Depth (meters, +down)")
         plt.legend()
         plt.show()
 
-    def plotv2(self, mode: str = 'frequency', depth_bin_size: float = 10.0, point_size: int = 4, filter_incomplete_swaths: bool = True):
+    def plotv2(
+        self,
+        mode: str = "frequency",
+        depth_bin_size: float = 10.0,
+        point_size: int = 4,
+        filter_incomplete_swaths: bool = True,
+    ):
         """
         Plot all outermost points binned in the depth dimension according to the provided size.
 
@@ -345,7 +465,7 @@ class ExtinctionTest(BaseTest):
         """
 
         if self.acrosstrack is None or self.depth is None:
-            print('Data was not successfully loaded, ExtinctionTest must be recreated')
+            print("Data was not successfully loaded, ExtinctionTest must be recreated")
             return
 
         fig = plt.figure()
@@ -360,23 +480,39 @@ class ExtinctionTest(BaseTest):
         maxacross = int(np.ceil(np.max(self.acrosstrack)))
 
         # maintain at least 5 bins just to make a halfway decent plot if they pick a bad bin size
-        bins = np.linspace(mindepth, maxdepth, max(int((maxdepth - mindepth) / depth_bin_size), 5))
+        bins = np.linspace(
+            mindepth, maxdepth, max(int((maxdepth - mindepth) / depth_bin_size), 5)
+        )
         dpth_indices = np.digitize(self.depth, bins) - 1
         valid_indices = [i for i in range(len(bins) - 1) if i in dpth_indices]
 
-        binned_acrosstrack = [self.acrosstrack[dpth_indices == i] for i in valid_indices]
+        binned_acrosstrack = [
+            self.acrosstrack[dpth_indices == i] for i in valid_indices
+        ]
         binned_depth = [self.depth[dpth_indices == i] for i in valid_indices]
         binned_comparison = [comparison[dpth_indices == i] for i in valid_indices]
 
         min_indices = [np.argmin(ba) for ba in binned_acrosstrack]
-        min_across_across = np.array([ba[min_indices[cnt]] for cnt, ba in enumerate(binned_acrosstrack)])
-        min_across_comparison = np.array([cp[min_indices[cnt]] for cnt, cp in enumerate(binned_comparison)])
-        min_across_depth = np.array([dpth[min_indices[cnt]] for cnt, dpth in enumerate(binned_depth)])
+        min_across_across = np.array(
+            [ba[min_indices[cnt]] for cnt, ba in enumerate(binned_acrosstrack)]
+        )
+        min_across_comparison = np.array(
+            [cp[min_indices[cnt]] for cnt, cp in enumerate(binned_comparison)]
+        )
+        min_across_depth = np.array(
+            [dpth[min_indices[cnt]] for cnt, dpth in enumerate(binned_depth)]
+        )
 
         max_indices = [np.argmax(ba) for ba in binned_acrosstrack]
-        max_across_across = np.array([ba[max_indices[cnt]] for cnt, ba in enumerate(binned_acrosstrack)])
-        max_across_comparison = np.array([cp[max_indices[cnt]] for cnt, cp in enumerate(binned_comparison)])
-        max_across_depth = np.array([dpth[max_indices[cnt]] for cnt, dpth in enumerate(binned_depth)])
+        max_across_across = np.array(
+            [ba[max_indices[cnt]] for cnt, ba in enumerate(binned_acrosstrack)]
+        )
+        max_across_comparison = np.array(
+            [cp[max_indices[cnt]] for cnt, cp in enumerate(binned_comparison)]
+        )
+        max_across_depth = np.array(
+            [dpth[max_indices[cnt]] for cnt, dpth in enumerate(binned_depth)]
+        )
 
         if filter_incomplete_swaths:
             swath_filter = np.logical_and(min_across_across < 0, max_across_across > 0)
@@ -391,15 +527,30 @@ class ExtinctionTest(BaseTest):
             valid_min_indices = min_across_comparison == grp
             valid_max_indices = max_across_comparison == grp
             newlbl, newgrp = self._translate_label(mode, grp, empty_lbl)
-            plt.scatter(min_across_across[valid_min_indices], min_across_depth[valid_min_indices], c=np.array([clr]), label=newlbl.format(newgrp), s=point_size)
-            plt.scatter(max_across_across[valid_max_indices], max_across_depth[valid_max_indices], c=np.array([clr]), s=point_size)
+            plt.scatter(
+                min_across_across[valid_min_indices],
+                min_across_depth[valid_min_indices],
+                c=np.array([clr]),
+                label=newlbl.format(newgrp),
+                s=point_size,
+            )
+            plt.scatter(
+                max_across_across[valid_max_indices],
+                max_across_depth[valid_max_indices],
+                c=np.array([clr]),
+                s=point_size,
+            )
 
         self._plot_depth_guidelines(mindepth, maxdepth)
         plt.xlim(minacross * 1.3, maxacross * 1.3)
         plt.gca().invert_yaxis()
-        plt.title('{} (SN{}): {} by {}'.format(self.sonartype, self.serialnum, self.name, mode))
-        plt.xlabel('AcrossTrack Distance (meters)')
-        plt.ylabel('Depth (meters, +down)')
+        plt.title(
+            "{} (SN{}): {} by {}".format(
+                self.sonartype, self.serialnum, self.name, mode
+            )
+        )
+        plt.xlabel("AcrossTrack Distance (meters)")
+        plt.ylabel("Depth (meters, +down)")
         plt.legend()
         plt.grid()
         plt.show()
@@ -414,7 +565,7 @@ class PingPeriodTest(BaseTest):
 
     def __init__(self, fqpr, round_frequency: bool = True):
         self.fqpr = fqpr
-        super().__init__(fqpr, 'PingPeriodTest')
+        super().__init__(fqpr, "PingPeriodTest")
         self.round_frequency = round_frequency
 
         self.time = None
@@ -434,17 +585,21 @@ class PingPeriodTest(BaseTest):
         Load and preprocess the data from the fqpr instance
         """
 
-        print('Loading data for ping period test')
+        print("Loading data for ping period test")
         try:
-            self.depth = self.fqpr.multibeam.raw_ping[0].depthoffset.mean(dim='beam')
+            self.depth = self.fqpr.multibeam.raw_ping[0].depthoffset.mean(dim="beam")
         except KeyError:
-            print("Unable to find 'depthoffset' in given fqpr instance.  Are you sure you've run svcorrect?")
+            print(
+                "Unable to find 'depthoffset' in given fqpr instance.  Are you sure you've run svcorrect?"
+            )
             return
 
         maxbeam = self.fqpr.multibeam.raw_ping[0].beam.shape[0]
 
         self.time = self.fqpr.multibeam.raw_ping[0].time
-        self.frequency = self.fqpr.multibeam.raw_ping[0].frequency.isel(beam=int(maxbeam / 2))
+        self.frequency = self.fqpr.multibeam.raw_ping[0].frequency.isel(
+            beam=int(maxbeam / 2)
+        )
         self.modeone = self.fqpr.multibeam.raw_ping[0].mode
         self.modetwo = self.fqpr.multibeam.raw_ping[0].modetwo
 
@@ -465,15 +620,18 @@ class PingPeriodTest(BaseTest):
         # check for alternating times, matching what we would expect with dual ping sonar
         rolling_average = False
         samplemean = np.mean(self.time_dif[1:11])
-        checks = [self.time_dif[1] * 2 < samplemean, self.time_dif[2] * 2 < samplemean,
-                  self.time_dif[3] * 2 < samplemean,
-                  self.time_dif[4] * 2 < samplemean]
+        checks = [
+            self.time_dif[1] * 2 < samplemean,
+            self.time_dif[2] * 2 < samplemean,
+            self.time_dif[3] * 2 < samplemean,
+            self.time_dif[4] * 2 < samplemean,
+        ]
         if checks == [False, True, False, True] or checks == [True, False, True, False]:
-            print('Averaging over dual swath periods...')
+            print("Averaging over dual swath periods...")
             rolling_average = True
 
         if rolling_average:
-            self.time_dif = np.convolve(self.time_dif, np.ones(2) / 2, mode='valid')
+            self.time_dif = np.convolve(self.time_dif, np.ones(2) / 2, mode="valid")
             self.time_dif = np.append(self.time_dif, self.time_dif[-1])
 
         self.frequency = self._round_frequency_ident()
@@ -483,7 +641,7 @@ class PingPeriodTest(BaseTest):
         self.unique_modeone = [x for x in np.unique(self.modeone) if x]
         self.unique_modetwo = [x for x in np.unique(self.modetwo) if x]
 
-    def plot(self, mode: str = 'frequency', depth_bin_size: float = 5.0):
+    def plot(self, mode: str = "frequency", depth_bin_size: float = 5.0):
         """
         Plot all outermost points binned in the depth dimension according to the provided size.  Each plot is organized
         by the given mode, if mode is frequency will plot once per frequency, such that the colors let you know the extinction
@@ -498,7 +656,7 @@ class PingPeriodTest(BaseTest):
         """
 
         if self.depth is None:
-            print('Data was not successfully loaded, PingPeriodTest must be recreated')
+            print("Data was not successfully loaded, PingPeriodTest must be recreated")
             return
 
         fig = plt.figure()
@@ -509,7 +667,7 @@ class PingPeriodTest(BaseTest):
 
         colors = iter(cm.rainbow(np.linspace(0, 1, len(groups))))
         for grp in groups:
-            print('Building plot for {}={}'.format(mode, grp))
+            print("Building plot for {}={}".format(mode, grp))
             idx = comparison == grp
             dpth_by_idx = self.depth[idx]
             diff_by_idx = self.time_dif[idx]
@@ -520,12 +678,21 @@ class PingPeriodTest(BaseTest):
             totalmindepth = min(mindepth, totalmindepth)
             totalmaxdepth = max(maxdepth, totalmaxdepth)
 
-            bins = np.linspace(mindepth, maxdepth, max(int((maxdepth - mindepth) / depth_bin_size), 5))
+            bins = np.linspace(
+                mindepth, maxdepth, max(int((maxdepth - mindepth) / depth_bin_size), 5)
+            )
             dpth_indices = np.digitize(dpth_by_idx, bins) - 1
 
             diff_vals = np.array(
-                [diff_by_idx[dpth_indices == i].mean() for i in range(len(bins) - 1) if i in dpth_indices])
-            dpth_vals = np.array([bins[i] for i in range(len(bins) - 1) if i in dpth_indices])
+                [
+                    diff_by_idx[dpth_indices == i].mean()
+                    for i in range(len(bins) - 1)
+                    if i in dpth_indices
+                ]
+            )
+            dpth_vals = np.array(
+                [bins[i] for i in range(len(bins) - 1) if i in dpth_indices]
+            )
 
             totalmaxperiod = max(totalmaxperiod, np.max(diff_vals))
 
@@ -534,9 +701,13 @@ class PingPeriodTest(BaseTest):
             plt.plot(dpth_vals, diff_vals, c=c, label=lbl.format(grp))
 
         # self._plot_depth_guidelines(totalmindepth, totalmaxdepth)
-        plt.title('{} (SN{}): {} by {}'.format(self.sonartype, self.serialnum, self.name, mode))
-        plt.xlabel('Depth (meters, +down)')
-        plt.ylabel('Period of Ping (seconds)')
+        plt.title(
+            "{} (SN{}): {} by {}".format(
+                self.sonartype, self.serialnum, self.name, mode
+            )
+        )
+        plt.xlabel("Depth (meters, +down)")
+        plt.ylabel("Period of Ping (seconds)")
         plt.ylim(0, totalmaxperiod * 2)
         plt.xlim(0, totalmaxdepth * 2)
         plt.legend()
@@ -593,19 +764,26 @@ def difference_grid_and_soundings(ref_surf: BathyGrid, fq: Fqpr):
         angle values for each returned sounding
     """
 
-    grid_depth_at_loc = ref_surf.layer_values_at_xy(fq.x, fq.y, 'depth')
+    grid_depth_at_loc = ref_surf.layer_values_at_xy(fq.x, fq.y, "depth")
     empty_grid_idx = np.isnan(grid_depth_at_loc)
 
     grid_depth_at_loc = grid_depth_at_loc[~empty_grid_idx]
     soundings_depth_at_loc = fq.z[~empty_grid_idx]
     soundings_beam_at_loc = fq.beam[~empty_grid_idx]
-    soundings_angle_at_loc = np.rad2deg(fq.corr_pointing_angle[~empty_grid_idx])  # corrected beam angle is in radians
+    soundings_angle_at_loc = np.rad2deg(
+        fq.corr_pointing_angle[~empty_grid_idx]
+    )  # corrected beam angle is in radians
     depth_diff = soundings_depth_at_loc - grid_depth_at_loc
 
     return depth_diff, grid_depth_at_loc, soundings_beam_at_loc, soundings_angle_at_loc
 
 
-def _acctest_generate_stats(soundings_xdim: np.array, depth_diff: np.array, bin_size: float, client: Client = None):
+def _acctest_generate_stats(
+    soundings_xdim: np.array,
+    depth_diff: np.array,
+    bin_size: float,
+    client: Client = None,
+):
     """
     Build the accuracy test statistics for given beam values/angle values and the depths determined previously.
 
@@ -633,9 +811,11 @@ def _acctest_generate_stats(soundings_xdim: np.array, depth_diff: np.array, bin_
     """
 
     if client is not None:
-        raise NotImplementedError('Not yet ready for dask')
+        raise NotImplementedError("Not yet ready for dask")
 
-    bins = np.arange(int(soundings_xdim.min()), np.ceil(soundings_xdim.max()) + bin_size, bin_size)
+    bins = np.arange(
+        int(soundings_xdim.min()), np.ceil(soundings_xdim.max()) + bin_size, bin_size
+    )
     bins_dig = np.sort(np.digitize(soundings_xdim, bins))
     bins_dig = np.delete(bins_dig, bins_dig >= len(bins))  # remove out of bounds data
     bins_dig = np.delete(bins_dig, bins_dig < 0)  # remove out of bounds data
@@ -654,7 +834,7 @@ def _acctest_generate_stats(soundings_xdim: np.array, depth_diff: np.array, bin_
             dpthdiff_rel_xdim_avg.append((split_diff_chnk - depth_offset).mean())
             dpthdiff_rel_xdim_stddev.append((split_diff_chnk - depth_offset).std())
     else:
-        raise NotImplementedError('Not yet ready for dask')
+        raise NotImplementedError("Not yet ready for dask")
 
     dpth_avg = np.array(dpthdiff_rel_xdim_avg)
     dpth_stddev = np.array(dpthdiff_rel_xdim_stddev)
@@ -662,8 +842,18 @@ def _acctest_generate_stats(soundings_xdim: np.array, depth_diff: np.array, bin_
     return dpth_avg, dpth_stddev, depth_offset, bins
 
 
-def _acctest_plots(arr_mean: np.array, arr_std: np.array, xdim: np.array, xdim_bins: np.array, depth_diff: np.array,
-                   surf_depth: np.array, depth_offset: float, mode: str, output_pth: str, show: bool = False):
+def _acctest_plots(
+    arr_mean: np.array,
+    arr_std: np.array,
+    xdim: np.array,
+    xdim_bins: np.array,
+    depth_diff: np.array,
+    surf_depth: np.array,
+    depth_offset: float,
+    mode: str,
+    output_pth: str,
+    show: bool = False,
+):
     """
     Accuracy plots for sounding/surface difference values.
 
@@ -702,16 +892,16 @@ def _acctest_plots(arr_mean: np.array, arr_std: np.array, xdim: np.array, xdim_b
         Axes for plot
     """
 
-    if mode == 'beam':
-        xlabel = 'Beam Number'
-        ylabel = 'Depth Bias (meters)'
-        mode = 'Beam'
-    elif mode == 'angle':
-        xlabel = 'Angle (Degrees)'
-        ylabel = 'Depth Bias (meters)'
-        mode = 'Angle'
+    if mode == "beam":
+        xlabel = "Beam Number"
+        ylabel = "Depth Bias (meters)"
+        mode = "Beam"
+    elif mode == "angle":
+        xlabel = "Angle (Degrees)"
+        ylabel = "Depth Bias (meters)"
+        mode = "Angle"
     else:
-        raise ValueError('Mode must be one of beam or angle')
+        raise ValueError("Mode must be one of beam or angle")
 
     o1_min, o1_max, so_min, so_max = calc_order(surf_depth)
 
@@ -719,36 +909,81 @@ def _acctest_plots(arr_mean: np.array, arr_std: np.array, xdim: np.array, xdim_b
     plus = arr_mean + 1.96 * arr_std
     minus = arr_mean - 1.96 * arr_std
     # plot the soundings
-    a.scatter(xdim, depth_diff - depth_offset, s=6, c='0.5', marker=',', alpha=0.3, edgecolors='none', label='Soundings')
+    a.scatter(
+        xdim,
+        depth_diff - depth_offset,
+        s=6,
+        c="0.5",
+        marker=",",
+        alpha=0.3,
+        edgecolors="none",
+        label="Soundings",
+    )
 
     # plot 2 std
-    a.fill_between(xdim_bins, minus, plus, facecolor='red', interpolate=True, alpha=0.1)
+    a.fill_between(xdim_bins, minus, plus, facecolor="red", interpolate=True, alpha=0.1)
     # plot mean line
-    a.plot(xdim_bins, arr_mean, 'b', linewidth=2, label='Mean Depth')
+    a.plot(xdim_bins, arr_mean, "b", linewidth=2, label="Mean Depth")
     # set axes
     a.grid()
     ymax = max((depth_diff - depth_offset).max(), 1.3 * o1_max)
     ymin = min((depth_diff - depth_offset).min(), -1.3 * o1_max)
-    if mode == 'Beam':
+    if mode == "Beam":
         a.set_xlim(xdim_bins.min(), xdim_bins.max())
     else:
         a.set_xlim(xdim_bins.max(), xdim_bins.min())
     a.set_ylim(ymin, ymax)
     a.set_xlabel(xlabel)
     a.set_ylabel(ylabel)
-    a.set_title('Depth Bias vs {}\nremoved {}m offset from grid to sounding'.format(mode, round(depth_offset, 3)))
+    a.set_title(
+        "Depth Bias vs {}\nremoved {}m offset from grid to sounding".format(
+            mode, round(depth_offset, 3)
+        )
+    )
 
     # Order 1 line
-    a.hlines(o1_max, xdim_bins.min(), xdim_bins.max(), colors='grey', linestyles='dashed', linewidth=3, alpha=0.5,
-             label='Order 1')
-    a.hlines(-o1_max, xdim_bins.min(), xdim_bins.max(), colors='grey', linestyles='dashed', linewidth=3, alpha=0.5)
+    a.hlines(
+        o1_max,
+        xdim_bins.min(),
+        xdim_bins.max(),
+        colors="grey",
+        linestyles="dashed",
+        linewidth=3,
+        alpha=0.5,
+        label="Order 1",
+    )
+    a.hlines(
+        -o1_max,
+        xdim_bins.min(),
+        xdim_bins.max(),
+        colors="grey",
+        linestyles="dashed",
+        linewidth=3,
+        alpha=0.5,
+    )
 
     # Special Order Line
-    a.hlines(so_max, xdim_bins.min(), xdim_bins.max(), colors='g', linestyles='dashed', linewidth=3, alpha=0.5,
-             label='Special Order')
-    a.hlines(-so_max, xdim_bins.min(), xdim_bins.max(), colors='g', linestyles='dashed', linewidth=3, alpha=0.5)
-    a.legend(loc='upper left')
-    if mode == 'Angle':
+    a.hlines(
+        so_max,
+        xdim_bins.min(),
+        xdim_bins.max(),
+        colors="g",
+        linestyles="dashed",
+        linewidth=3,
+        alpha=0.5,
+        label="Special Order",
+    )
+    a.hlines(
+        -so_max,
+        xdim_bins.min(),
+        xdim_bins.max(),
+        colors="g",
+        linestyles="dashed",
+        linewidth=3,
+        alpha=0.5,
+    )
+    a.legend(loc="upper left")
+    if mode == "Angle":
         a.invert_xaxis()
 
     f.savefig(output_pth)
@@ -757,25 +992,39 @@ def _acctest_plots(arr_mean: np.array, arr_std: np.array, xdim: np.array, xdim_b
     return f, a
 
 
-def _validate_accuracy_test(ref_surf: BathyGrid, fq: Fqpr, line_names: Union[str, list] = None):
+def _validate_accuracy_test(
+    ref_surf: BathyGrid, fq: Fqpr, line_names: Union[str, list] = None
+):
     err = False
     converted_crs = fq.multibeam.raw_ping[0].vertical_crs
     if ref_surf.vertical_reference not in [fq.vert_ref, converted_crs]:
         if len(converted_crs) > 20:
-            converted_crs = converted_crs[:20] + '...'
-        print('The surface vertical reference ({}) does not match the Converted data vertical reference ({},{})'.format(ref_surf.vertical_reference,
-                                                                                                                        fq.vert_ref, converted_crs))
+            converted_crs = converted_crs[:20] + "..."
+        print(
+            "The surface vertical reference ({}) does not match the Converted data vertical reference ({},{})".format(
+                ref_surf.vertical_reference, fq.vert_ref, converted_crs
+            )
+        )
         err = True
         return err
     if ref_surf.epsg != fq.horizontal_crs.to_epsg():
-        print('The surface horizontal reference ({}) does not match the Converted data horizontal reference ({})'.format(ref_surf.epsg,
-                                                                                                                         fq.horizontal_crs.to_epsg()))
+        print(
+            "The surface horizontal reference ({}) does not match the Converted data horizontal reference ({})".format(
+                ref_surf.epsg, fq.horizontal_crs.to_epsg()
+            )
+        )
         err = True
         return err
 
 
-def accuracy_test(ref_surf: Union[str, BathyGrid], fq: Union[str, Fqpr], output_directory: str, line_names: Union[str, list] = None,
-                  ping_times: tuple = None, show_plots: bool = False):
+def accuracy_test(
+    ref_surf: Union[str, BathyGrid],
+    fq: Union[str, Fqpr],
+    output_directory: str,
+    line_names: Union[str, list] = None,
+    ping_times: tuple = None,
+    show_plots: bool = False,
+):
     """
     Accuracy test: takes a reference surface and accuracy test lines and creates plots of depth difference between
     surface and lines for the soundings nearest the grid nodes.  Plots are by beam/by angle averages.  This function
@@ -806,19 +1055,28 @@ def accuracy_test(ref_surf: Union[str, BathyGrid], fq: Union[str, Fqpr], output_
     os.makedirs(output_directory, exist_ok=True)
 
     grouped_datasets = {}
-    print('loading data...')
-    linedata = fq.subset_variables_by_line(['x', 'y', 'z', 'corr_pointing_angle', 'mode', 'frequency', 'modetwo'],
-                                           filter_by_detection=True, line_names=line_names, ping_times=ping_times)
+    print("loading data...")
+    linedata = fq.subset_variables_by_line(
+        ["x", "y", "z", "corr_pointing_angle", "mode", "frequency", "modetwo"],
+        filter_by_detection=True,
+        line_names=line_names,
+        ping_times=ping_times,
+    )
     for mline, linedataset in linedata.items():
         unique_mode = np.unique(linedataset.mode)
         if len(unique_mode) > 1:
-            ucount = [np.count_nonzero(linedataset.mode == umode) for umode in unique_mode]
+            ucount = [
+                np.count_nonzero(linedataset.mode == umode) for umode in unique_mode
+            ]
             unique_mode = [x for _, x in sorted(zip(ucount, unique_mode))][0]
         else:
             unique_mode = unique_mode[0]
         unique_modetwo = np.unique(linedataset.modetwo)
         if len(unique_modetwo) > 1:
-            ucount = [np.count_nonzero(linedataset.modetwo == umode) for umode in unique_modetwo]
+            ucount = [
+                np.count_nonzero(linedataset.modetwo == umode)
+                for umode in unique_modetwo
+            ]
             unique_modetwo = [x for _, x in sorted(zip(ucount, unique_modetwo))][0]
         else:
             unique_modetwo = unique_modetwo[0]
@@ -827,16 +1085,27 @@ def accuracy_test(ref_surf: Union[str, BathyGrid], fq: Union[str, Fqpr], output_
         freqs = [f for f in freq_numbers if len(str(f)) == lens]
         digits = -(len(str(freqs[0])) - 1)
         rounded_freq = list(np.unique([np.around(f, digits) for f in freqs]))[0]
-        print('{}: mode {} modetwo {} frequency {}'.format(mline, unique_mode, unique_modetwo, rounded_freq))
-        dkey = '{}-{}-{}hz'.format(unique_mode, unique_modetwo, rounded_freq)
+        print(
+            "{}: mode {} modetwo {} frequency {}".format(
+                mline, unique_mode, unique_modetwo, rounded_freq
+            )
+        )
+        dkey = "{}-{}-{}hz".format(unique_mode, unique_modetwo, rounded_freq)
         if dkey not in grouped_datasets:
             grouped_datasets[dkey] = linedataset
         else:
-            grouped_datasets[dkey] = xr.concat([grouped_datasets[dkey], linedataset], dim='sounding')
+            grouped_datasets[dkey] = xr.concat(
+                [grouped_datasets[dkey], linedataset], dim="sounding"
+            )
 
-    print('building plots...')
+    print("building plots...")
     for dkey, dset in grouped_datasets.items():
-        depth_diff, surf_depth, soundings_beam, soundings_angle = difference_grid_and_soundings(ref_surf, dset)
+        (
+            depth_diff,
+            surf_depth,
+            soundings_beam,
+            soundings_angle,
+        ) = difference_grid_and_soundings(ref_surf, dset)
 
         # for plots, we limit to max 30000 soundings, the plot chokes with more than that
         soundings_filter = int(np.ceil(len(soundings_beam) / 30000))
@@ -845,11 +1114,35 @@ def accuracy_test(ref_surf: Union[str, BathyGrid], fq: Union[str, Fqpr], output_
         filter_diff = depth_diff[::soundings_filter]
         filter_surf = surf_depth[::soundings_filter]
 
-        d_rel_a_avg, d_rel_a_stddev, depth_offset, angbins = _acctest_generate_stats(filter_angle, filter_diff, bin_size=1)
-        d_rel_b_avg, d_rel_b_stddev, depth_offset, beambins = _acctest_generate_stats(filter_beam, filter_diff, bin_size=1)
+        d_rel_a_avg, d_rel_a_stddev, depth_offset, angbins = _acctest_generate_stats(
+            filter_angle, filter_diff, bin_size=1
+        )
+        d_rel_b_avg, d_rel_b_stddev, depth_offset, beambins = _acctest_generate_stats(
+            filter_beam, filter_diff, bin_size=1
+        )
 
-        _acctest_plots(d_rel_b_avg, d_rel_b_stddev, filter_beam, beambins, filter_diff, filter_surf, depth_offset, mode='beam',
-                       output_pth=os.path.join(output_directory, dkey + '_acc_beam.png'), show=show_plots)
-        _acctest_plots(d_rel_a_avg, d_rel_a_stddev, filter_angle, angbins, filter_diff, filter_surf, depth_offset, mode='angle',
-                       output_pth=os.path.join(output_directory, dkey + '_acc_angle.png'), show=show_plots)
-    print('Accuracy test complete.')
+        _acctest_plots(
+            d_rel_b_avg,
+            d_rel_b_stddev,
+            filter_beam,
+            beambins,
+            filter_diff,
+            filter_surf,
+            depth_offset,
+            mode="beam",
+            output_pth=os.path.join(output_directory, dkey + "_acc_beam.png"),
+            show=show_plots,
+        )
+        _acctest_plots(
+            d_rel_a_avg,
+            d_rel_a_stddev,
+            filter_angle,
+            angbins,
+            filter_diff,
+            filter_surf,
+            depth_offset,
+            mode="angle",
+            output_pth=os.path.join(output_directory, dkey + "_acc_angle.png"),
+            show=show_plots,
+        )
+    print("Accuracy test complete.")

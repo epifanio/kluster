@@ -24,10 +24,23 @@ def build_entwine_points(input_las_directory: str, output_folder: str):
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
 
-    args = ["cmd.exe", "/C", "set pythonpath=", "&&", activate_file, "Pydro38_test", "&&",
-            'entwine', 'build', '-i', input_las_directory, '-o', output_folder]
+    args = [
+        "cmd.exe",
+        "/C",
+        "set pythonpath=",
+        "&&",
+        activate_file,
+        "Pydro38_test",
+        "&&",
+        "entwine",
+        "build",
+        "-i",
+        input_las_directory,
+        "-o",
+        output_folder,
+    ]
 
-    subprocess.Popen(' '.join(args), creationflags=subprocess.CREATE_NEW_CONSOLE)
+    subprocess.Popen(" ".join(args), creationflags=subprocess.CREATE_NEW_CONSOLE)
 
 
 def visualize_entwine(entwine_dir: str):
@@ -47,9 +60,13 @@ def visualize_entwine(entwine_dir: str):
     # start the nodejs http server
     base_path, ent_dir = os.path.split(entwine_dir)
 
-    args = ["cmd.exe", "/K", 'http-server', base_path, '-p', '8080', '--cors']
-    subprocess.Popen(' '.join(args), creationflags=subprocess.CREATE_NEW_CONSOLE)
+    args = ["cmd.exe", "/K", "http-server", base_path, "-p", "8080", "--cors"]
+    subprocess.Popen(" ".join(args), creationflags=subprocess.CREATE_NEW_CONSOLE)
 
     # wait a sec
     sleep(2)
-    webbrowser.open_new('https://potree.entwine.io/data/view.html?r=%22http://localhost:8080/{}%22'.format(ent_dir))
+    webbrowser.open_new(
+        "https://potree.entwine.io/data/view.html?r=%22http://localhost:8080/{}%22".format(
+            ent_dir
+        )
+    )

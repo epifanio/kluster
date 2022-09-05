@@ -15,12 +15,14 @@ try:
     from vyperdatum.points import VyperPoints
     from vyperdatum.core import VyperCore, vertical_datum_to_wkt, DatumData
     from vyperdatum.vypercrs import VyperPipelineCRS, CompoundCRS
+
     vyperdatum_found = True
 except ModuleNotFoundError:
     vyperdatum_found = False
 
 try:
     from aviso import fes
+
     fes_grids = list(fes.regional_sep_catalog.keys())
     fes_grids = [fg for fg in fes_grids if os.path.exists(fes.__dict__[fg])]
     fes_found = True
@@ -29,7 +31,7 @@ except ModuleNotFoundError:
     fes_grids = []
 
 fes_model = None
-fes_model_description = ''
+fes_model_description = ""
 
 
 def distrib_run_georeference(dat: list):
@@ -54,19 +56,46 @@ def distrib_run_georeference(dat: list):
          processing_status]
     """
 
-    ans = georef_by_worker(dat[0], dat[1], dat[2], dat[3], dat[4], dat[5], dat[6], dat[7], dat[8], dat[9], dat[10], dat[11], dat[12])
+    ans = georef_by_worker(
+        dat[0],
+        dat[1],
+        dat[2],
+        dat[3],
+        dat[4],
+        dat[5],
+        dat[6],
+        dat[7],
+        dat[8],
+        dat[9],
+        dat[10],
+        dat[11],
+        dat[12],
+    )
     # return processing status = 4 for all affected soundings
-    processing_status = xr.DataArray(np.full_like(dat[0][0], 4, dtype=np.uint8),
-                                     coords={'time': dat[0][0].coords['time'],
-                                             'beam': dat[0][0].coords['beam']},
-                                     dims=['time', 'beam'])
+    processing_status = xr.DataArray(
+        np.full_like(dat[0][0], 4, dtype=np.uint8),
+        coords={"time": dat[0][0].coords["time"], "beam": dat[0][0].coords["beam"]},
+        dims=["time", "beam"],
+    )
     ans.append(processing_status)
     return ans
 
 
-def georef_by_worker(sv_corr: list, alt: xr.DataArray, lon: xr.DataArray, lat: xr.DataArray, hdng: xr.DataArray,
-                     heave: xr.DataArray, wline: float, vert_ref: str, input_crs: CRS, horizontal_crs: CRS,
-                     z_offset: float, vdatum_directory: str = None, tide_corrector: xr.DataArray = None):
+def georef_by_worker(
+    sv_corr: list,
+    alt: xr.DataArray,
+    lon: xr.DataArray,
+    lat: xr.DataArray,
+    hdng: xr.DataArray,
+    heave: xr.DataArray,
+    wline: float,
+    vert_ref: str,
+    input_crs: CRS,
+    horizontal_crs: CRS,
+    z_offset: float,
+    vdatum_directory: str = None,
+    tide_corrector: xr.DataArray = None,
+):
     """
     Use the raw attitude/navigation to transform the vessel relative along/across/down offsets to georeferenced
     soundings.  Will support transformation to geographic and projected coordinate systems and with a vertical
@@ -124,51 +153,88 @@ def georef_by_worker(sv_corr: list, alt: xr.DataArray, lon: xr.DataArray, lat: x
     if vert_ref in kluster_variables.ellipse_based_vertical_references:
         corr_altitude = alt
         corr_heave = xr.zeros_like(corr_altitude)
-        corr_dpth = (depthoffset - corr_altitude.values[:, None]).astype(np.float32) * -1
-    elif vert_ref == 'vessel':
+        corr_dpth = (depthoffset - corr_altitude.values[:, None]).astype(
+            np.float32
+        ) * -1
+    elif vert_ref == "vessel":
         corr_heave = heave
         corr_altitude = xr.zeros_like(corr_heave)
         corr_dpth = (depthoffset + corr_heave.values[:, None]).astype(np.float32)
-    elif vert_ref == 'waterline':
+    elif vert_ref == "waterline":
         corr_heave = heave
         corr_altitude = xr.zeros_like(corr_heave)
-        corr_dpth = (depthoffset + corr_heave.values[:, None] - wline).astype(np.float32)
-    elif vert_ref == 'Aviso MLLW':
+        corr_dpth = (depthoffset + corr_heave.values[:, None] - wline).astype(
+            np.float32
+        )
+    elif vert_ref == "Aviso MLLW":
         corr_heave = heave
         corr_altitude = xr.zeros_like(corr_heave)
-        corr_dpth = (depthoffset + corr_heave.values[:, None] - wline - tide_corrector).astype(np.float32)
+        corr_dpth = (
+            depthoffset + corr_heave.values[:, None] - wline - tide_corrector
+        ).astype(np.float32)
 
     # get the sv corrected alongtrack/acrosstrack offsets stacked without the NaNs (arrays have NaNs for beams that do not exist in that sector)
-    at_idx, alongtrack_stck = stack_nan_array(alongtrack, stack_dims=('time', 'beam'))
-    ac_idx, acrosstrack_stck = stack_nan_array(acrosstrack, stack_dims=('time', 'beam'))
+    at_idx, alongtrack_stck = stack_nan_array(alongtrack, stack_dims=("time", "beam"))
+    ac_idx, acrosstrack_stck = stack_nan_array(acrosstrack, stack_dims=("time", "beam"))
 
     # determine the beam wise offsets
-    bm_azimuth = np.rad2deg(np.arctan2(acrosstrack_stck, alongtrack_stck)) + np.float32(hdng[at_idx[0]].values)
+    bm_azimuth = np.rad2deg(np.arctan2(acrosstrack_stck, alongtrack_stck)) + np.float32(
+        hdng[at_idx[0]].values
+    )
     bm_radius = np.sqrt(acrosstrack_stck ** 2 + alongtrack_stck ** 2)
-    pos = g.fwd(lon[at_idx[0]].values, lat[at_idx[0]].values, bm_azimuth.values, bm_radius.values)
+    pos = g.fwd(
+        lon[at_idx[0]].values,
+        lat[at_idx[0]].values,
+        bm_azimuth.values,
+        bm_radius.values,
+    )
     z = np.around(corr_dpth, 3)
 
-    if vert_ref in ['NOAA MLLW', 'NOAA MHW']:
-        z_stck = z.values[ac_idx]  # get the depth values where there are valid acrosstrack results (i.e. svcorrect worked)
-        if vert_ref == 'NOAA MLLW':
-            z_stck, vdatum_unc = transform_vyperdatum(pos[0], pos[1], z_stck, input_crs.to_epsg(), 'mllw', vdatum_directory=vdatum_directory, horizontal_crs=horizontal_crs)
+    if vert_ref in ["NOAA MLLW", "NOAA MHW"]:
+        z_stck = z.values[
+            ac_idx
+        ]  # get the depth values where there are valid acrosstrack results (i.e. svcorrect worked)
+        if vert_ref == "NOAA MLLW":
+            z_stck, vdatum_unc = transform_vyperdatum(
+                pos[0],
+                pos[1],
+                z_stck,
+                input_crs.to_epsg(),
+                "mllw",
+                vdatum_directory=vdatum_directory,
+                horizontal_crs=horizontal_crs,
+            )
         else:
-            z_stck, vdatum_unc = transform_vyperdatum(pos[0], pos[1], z_stck, input_crs.to_epsg(), 'mhw', vdatum_directory=vdatum_directory, horizontal_crs=horizontal_crs)
+            z_stck, vdatum_unc = transform_vyperdatum(
+                pos[0],
+                pos[1],
+                z_stck,
+                input_crs.to_epsg(),
+                "mhw",
+                vdatum_directory=vdatum_directory,
+                horizontal_crs=horizontal_crs,
+            )
         vdatum_unc = reform_nan_array(vdatum_unc, ac_idx, z.shape, z.coords, z.dims)
         z = reform_nan_array(z_stck, ac_idx, z.shape, z.coords, z.dims)
     else:
         vdatum_unc = xr.zeros_like(z)
 
     # compute the geohash for each beam return, the base32 encoded cell that the beam falls within, used for spatial indexing
-    ghash = compute_geohash(pos[1], pos[0], precision=kluster_variables.geohash_precision)
+    ghash = compute_geohash(
+        pos[1], pos[0], precision=kluster_variables.geohash_precision
+    )
 
     if horizontal_crs.is_projected:
         # Transformer.transform input order is based on the CRS, see CRS.geodetic_crs.axis_info
         # - lon, lat - this appears to be valid when using CRS from proj4 string
         # - lat, lon - this appears to be valid when using CRS from epsg
         # use the always_xy option to force the transform to expect lon/lat order
-        georef_transformer = Transformer.from_crs(input_crs, horizontal_crs, always_xy=True)
-        newpos = georef_transformer.transform(pos[0], pos[1], errcheck=False)  # longitude / latitude order (x/y)
+        georef_transformer = Transformer.from_crs(
+            input_crs, horizontal_crs, always_xy=True
+        )
+        newpos = georef_transformer.transform(
+            pos[0], pos[1], errcheck=False
+        )  # longitude / latitude order (x/y)
     else:
         newpos = pos
 
@@ -176,21 +242,42 @@ def georef_by_worker(sv_corr: list, alt: xr.DataArray, lon: xr.DataArray, lat: x
     if bad_nav_mask.any():
         newpos[0][bad_nav_mask] = np.nan
         newpos[1][bad_nav_mask] = np.nan
-    x = reform_nan_array(np.around(newpos[0], 3), at_idx, alongtrack.shape, alongtrack.coords, alongtrack.dims)
-    y = reform_nan_array(np.around(newpos[1], 3), ac_idx, acrosstrack.shape, acrosstrack.coords, acrosstrack.dims)
-    ghash = reform_nan_array(ghash, ac_idx, acrosstrack.shape, acrosstrack.coords, acrosstrack.dims)
+    x = reform_nan_array(
+        np.around(newpos[0], 3),
+        at_idx,
+        alongtrack.shape,
+        alongtrack.coords,
+        alongtrack.dims,
+    )
+    y = reform_nan_array(
+        np.around(newpos[1], 3),
+        ac_idx,
+        acrosstrack.shape,
+        acrosstrack.coords,
+        acrosstrack.dims,
+    )
+    ghash = reform_nan_array(
+        ghash, ac_idx, acrosstrack.shape, acrosstrack.coords, acrosstrack.dims
+    )
     if bad_nav_mask.any():
         final_mask = ~np.isnan(x)
         if final_mask.any():
             z = z.where(final_mask, np.nan)
             vdatum_unc = vdatum_unc.where(final_mask, np.nan)
-            ghash = ghash.where(final_mask, b' ' * kluster_variables.geohash_precision)
+            ghash = ghash.where(final_mask, b" " * kluster_variables.geohash_precision)
 
     return [x, y, z, corr_heave, corr_altitude, vdatum_unc, ghash]
 
 
-def transform_vyperdatum(x: np.array, y: np.array, z: np.array, source_datum: Union[str, int] = 'nad83',
-                         final_datum: str = 'mllw', vdatum_directory: str = None, horizontal_crs: CRS = None):
+def transform_vyperdatum(
+    x: np.array,
+    y: np.array,
+    z: np.array,
+    source_datum: Union[str, int] = "nad83",
+    final_datum: str = "mllw",
+    vdatum_directory: str = None,
+    horizontal_crs: CRS = None,
+):
     """
     When we specify a NOAA vertical datum (NOAA Mean Lower Low Water, NOAA Mean High Water) in Kluster, we use
     vyperdatum/VDatum to transform the points to the appropriate vertical datum.
@@ -221,13 +308,15 @@ def transform_vyperdatum(x: np.array, y: np.array, z: np.array, source_datum: Un
         uncertainty associated with the vertical transformation between the source and destination datum
     """
 
-    if final_datum == 'mllw':  # we need to let vyperdatum know this is positive down, do that by giving it the mllw epsg
+    if (
+        final_datum == "mllw"
+    ):  # we need to let vyperdatum know this is positive down, do that by giving it the mllw epsg
         final_datum = 5866
     horizontal_crs = None
     if horizontal_crs:
-        if horizontal_crs.name.find('NAD83'):
+        if horizontal_crs.name.find("NAD83"):
             final_datum = (kluster_variables.epsg_nad83, final_datum)
-        elif horizontal_crs.name.find('WGS'):
+        elif horizontal_crs.name.find("WGS"):
             final_datum = (kluster_variables.epsg_wgs84, final_datum)
 
     if vdatum_directory:
@@ -236,12 +325,16 @@ def transform_vyperdatum(x: np.array, y: np.array, z: np.array, source_datum: Un
         vp = VyperPoints(silent=True)
 
     if not os.path.exists(vp.datum_data.vdatum_path):
-        raise EnvironmentError('Unable to find path to VDatum folder: {}'.format(vp.datum_data.vdatum_path))
-    if source_datum == 'nad83':
+        raise EnvironmentError(
+            "Unable to find path to VDatum folder: {}".format(vp.datum_data.vdatum_path)
+        )
+    if source_datum == "nad83":
         source_datum = kluster_variables.epsg_nad83
-    elif source_datum == 'wgs84':
+    elif source_datum == "wgs84":
         source_datum = kluster_variables.epsg_wgs84
-    vp.transform_points((source_datum, 'ellipse'), final_datum, x, y, z=z, sample_distance=0.0001)  # sample distance in degrees
+    vp.transform_points(
+        (source_datum, "ellipse"), final_datum, x, y, z=z, sample_distance=0.0001
+    )  # sample distance in degrees
 
     return np.around(vp.z, 3), np.around(vp.unc, 3)
 
@@ -264,16 +357,18 @@ def set_vyperdatum_vdatum_path(vdatum_path: str):
     """
 
     err = False
-    status = ''
+    status = ""
     try:
         # first time setting vdatum path sets the settings file with the correct path
         vc = VyperCore(vdatum_directory=vdatum_path)
         if not vc.datum_data.vdatum_version:
             assert False
-        status = 'Found {} at {}'.format(vc.datum_data.vdatum_version, vc.datum_data.vdatum_path)
+        status = "Found {} at {}".format(
+            vc.datum_data.vdatum_version, vc.datum_data.vdatum_path
+        )
     except:
         err = True
-        status = 'No valid vdatum found at {}'.format(vdatum_path)
+        status = "No valid vdatum found at {}".format(vdatum_path)
     return err, status
 
 
@@ -286,13 +381,13 @@ def clear_vdatum_path():
         #  this initialization below works, because it has a saved vdatum_path already in settings
         vc = VyperCore()
         # remove the saved vdatum_path
-        vc.datum_data.remove_from_config('vdatum_path')
+        vc.datum_data.remove_from_config("vdatum_path")
     except:
         # special case for where VyperCore is either initialized with a broken path, or no path at all
         # initialize the datumdata object with a fake directory
-        datum_data = DatumData(vdatum_directory=r'c:\\')
+        datum_data = DatumData(vdatum_directory=r"c:\\")
         # and then remove that directory to clear the vdatum path
-        datum_data.remove_from_config('vdatum_path')
+        datum_data.remove_from_config("vdatum_path")
 
 
 def new_geohash(latitude: float, longitude: float, precision: int):
@@ -315,7 +410,7 @@ def new_geohash(latitude: float, longitude: float, precision: int):
     """
 
     if np.isnan(latitude) or np.isnan(longitude):
-        return b' ' * precision
+        return b" " * precision
     return geohash.encode(latitude, longitude, precision=precision).encode()
 
 
@@ -383,9 +478,13 @@ def geohash_to_polygon(ghash: Union[str, bytes]):
     """
 
     if isinstance(ghash, str):
-        lat_centroid, lng_centroid, lat_offset, lng_offset = geohash.decode_exactly(ghash)
+        lat_centroid, lng_centroid, lat_offset, lng_offset = geohash.decode_exactly(
+            ghash
+        )
     else:
-        lat_centroid, lng_centroid, lat_offset, lng_offset = geohash.decode_exactly(ghash.decode())
+        lat_centroid, lng_centroid, lat_offset, lng_offset = geohash.decode_exactly(
+            ghash.decode()
+        )
 
     corner_1 = (lat_centroid - lat_offset, lng_centroid - lng_offset)[::-1]
     corner_2 = (lat_centroid - lat_offset, lng_centroid + lng_offset)[::-1]
@@ -431,7 +530,11 @@ def polygon_to_geohashes(polygon: Union[np.array, geometry.Polygon], precision):
     while not testing_geohashes.empty():
         current_geohash = testing_geohashes.get()
 
-        if current_geohash not in inner_geohashes and current_geohash not in outer_geohashes and current_geohash not in intersect_geohashes:
+        if (
+            current_geohash not in inner_geohashes
+            and current_geohash not in outer_geohashes
+            and current_geohash not in intersect_geohashes
+        ):
             current_polygon = geohash_to_polygon(current_geohash)
 
             if envelope.intersects(current_polygon):
@@ -444,14 +547,23 @@ def polygon_to_geohashes(polygon: Union[np.array, geometry.Polygon], precision):
 
                 for neighbor in geohash.neighbors(current_geohash.decode()):
                     neighbor = neighbor.encode()
-                    if neighbor not in inner_geohashes and neighbor not in outer_geohashes and neighbor not in intersect_geohashes:
+                    if (
+                        neighbor not in inner_geohashes
+                        and neighbor not in outer_geohashes
+                        and neighbor not in intersect_geohashes
+                    ):
                         testing_geohashes.put(neighbor)
 
     return list(inner_geohashes), list(intersect_geohashes)
 
 
-def distance_between_coordinates(lat_one: Union[float, np.ndarray], lon_one: Union[float, np.ndarray],
-                                 lat_two: Union[float, np.ndarray], lon_two: Union[float, np.ndarray], ellipse_string: str = 'WGS84'):
+def distance_between_coordinates(
+    lat_one: Union[float, np.ndarray],
+    lon_one: Union[float, np.ndarray],
+    lat_two: Union[float, np.ndarray],
+    lon_two: Union[float, np.ndarray],
+    ellipse_string: str = "WGS84",
+):
     """
     Use the pyproj inverse transformation to determine the distance between the given point(s).  Can either be a single point,
     or an array of points
@@ -505,22 +617,34 @@ def determine_aviso_grid(longitude: float):
     nbs_ne_max_x = -62.3833313
 
     if len(fes_grids) > 2:
-        print(f"WARNING: determine_aviso_grid: found {len(fes_grids)} grids available in aviso, expected only two, this function might need to be updated.")
+        print(
+            f"WARNING: determine_aviso_grid: found {len(fes_grids)} grids available in aviso, expected only two, this function might need to be updated."
+        )
 
     if (longitude <= alaska_max_x) and (longitude >= alaska_min_x):
-        grid = 'jAcK_EEZ_ERTDM_2021'
+        grid = "jAcK_EEZ_ERTDM_2021"
     elif (longitude <= nbs_ne_max_x) and (longitude >= nbs_ne_min_x):
-        grid = 'gERTDM_NBS_NE'
+        grid = "gERTDM_NBS_NE"
     else:  # currently there are only two grids, so this logic is simple
-        raise ValueError(f'determine_aviso_grid: Unable to determine grid for longitude={longitude}.  Tried jAcK_EEZ_ERTDM_2021 ({alaska_min_x} '
-                         f'to {alaska_max_x}) and gERTDM_NBS_NE ({nbs_ne_min_x} to {nbs_ne_max_x})')
+        raise ValueError(
+            f"determine_aviso_grid: Unable to determine grid for longitude={longitude}.  Tried jAcK_EEZ_ERTDM_2021 ({alaska_min_x} "
+            f"to {alaska_max_x}) and gERTDM_NBS_NE ({nbs_ne_min_x} to {nbs_ne_max_x})"
+        )
 
     if grid not in fes_grids:
-        raise ValueError(f'determine_aviso_grid: Attempting to load {grid}, but unable to find this file in the file system.')
+        raise ValueError(
+            f"determine_aviso_grid: Attempting to load {grid}, but unable to find this file in the file system."
+        )
     return grid
 
 
-def aviso_tide_correct(latitudes: np.ndarray, longitudes: np.ndarray, times: np.ndarray, region: str, datum: str):
+def aviso_tide_correct(
+    latitudes: np.ndarray,
+    longitudes: np.ndarray,
+    times: np.ndarray,
+    region: str,
+    datum: str,
+):
     """
     Run the aviso fes module to get tide corrections for the given positions/times.  Used for tide correcting svcorrected depths,
     where you would subtract the return from this function from your (+ DOWN) depths to get a tide corrected answer.
@@ -545,11 +669,15 @@ def aviso_tide_correct(latitudes: np.ndarray, longitudes: np.ndarray, times: np.
     """
 
     if not fes_found:
-        raise ValueError(f'aviso_tide_correct: fes module not found.')
+        raise ValueError(f"aviso_tide_correct: fes module not found.")
     if region not in fes_grids:
-        raise ValueError(f'aviso_tide_correct: Attempting to load {region}, but unable to find this file in the file system.')
+        raise ValueError(
+            f"aviso_tide_correct: Attempting to load {region}, but unable to find this file in the file system."
+        )
     if not (latitudes.size == longitudes.size == times.size):
-        raise ValueError(f'aviso_tide_correct: given different length arrays, longitudes/latitudes/times must all be the same length.')
+        raise ValueError(
+            f"aviso_tide_correct: given different length arrays, longitudes/latitudes/times must all be the same length."
+        )
 
     # we have logic here to store the model as a global, so that each call doesn't have to reload the grid
     global fes_model
@@ -558,9 +686,9 @@ def aviso_tide_correct(latitudes: np.ndarray, longitudes: np.ndarray, times: np.
         fes_model = fes.Model(sep_region=region)
         fes_model_description = region
 
-    dtimes = (times * 10**6).astype('datetime64[us]')
+    dtimes = (times * 10 ** 6).astype("datetime64[us]")
     wl_fes = fes_model.tides(longitudes, latitudes, dtimes, datum=datum)
-    wl_fes = xr.DataArray(wl_fes, coords={'time': times})
+    wl_fes = xr.DataArray(wl_fes, coords={"time": times})
     return wl_fes
 
 
@@ -573,4 +701,4 @@ def aviso_clear_model():
     global fes_model
     global fes_model_description
     fes_model = None
-    fes_model_description = ''
+    fes_model_description = ""

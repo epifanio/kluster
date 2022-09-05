@@ -13,55 +13,68 @@ class OverwriteNavigationDialog(SaveStateDialog):
 
     fqpr = fully qualified ping record, the term for the datastore in kluster
     """
-    def __init__(self, parent=None, title='', settings=None):
-        super().__init__(parent, settings, widgetname='OverwriteNavigationDialog')
 
-        self.setWindowTitle('Overwrite Navigation')
+    def __init__(self, parent=None, title="", settings=None):
+        super().__init__(parent, settings, widgetname="OverwriteNavigationDialog")
+
+        self.setWindowTitle("Overwrite Navigation")
         layout = QtWidgets.QVBoxLayout()
 
-        self.input_msg = QtWidgets.QLabel('Apply to the following:')
+        self.input_msg = QtWidgets.QLabel("Apply to the following:")
 
         self.hlayout_zero = QtWidgets.QHBoxLayout()
         self.input_fqpr = BrowseListWidget(self)
         self.input_fqpr.sizeHint()
-        self.input_fqpr.setup(mode='directory', registry_key='kluster', app_name='klusterbrowse',
-                              filebrowse_title='Select input processed folder')
+        self.input_fqpr.setup(
+            mode="directory",
+            registry_key="kluster",
+            app_name="klusterbrowse",
+            filebrowse_title="Select input processed folder",
+        )
         self.hlayout_zero.addWidget(self.input_fqpr)
 
-        self.posmv_msg = QtWidgets.QLabel('POSMV Files')
+        self.posmv_msg = QtWidgets.QLabel("POSMV Files")
 
         self.hlayout_two = QtWidgets.QHBoxLayout()
         self.posmvfiles = BrowseListWidget(self)
-        self.posmvfiles.setup(registry_key='kluster', app_name='klusterbrowse',
-                              multiselect=True, filebrowse_title='Select POS MV files')
+        self.posmvfiles.setup(
+            registry_key="kluster",
+            app_name="klusterbrowse",
+            multiselect=True,
+            filebrowse_title="Select POS MV files",
+        )
         self.hlayout_two.addWidget(self.posmvfiles)
 
-        self.override_check = QtWidgets.QGroupBox('Manually set metadata')
+        self.override_check = QtWidgets.QGroupBox("Manually set metadata")
         self.override_check.setCheckable(False)
         self.override_check.setChecked(True)
         self.overrideopts = QtWidgets.QVBoxLayout()
         self.hlayout_four_one = QtWidgets.QHBoxLayout()
-        self.caltext = QtWidgets.QLabel('Date of POS MV File')
+        self.caltext = QtWidgets.QLabel("Date of POS MV File")
         self.hlayout_four_one.addWidget(self.caltext)
         self.calendar_widget = QtWidgets.QDateEdit()
         self.calendar_widget.setCalendarPopup(True)
         currdate = datetime.now()
-        self.calendar_widget.setDate(QtCore.QDate(currdate.year, currdate.month, currdate.day))
+        self.calendar_widget.setDate(
+            QtCore.QDate(currdate.year, currdate.month, currdate.day)
+        )
         self.hlayout_four_one.addWidget(self.calendar_widget)
         self.hlayout_four_two = QtWidgets.QHBoxLayout()
         self.overrideopts.addLayout(self.hlayout_four_one)
         self.overrideopts.addLayout(self.hlayout_four_two)
         self.override_check.setLayout(self.overrideopts)
 
-        self.status_msg = QtWidgets.QLabel('')
-        self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
+        self.status_msg = QtWidgets.QLabel("")
+        self.status_msg.setStyleSheet(
+            "QLabel { color : " + kluster_variables.error_color + "; }"
+        )
 
         self.hlayout_five = QtWidgets.QHBoxLayout()
         self.hlayout_five.addStretch(1)
-        self.ok_button = QtWidgets.QPushButton('OK', self)
+        self.ok_button = QtWidgets.QPushButton("OK", self)
         self.hlayout_five.addWidget(self.ok_button)
         self.hlayout_five.addStretch(1)
-        self.cancel_button = QtWidgets.QPushButton('Cancel', self)
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
         self.hlayout_five.addWidget(self.cancel_button)
         self.hlayout_five.addStretch(1)
 
@@ -117,12 +130,19 @@ class OverwriteNavigationDialog(SaveStateDialog):
 
         """
 
-        weekstart_year, weekstart_week, dy = datetime.strptime(self.calendar_widget.text(), '%m/%d/%Y').isocalendar()
+        weekstart_year, weekstart_week, dy = datetime.strptime(
+            self.calendar_widget.text(), "%m/%d/%Y"
+        ).isocalendar()
 
         # always overwrite when the user uses the manual import with this dialog
         if not self.canceled:
-            opts = {'fqpr_inst': self.fqpr_inst, 'navfiles': self.pos_files, 'weekstart_year': weekstart_year,
-                    'weekstart_week': weekstart_week, 'overwrite': True}
+            opts = {
+                "fqpr_inst": self.fqpr_inst,
+                "navfiles": self.pos_files,
+                "weekstart_year": weekstart_year,
+                "weekstart_week": weekstart_week,
+                "overwrite": True,
+            }
         else:
             opts = None
         return opts
@@ -133,7 +153,9 @@ class OverwriteNavigationDialog(SaveStateDialog):
         settings the user entered into the dialog.
         """
         if not self.fqpr_inst and not self.pos_files:
-            self.status_msg.setText('Error: You must select source data and pos mv files to continue')
+            self.status_msg.setText(
+                "Error: You must select source data and pos mv files to continue"
+            )
         else:
             self.canceled = False
             self.accept()
@@ -146,7 +168,7 @@ class OverwriteNavigationDialog(SaveStateDialog):
         self.accept()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

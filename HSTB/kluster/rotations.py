@@ -2,7 +2,13 @@ import xarray as xr
 import numpy as np
 
 
-def build_rot_mat(roll: xr.DataArray, pitch: xr.DataArray, yaw: xr.DataArray, order: str = 'rpy', degrees: bool = True):
+def build_rot_mat(
+    roll: xr.DataArray,
+    pitch: xr.DataArray,
+    yaw: xr.DataArray,
+    order: str = "rpy",
+    degrees: bool = True,
+):
     """
     Make the rotation matrix for a set of angles and return the matrix.
     All file angles are in degrees, so incoming angles are degrees.
@@ -29,19 +35,23 @@ def build_rot_mat(roll: xr.DataArray, pitch: xr.DataArray, yaw: xr.DataArray, or
         rotation matrix composed of rpy rotations
     """
 
-    if type(roll) != xr.DataArray or type(pitch) != xr.DataArray or type(yaw) != xr.DataArray:
-        raise TypeError('Expected xarray DataArray object')
+    if (
+        type(roll) != xr.DataArray
+        or type(pitch) != xr.DataArray
+        or type(yaw) != xr.DataArray
+    ):
+        raise TypeError("Expected xarray DataArray object")
 
-    if order == 'ypr':
+    if order == "ypr":
         r = yaw
         p = pitch
         y = roll
-    elif order == 'rpy':
+    elif order == "rpy":
         r = roll
         p = pitch
         y = yaw
     else:
-        raise ValueError('Order provided is not rpy or ypr.')
+        raise ValueError("Order provided is not rpy or ypr.")
 
     if degrees:
         r = np.deg2rad(r)
@@ -55,20 +65,20 @@ def build_rot_mat(roll: xr.DataArray, pitch: xr.DataArray, yaw: xr.DataArray, or
     psin = np.sin(p)
     ysin = np.sin(y)
 
-    r00 = (ycos * pcos).assign_coords({'x': 0, 'y': 0})
-    r01 = (ycos * psin * rsin - ysin * rcos).assign_coords({'x': 0, 'y': 1})
-    r02 = (ycos * psin * rcos + ysin * rsin).assign_coords({'x': 0, 'y': 2})
-    r0 = xr.concat([r00, r01, r02], dim='y')
-    r10 = (ysin * pcos).assign_coords({'x': 1, 'y': 0})
-    r11 = (ysin * psin * rsin + ycos * rcos).assign_coords({'x': 1, 'y': 1})
-    r12 = (ysin * psin * rcos - ycos * rsin).assign_coords({'x': 1, 'y': 2})
-    r1 = xr.concat([r10, r11, r12], dim='y')
-    r20 = (-psin).assign_coords({'x': 2, 'y': 0})
-    r21 = (pcos * rsin).assign_coords({'x': 2, 'y': 1})
-    r22 = (pcos * rcos).assign_coords({'x': 2, 'y': 2})
-    r2 = xr.concat([r20, r21, r22], dim='y')
+    r00 = (ycos * pcos).assign_coords({"x": 0, "y": 0})
+    r01 = (ycos * psin * rsin - ysin * rcos).assign_coords({"x": 0, "y": 1})
+    r02 = (ycos * psin * rcos + ysin * rsin).assign_coords({"x": 0, "y": 2})
+    r0 = xr.concat([r00, r01, r02], dim="y")
+    r10 = (ysin * pcos).assign_coords({"x": 1, "y": 0})
+    r11 = (ysin * psin * rsin + ycos * rcos).assign_coords({"x": 1, "y": 1})
+    r12 = (ysin * psin * rcos - ycos * rsin).assign_coords({"x": 1, "y": 2})
+    r1 = xr.concat([r10, r11, r12], dim="y")
+    r20 = (-psin).assign_coords({"x": 2, "y": 0})
+    r21 = (pcos * rsin).assign_coords({"x": 2, "y": 1})
+    r22 = (pcos * rcos).assign_coords({"x": 2, "y": 2})
+    r2 = xr.concat([r20, r21, r22], dim="y")
 
-    rmat = xr.concat([r0, r1, r2], dim='x').transpose('time', 'x', 'y')
+    rmat = xr.concat([r0, r1, r2], dim="x").transpose("time", "x", "y")
 
     return rmat
 
@@ -98,13 +108,19 @@ def build_mounting_angle_mat(roll: float, pitch: float, yaw: float, tstmp: str):
     """
 
     if type(roll) != float or type(pitch) != float or type(yaw) != float:
-        raise TypeError('Expected floating point values for roll,pitch,yaw')
+        raise TypeError("Expected floating point values for roll,pitch,yaw")
 
     time_coord = np.array([float(tstmp)])
-    roll_xarr = xr.DataArray(np.array([roll], dtype=np.float32), dims=['time'], coords={'time': time_coord}).chunk()
-    pitch_xarr = xr.DataArray(np.array([pitch], dtype=np.float32), dims=['time'], coords={'time': time_coord}).chunk()
-    yaw_xarr = xr.DataArray(np.array([yaw], dtype=np.float32), dims=['time'], coords={'time': time_coord}).chunk()
-    return build_rot_mat(roll_xarr, pitch_xarr, yaw_xarr, order='rpy', degrees=True)
+    roll_xarr = xr.DataArray(
+        np.array([roll], dtype=np.float32), dims=["time"], coords={"time": time_coord}
+    ).chunk()
+    pitch_xarr = xr.DataArray(
+        np.array([pitch], dtype=np.float32), dims=["time"], coords={"time": time_coord}
+    ).chunk()
+    yaw_xarr = xr.DataArray(
+        np.array([yaw], dtype=np.float32), dims=["time"], coords={"time": time_coord}
+    ).chunk()
+    return build_rot_mat(roll_xarr, pitch_xarr, yaw_xarr, order="rpy", degrees=True)
 
 
 def combine_rotation_matrix(mat_one: xr.DataArray, mat_two: xr.DataArray):
@@ -137,37 +153,75 @@ def combine_rotation_matrix(mat_one: xr.DataArray, mat_two: xr.DataArray):
     elif mat_two.shape[0] == 1:
         mat_two = mat_two.values
     else:
-        raise NotImplementedError('One of the input matrices must only have one value in the time dimension')
+        raise NotImplementedError(
+            "One of the input matrices must only have one value in the time dimension"
+        )
 
     # we'll just brute force it for now
-    r00 = (mat_one[:, 0, 0] * mat_two[:, 0, 0]) + (mat_one[:, 1, 0] * mat_two[:, 0, 1]) + (mat_one[:, 2, 0] * mat_two[:, 0, 2])
-    r00['y'] = 0
-    r01 = (mat_one[:, 0, 1] * mat_two[:, 0, 0]) + (mat_one[:, 1, 1] * mat_two[:, 0, 1]) + (mat_one[:, 2, 1] * mat_two[:, 0, 2])
-    r01['y'] = 1
-    r02 = (mat_one[:, 0, 2] * mat_two[:, 0, 0]) + (mat_one[:, 1, 2] * mat_two[:, 0, 1]) + (mat_one[:, 2, 2] * mat_two[:, 0, 2])
-    r02['y'] = 2
-    r0 = xr.concat([r00, r01, r02], dim='y')
-    r0['x'] = 0
+    r00 = (
+        (mat_one[:, 0, 0] * mat_two[:, 0, 0])
+        + (mat_one[:, 1, 0] * mat_two[:, 0, 1])
+        + (mat_one[:, 2, 0] * mat_two[:, 0, 2])
+    )
+    r00["y"] = 0
+    r01 = (
+        (mat_one[:, 0, 1] * mat_two[:, 0, 0])
+        + (mat_one[:, 1, 1] * mat_two[:, 0, 1])
+        + (mat_one[:, 2, 1] * mat_two[:, 0, 2])
+    )
+    r01["y"] = 1
+    r02 = (
+        (mat_one[:, 0, 2] * mat_two[:, 0, 0])
+        + (mat_one[:, 1, 2] * mat_two[:, 0, 1])
+        + (mat_one[:, 2, 2] * mat_two[:, 0, 2])
+    )
+    r02["y"] = 2
+    r0 = xr.concat([r00, r01, r02], dim="y")
+    r0["x"] = 0
 
-    r10 = (mat_one[:, 0, 0] * mat_two[:, 1, 0]) + (mat_one[:, 1, 0] * mat_two[:, 1, 1]) + (mat_one[:, 2, 0] * mat_two[:, 1, 2])
-    r10['y'] = 0
-    r11 = (mat_one[:, 0, 1] * mat_two[:, 1, 0]) + (mat_one[:, 1, 1] * mat_two[:, 1, 1]) + (mat_one[:, 2, 1] * mat_two[:, 1, 2])
-    r11['y'] = 1
-    r12 = (mat_one[:, 0, 2] * mat_two[:, 1, 0]) + (mat_one[:, 1, 2] * mat_two[:, 1, 1]) + (mat_one[:, 2, 2] * mat_two[:, 1, 2])
-    r12['y'] = 2
-    r1 = xr.concat([r10, r11, r12], dim='y')
-    r1['x'] = 1
+    r10 = (
+        (mat_one[:, 0, 0] * mat_two[:, 1, 0])
+        + (mat_one[:, 1, 0] * mat_two[:, 1, 1])
+        + (mat_one[:, 2, 0] * mat_two[:, 1, 2])
+    )
+    r10["y"] = 0
+    r11 = (
+        (mat_one[:, 0, 1] * mat_two[:, 1, 0])
+        + (mat_one[:, 1, 1] * mat_two[:, 1, 1])
+        + (mat_one[:, 2, 1] * mat_two[:, 1, 2])
+    )
+    r11["y"] = 1
+    r12 = (
+        (mat_one[:, 0, 2] * mat_two[:, 1, 0])
+        + (mat_one[:, 1, 2] * mat_two[:, 1, 1])
+        + (mat_one[:, 2, 2] * mat_two[:, 1, 2])
+    )
+    r12["y"] = 2
+    r1 = xr.concat([r10, r11, r12], dim="y")
+    r1["x"] = 1
 
-    r20 = (mat_one[:, 0, 0] * mat_two[:, 2, 0]) + (mat_one[:, 1, 0] * mat_two[:, 2, 1]) + (mat_one[:, 2, 0] * mat_two[:, 2, 2])
-    r20['y'] = 0
-    r21 = (mat_one[:, 0, 1] * mat_two[:, 2, 0]) + (mat_one[:, 1, 1] * mat_two[:, 2, 1]) + (mat_one[:, 2, 1] * mat_two[:, 2, 2])
-    r21['y'] = 1
-    r22 = (mat_one[:, 0, 2] * mat_two[:, 2, 0]) + (mat_one[:, 1, 2] * mat_two[:, 2, 1]) + (mat_one[:, 2, 2] * mat_two[:, 2, 2])
-    r22['y'] = 2
-    r2 = xr.concat([r20, r21, r22], dim='y')
-    r2['x'] = 2
+    r20 = (
+        (mat_one[:, 0, 0] * mat_two[:, 2, 0])
+        + (mat_one[:, 1, 0] * mat_two[:, 2, 1])
+        + (mat_one[:, 2, 0] * mat_two[:, 2, 2])
+    )
+    r20["y"] = 0
+    r21 = (
+        (mat_one[:, 0, 1] * mat_two[:, 2, 0])
+        + (mat_one[:, 1, 1] * mat_two[:, 2, 1])
+        + (mat_one[:, 2, 1] * mat_two[:, 2, 2])
+    )
+    r21["y"] = 1
+    r22 = (
+        (mat_one[:, 0, 2] * mat_two[:, 2, 0])
+        + (mat_one[:, 1, 2] * mat_two[:, 2, 1])
+        + (mat_one[:, 2, 2] * mat_two[:, 2, 2])
+    )
+    r22["y"] = 2
+    r2 = xr.concat([r20, r21, r22], dim="y")
+    r2["x"] = 2
 
-    rmat = xr.concat([r0, r1, r2], dim='x').transpose('time', 'x', 'y')
+    rmat = xr.concat([r0, r1, r2], dim="x").transpose("time", "x", "y")
     return rmat
 
 
@@ -198,7 +252,13 @@ def return_attitude_rotation_matrix(attitude: xr.Dataset, time_index: np.array =
     if time_index is not None:
         attitude = attitude.isel(time=time_index)
     att_times = attitude.time
-    attitude_rotation = build_rot_mat(attitude['roll'], attitude['pitch'], attitude['heading'], order='rpy', degrees=True)
+    attitude_rotation = build_rot_mat(
+        attitude["roll"],
+        attitude["pitch"],
+        attitude["heading"],
+        order="rpy",
+        degrees=True,
+    )
     return att_times, attitude_rotation
 
 
@@ -225,5 +285,7 @@ def return_mounting_rotation_matrix(roll: float, pitch: float, yaw: float, tstmp
         always 1)
 
     """
-    mount_rotation = build_mounting_angle_mat(float(roll), float(pitch), float(yaw), tstmp)
+    mount_rotation = build_mounting_angle_mat(
+        float(roll), float(pitch), float(yaw), tstmp
+    )
     return mount_rotation

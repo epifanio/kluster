@@ -22,7 +22,19 @@ class Player(FuncAnimation):
     Matplotlib FuncAnimation player that includes the ability to start/stop/speed up/slow down/skip frames.  Relies on the
     frames passed in, frames must be the values of the dimension you want to animate on.
     """
-    def __init__(self, fig, func, frames=None, init_func=None, fargs=None, save_count=None, save_pth=None, pos=(0.125, 0.92), **kwargs):
+
+    def __init__(
+        self,
+        fig,
+        func,
+        frames=None,
+        init_func=None,
+        fargs=None,
+        save_count=None,
+        save_pth=None,
+        pos=(0.125, 0.92),
+        **kwargs,
+    ):
         self.save_pth = save_pth
         self.i = 0
         self.min = frames[0]
@@ -34,12 +46,21 @@ class Player(FuncAnimation):
         self.frames = frames
         self.setup(pos)
         self.added_speed = 0
-        FuncAnimation.__init__(self, self.fig, self.update, frames=self.play(), init_func=init_func, fargs=fargs, save_count=save_count, **kwargs )
+        FuncAnimation.__init__(
+            self,
+            self.fig,
+            self.update,
+            frames=self.play(),
+            init_func=init_func,
+            fargs=fargs,
+            save_count=save_count,
+            **kwargs,
+        )
 
         self._observers = []
 
         get_current_fig_manager().toolbar.save_figure = self.save_event
-        self.fig.canvas.mpl_connect('close_event', self.close_event)
+        self.fig.canvas.mpl_connect("close_event", self.close_event)
 
     def close_event(self, evt):
         """
@@ -56,17 +77,21 @@ class Player(FuncAnimation):
         animation.  Takes forever to run, probably need to thread this later with a progress count.
         """
         if self.save_pth is not None:
-            print('\nSaving animation...')
+            print("\nSaving animation...")
             ffwriter = FFMpegWriter()
             base_dir, filepth = os.path.split(self.save_pth)
             if os.path.exists(self.save_pth):
-                self.save_pth = os.path.join(base_dir, os.path.splitext(filepth)[0] + '_{}.mpeg'.format(datetime.now().strftime('%H%M%S')))
+                self.save_pth = os.path.join(
+                    base_dir,
+                    os.path.splitext(filepth)[0]
+                    + "_{}.mpeg".format(datetime.now().strftime("%H%M%S")),
+                )
             if not os.path.exists(base_dir):
                 os.makedirs(base_dir)
             self.save(self.save_pth, writer=ffwriter)
-            print('Animation saved to {}'.format(self.save_pth))
+            print("Animation saved to {}".format(self.save_pth))
         else:
-            print('No save path provided to animation')
+            print("No save path provided to animation")
 
     def bind_to(self, callback):
         """
@@ -202,7 +227,7 @@ class Player(FuncAnimation):
             tuple of position (left position, bottom position) to place the player bar
         """
 
-        playerax = self.fig.add_axes([pos[0],pos[1], 0.64, 0.04])
+        playerax = self.fig.add_axes([pos[0], pos[1], 0.64, 0.04])
         divider = mpl_toolkits.axes_grid1.make_axes_locatable(playerax)
         onebax = divider.append_axes("right", size="80%", pad=0.05)
         bax = divider.append_axes("right", size="80%", pad=0.05)
@@ -212,13 +237,13 @@ class Player(FuncAnimation):
         onefwdax = divider.append_axes("right", size="80%", pad=0.05)
         sliderax = divider.append_axes("right", size="500%", pad=0.07)
 
-        self.button_slow = matplotlib.widgets.Button(playerax, label='<<')
-        self.button_oneback = matplotlib.widgets.Button(onebax, label='$\u29CF$')
-        self.button_back = matplotlib.widgets.Button(bax, label='$\u25C0$')
-        self.button_stop = matplotlib.widgets.Button(sax, label='$\u25A0$')
-        self.button_forward = matplotlib.widgets.Button(fax, label='$\u25B6$')
-        self.button_oneforward = matplotlib.widgets.Button(ofax, label='$\u29D0$')
-        self.button_fast = matplotlib.widgets.Button(onefwdax, label='>>')
+        self.button_slow = matplotlib.widgets.Button(playerax, label="<<")
+        self.button_oneback = matplotlib.widgets.Button(onebax, label="$\u29CF$")
+        self.button_back = matplotlib.widgets.Button(bax, label="$\u25C0$")
+        self.button_stop = matplotlib.widgets.Button(sax, label="$\u25A0$")
+        self.button_forward = matplotlib.widgets.Button(fax, label="$\u25B6$")
+        self.button_oneforward = matplotlib.widgets.Button(ofax, label="$\u29D0$")
+        self.button_fast = matplotlib.widgets.Button(onefwdax, label=">>")
 
         self.button_slow.on_clicked(self.slowdown)
         self.button_oneback.on_clicked(self.onebackward)
@@ -228,7 +253,9 @@ class Player(FuncAnimation):
         self.button_oneforward.on_clicked(self.oneforward)
         self.button_fast.on_clicked(self.speedup)
 
-        self.slider = matplotlib.widgets.Slider(sliderax, '', self.min, self.max, valinit=self.frames[self.i])
+        self.slider = matplotlib.widgets.Slider(
+            sliderax, "", self.min, self.max, valinit=self.frames[self.i]
+        )
         self.slider.on_changed(self.set_pos)
 
     def set_pos(self, slider_time: float):
@@ -313,23 +340,37 @@ class FqprVisualizations:
         zvar: string, variable name for the z dimension
         """
 
-        if mode == 'svcorr':
-            xvar = 'alongtrack'
-            yvar = 'acrosstrack'
-            zvar = 'depthoffset'
-        elif mode == 'georef':
-            xvar = 'x'
-            yvar = 'y'
-            zvar = 'z'
+        if mode == "svcorr":
+            xvar = "alongtrack"
+            yvar = "acrosstrack"
+            zvar = "depthoffset"
+        elif mode == "georef":
+            xvar = "x"
+            yvar = "y"
+            zvar = "z"
         else:
             raise ValueError('Unrecognized mode, must be either "svcorr" or "georef"')
 
-        modechks = [[v in sec] for v in [xvar, yvar, zvar] for sec in self.fqpr.multibeam.raw_ping]
+        modechks = [
+            [v in sec]
+            for v in [xvar, yvar, zvar]
+            for sec in self.fqpr.multibeam.raw_ping
+        ]
         if not np.any(modechks):
-            raise ValueError('{}: Unable to find one or more variables in the raw_ping records'.format(mode))
+            raise ValueError(
+                "{}: Unable to find one or more variables in the raw_ping records".format(
+                    mode
+                )
+            )
         return xvar, yvar, zvar
 
-    def soundings_plot_3d(self, mode: str = 'svcorr', color_by: str = 'depth', start_time: float = None, end_time: float = None):
+    def soundings_plot_3d(
+        self,
+        mode: str = "svcorr",
+        color_by: str = "depth",
+        start_time: float = None,
+        end_time: float = None,
+    ):
         """
         Plots a 3d representation of the alongtrack/acrosstrack/depth values generated by sv correct.
         If a time is provided, isolates that time.
@@ -360,7 +401,9 @@ class FqprVisualizations:
         maxz = self.fqpr.calc_max_var(zvar)
         miny = self.fqpr.calc_min_var(yvar)
         maxy = self.fqpr.calc_max_var(yvar)
-        if mode == 'svcorr':  # svcorrected is alongtrack/acrosstrack in meters.  Want the scales to be equal so it doesnt look weird
+        if (
+            mode == "svcorr"
+        ):  # svcorrected is alongtrack/acrosstrack in meters.  Want the scales to be equal so it doesnt look weird
             minx = miny
             maxx = maxy
         else:  # georeferenced is northing/easting, scales cant be equal of course
@@ -368,18 +411,32 @@ class FqprVisualizations:
             maxx = self.fqpr.calc_max_var(xvar)
 
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection="3d")
 
         for rp in self.fqpr.multibeam.raw_ping:
-            x_idx, x_stck = stack_nan_array(rp[xvar], stack_dims=('time', 'beam'))
-            y_idx, y_stck = stack_nan_array(rp[yvar], stack_dims=('time', 'beam'))
-            z_idx, z_stck = stack_nan_array(rp[zvar], stack_dims=('time', 'beam'))
+            x_idx, x_stck = stack_nan_array(rp[xvar], stack_dims=("time", "beam"))
+            y_idx, y_stck = stack_nan_array(rp[yvar], stack_dims=("time", "beam"))
+            z_idx, z_stck = stack_nan_array(rp[zvar], stack_dims=("time", "beam"))
 
-            if color_by == 'depth':
-                ax.scatter(x_stck.values, y_stck.values, z_stck.values, marker='o', s=10, c=z_stck.values)
-            elif color_by == 'sector':
+            if color_by == "depth":
+                ax.scatter(
+                    x_stck.values,
+                    y_stck.values,
+                    z_stck.values,
+                    marker="o",
+                    s=10,
+                    c=z_stck.values,
+                )
+            elif color_by == "sector":
                 sector_vals = rp.txsector_beam.values[x_idx]
-                ax.scatter(x_stck.values, y_stck.values, z_stck.values, marker='o', s=10, c=sector_vals)
+                ax.scatter(
+                    x_stck.values,
+                    y_stck.values,
+                    z_stck.values,
+                    marker="o",
+                    s=10,
+                    c=sector_vals,
+                )
 
         ax.set_xlim(minx, maxx)
         ax.set_ylim(miny, maxy)
@@ -389,7 +446,13 @@ class FqprVisualizations:
             self.fqpr.restore_subset()
         return ax
 
-    def soundings_plot_2d(self, mode: str = 'svcorr', color_by: str = 'depth', start_time: float = None, end_time: float = None):
+    def soundings_plot_2d(
+        self,
+        mode: str = "svcorr",
+        color_by: str = "depth",
+        start_time: float = None,
+        end_time: float = None,
+    ):
         """
         Plots a 2d representation of the acrosstrack/depth values generated by sv correct.  If sector is
         provided, isolates that sector.  If a time is provided, isolates that time.
@@ -420,7 +483,9 @@ class FqprVisualizations:
         maxz = self.fqpr.calc_max_var(zvar)
         miny = self.fqpr.calc_min_var(yvar)
         maxy = self.fqpr.calc_max_var(yvar)
-        if mode == 'svcorr':  # svcorrected is alongtrack/acrosstrack in meters.  Want the scales to be equal so it doesnt look weird
+        if (
+            mode == "svcorr"
+        ):  # svcorrected is alongtrack/acrosstrack in meters.  Want the scales to be equal so it doesnt look weird
             minx = miny
             maxx = maxy
         else:  # georeferenced is northing/easting, scales cant be equal of course
@@ -430,21 +495,21 @@ class FqprVisualizations:
         fig = plt.figure()
 
         for rp in self.fqpr.multibeam.raw_ping:
-            x_idx, x_stck = stack_nan_array(rp[xvar], stack_dims=('time', 'beam'))
-            y_idx, y_stck = stack_nan_array(rp[yvar], stack_dims=('time', 'beam'))
-            z_idx, z_stck = stack_nan_array(rp[zvar], stack_dims=('time', 'beam'))
+            x_idx, x_stck = stack_nan_array(rp[xvar], stack_dims=("time", "beam"))
+            y_idx, y_stck = stack_nan_array(rp[yvar], stack_dims=("time", "beam"))
+            z_idx, z_stck = stack_nan_array(rp[zvar], stack_dims=("time", "beam"))
 
-            if color_by == 'depth':
-                plt.scatter(y_stck, x_stck, marker='+', c=z_stck, cmap='coolwarm', s=5)
+            if color_by == "depth":
+                plt.scatter(y_stck, x_stck, marker="+", c=z_stck, cmap="coolwarm", s=5)
                 plt.clim(minz, maxz)
-            elif color_by == 'sector':
+            elif color_by == "sector":
                 sector_vals = rp.txsector_beam.values[x_idx]
-                plt.scatter(y_stck, x_stck, marker='+', c=sector_vals, s=5)
+                plt.scatter(y_stck, x_stck, marker="+", c=sector_vals, s=5)
         plt.xlim(miny, maxy)
         plt.ylim(minx, maxx)
-        if color_by != 'sector':
+        if color_by != "sector":
             plt.colorbar().set_label(zvar, rotation=270, labelpad=10)
-        plt.title('{}: {}/{} colored by {}'.format(mode, xvar, yvar, color_by))
+        plt.title("{}: {}/{} colored by {}".format(mode, xvar, yvar, color_by))
 
         if start_time is not None or start_time is not None:
             self.fqpr.restore_subset()
@@ -474,18 +539,22 @@ class FqprVisualizations:
         if profnames:
             fig = plt.figure()
 
-            for profname, cast, casttime, castloc in zip(profnames, casts, cast_times, castlocations):
+            for profname, cast, casttime, castloc in zip(
+                profnames, casts, cast_times, castlocations
+            ):
                 # filter cast by mintime/maxtime to only get casts in the subset range, if we have subsetted this fqpr instance
-                if filter_by_time and not (min_search_time < casttime < max_search_time):
+                if filter_by_time and not (
+                    min_search_time < casttime < max_search_time
+                ):
                     continue
                 plt.plot(cast[1], cast[0], label=profname)
                 plt.legend()
         else:
-            print('No sound velocity profiles found')
+            print("No sound velocity profiles found")
         plt.gca().invert_yaxis()
-        plt.title('Sound Velocity Profiles')
-        plt.xlabel('Sound Velocity (meters/second)')
-        plt.ylabel('Depth (meters)')
+        plt.title("Sound Velocity Profiles")
+        plt.xlabel("Sound Velocity (meters/second)")
+        plt.ylabel("Depth (meters)")
 
     def plot_surface_sv_vs_profiles(self, filter_by_time: bool = False):
         profnames, casts, cast_times, castlocations = self.fqpr.return_all_profiles()
@@ -499,33 +568,57 @@ class FqprVisualizations:
             prof_points = [[], []]
             minval = float(self.fqpr.multibeam.raw_ping[0].soundspeed.min())
             maxval = float(self.fqpr.multibeam.raw_ping[0].soundspeed.max())
-            plt.plot(self.fqpr.multibeam.raw_ping[0].time, self.fqpr.multibeam.raw_ping[0].soundspeed, label='Surface Sound Velocity')
-            for profname, cast, casttime, castloc in zip(profnames, casts, cast_times, castlocations):
+            plt.plot(
+                self.fqpr.multibeam.raw_ping[0].time,
+                self.fqpr.multibeam.raw_ping[0].soundspeed,
+                label="Surface Sound Velocity",
+            )
+            for profname, cast, casttime, castloc in zip(
+                profnames, casts, cast_times, castlocations
+            ):
                 # filter cast by mintime/maxtime to only get casts in the subset range, if we have subsetted this fqpr instance
-                if filter_by_time and not (min_search_time < casttime < max_search_time):
+                if filter_by_time and not (
+                    min_search_time < casttime < max_search_time
+                ):
                     continue
-                iparams = self.fqpr.multibeam.get_nearest_install_parameters(str(casttime))
+                iparams = self.fqpr.multibeam.get_nearest_install_parameters(
+                    str(casttime)
+                )
                 # draft rel rp minus transducer depth rel rp should be waterline location from sv sensors perspective
-                draft = float(iparams['transducer_1_vertical_location']) - float(iparams['waterline_vertical_location'])
+                draft = float(iparams["transducer_1_vertical_location"]) - float(
+                    iparams["waterline_vertical_location"]
+                )
                 try:
-                    nearest_sv_to_draft = cast[1][np.argmin(np.abs(np.array(cast[0]) - draft))]
+                    nearest_sv_to_draft = cast[1][
+                        np.argmin(np.abs(np.array(cast[0]) - draft))
+                    ]
                 except:
-                    print('WARNING: Unable to find a depth/sv value nearest to calculated draft ({})'.format(draft))
+                    print(
+                        "WARNING: Unable to find a depth/sv value nearest to calculated draft ({})".format(
+                            draft
+                        )
+                    )
                     continue
-                plt.text(float(casttime), nearest_sv_to_draft + ((maxval - minval) / 15), profname)
+                plt.text(
+                    float(casttime),
+                    nearest_sv_to_draft + ((maxval - minval) / 15),
+                    profname,
+                )
                 prof_points[0].append(float(casttime))
                 prof_points[1].append(nearest_sv_to_draft)
                 minval = np.min([minval, nearest_sv_to_draft])
                 maxval = np.max([maxval, nearest_sv_to_draft])
-                print(f'Plotting nearest sv ({nearest_sv_to_draft}m/s) value to draft ({draft}m) from profile {profname} using time {float(casttime)}')
+                print(
+                    f"Plotting nearest sv ({nearest_sv_to_draft}m/s) value to draft ({draft}m) from profile {profname} using time {float(casttime)}"
+                )
             if prof_points[0]:
                 plt.scatter(prof_points[0], prof_points[1])
         else:
-            print('No sound velocity profiles found')
+            print("No sound velocity profiles found")
         plt.legend()
-        plt.title('Sound Velocity Profiles vs Surface Sound Velocity')
-        plt.xlabel('Time (UTC Seconds)')
-        plt.ylabel('Sound Velocity (meters/second)')
+        plt.title("Sound Velocity Profiles vs Surface Sound Velocity")
+        plt.xlabel("Time (UTC Seconds)")
+        plt.ylabel("Sound Velocity (meters/second)")
         plt.ylim(minval - 0.5, maxval + 0.5)
         plt.show()
 
@@ -541,17 +634,17 @@ class FqprVisualizations:
             want to show the casts within the time range of the subset)
         """
 
-        print('Building Sound Velocity Profile map...')
+        print("Building Sound Velocity Profile map...")
         nav = self.fqpr.return_navigation()
         if nav is None:
-            print('no navigation found!')
+            print("no navigation found!")
             return
 
         minlon = 999
         maxlon = -999
         minlat = 999
         maxlat = -999
-        print('Plotting lines...')
+        print("Plotting lines...")
         fig = plt.figure()
 
         # these times based on the Fqpr subset time, which restricts the source dataset times
@@ -563,23 +656,30 @@ class FqprVisualizations:
         line_dict = deepcopy(self.fqpr.multibeam.raw_ping[0].multibeam_files)
         for line, times in line_dict.items():
             # if the line start/end is within the time range...
-            if max_search_time >= times[0] >= min_search_time or max_search_time >= times[1] >= min_search_time:
+            if (
+                max_search_time >= times[0] >= min_search_time
+                or max_search_time >= times[1] >= min_search_time
+            ):
                 times[0] = max(times[0], start_navigation_time)
                 times[1] = min(times[1], last_navigation_time)
                 try:
                     nav = self.fqpr.return_navigation(times[0], times[1])
                     lats, lons = nav.latitude.values, nav.longitude.values
-                    plt.plot(lons, lats, c='blue', alpha=0.5)
+                    plt.plot(lons, lats, c="blue", alpha=0.5)
 
                     minlon = min(np.min(lons), minlon)
                     maxlon = max(np.max(lons), maxlon)
                     minlat = min(np.min(lats), minlat)
                     maxlat = max(np.max(lats), maxlat)
                 except AttributeError:  # no nav at this time range
-                    print('Error reading Line {}'.format(line))
+                    print("Error reading Line {}".format(line))
 
         if minlon == 999:
-            print('Found no lines within this time range to plot: {} to {}'.format(min_search_time, max_search_time))
+            print(
+                "Found no lines within this time range to plot: {} to {}".format(
+                    min_search_time, max_search_time
+                )
+            )
             return
 
         lonrange = maxlon - minlon
@@ -589,39 +689,64 @@ class FqprVisualizations:
         all_lats = []
         all_longs = []
         if casts:
-            for profname, cast, casttime, castloc in zip(profnames, casts, cast_times, castlocations):
+            for profname, cast, casttime, castloc in zip(
+                profnames, casts, cast_times, castlocations
+            ):
                 # filter cast by mintime/maxtime to only get casts in the subset range, if we have subsetted this fqpr instance
-                if filter_casts_by_time and not (min_search_time < casttime < max_search_time):
+                if filter_casts_by_time and not (
+                    min_search_time < casttime < max_search_time
+                ):
                     continue
-                if not castloc:  # should never get here, but this will get a fall back position of nearest nav point to the cast time
-                    print('building cast position for cast {}'.format(profname))
+                if (
+                    not castloc
+                ):  # should never get here, but this will get a fall back position of nearest nav point to the cast time
+                    print("building cast position for cast {}".format(profname))
                     # search times have a buffer, if the casttime is within the buffer but less than the dataset time, use the min dataset time
                     if casttime <= nav.time.min():
-                        castloc = [float(nav.latitude[0].values), float(nav.longitude[0].values)]
+                        castloc = [
+                            float(nav.latitude[0].values),
+                            float(nav.longitude[0].values),
+                        ]
                     elif casttime >= nav.time.max():
-                        castloc = [float(nav.latitude[-1].values), float(nav.longitude[-1].values)]
+                        castloc = [
+                            float(nav.latitude[-1].values),
+                            float(nav.longitude[-1].values),
+                        ]
                     else:
-                        interpnav = nav.interp(time=np.array([casttime]), method='nearest')
-                        castloc = [float(interpnav.latitude.values), float(interpnav.longitude.values)]
-                print('Plotting cast at position {}'.format(castloc))
+                        interpnav = nav.interp(
+                            time=np.array([casttime]), method="nearest"
+                        )
+                        castloc = [
+                            float(interpnav.latitude.values),
+                            float(interpnav.longitude.values),
+                        ]
+                print("Plotting cast at position {}".format(castloc))
                 plt.scatter(castloc[1], castloc[0], label=profname)
                 all_lats.append(castloc[0])
                 all_longs.append(castloc[1])
         else:
-            print('No profiles found!')
+            print("No profiles found!")
             return
-        plt.title('Sound Velocity Map')
-        plt.xlabel('Longitude (degrees)')
-        plt.ylabel('Latitude (degrees)')
+        plt.title("Sound Velocity Map")
+        plt.xlabel("Longitude (degrees)")
+        plt.ylabel("Latitude (degrees)")
 
-        if all_longs and all_lats:  # found some casts, so we make sure they are within the plot range
-            plt.ylim(min(minlat - 0.5 * datarange, np.min(all_lats) - 0.01), max(maxlat + 0.5 * datarange, np.max(all_lats) + 0.01))
-            plt.xlim(min(minlon - 0.5 * datarange, np.min(all_longs) - 0.01), max(maxlon + 0.5 * datarange, np.max(all_longs) + 0.01))
+        if (
+            all_longs and all_lats
+        ):  # found some casts, so we make sure they are within the plot range
+            plt.ylim(
+                min(minlat - 0.5 * datarange, np.min(all_lats) - 0.01),
+                max(maxlat + 0.5 * datarange, np.max(all_lats) + 0.01),
+            )
+            plt.xlim(
+                min(minlon - 0.5 * datarange, np.min(all_longs) - 0.01),
+                max(maxlon + 0.5 * datarange, np.max(all_longs) + 0.01),
+            )
             plt.legend()
         else:
             plt.ylim(minlat - 0.5 * datarange, maxlat + 0.5 * datarange)
             plt.xlim(minlon - 0.5 * datarange, maxlon + 0.5 * datarange)
-            print('No sound velocity profiles found within the given time range')
+            print("No sound velocity profiles found within the given time range")
         return fig
 
     def _generate_orientation_vector(self, system_index: int = 0, tme: float = None):
@@ -684,10 +809,16 @@ class FqprVisualizations:
         rx_z = round(vecdata[5][1], 3)
 
         self.orientation_quiver.remove()
-        self.orientation_quiver = self.orientation_figure.quiver(*vecdata, color=['blue', 'red'])
+        self.orientation_quiver = self.orientation_figure.quiver(
+            *vecdata, color=["blue", "red"]
+        )
         # self.orientation_objects['time'].set_text('Time: {:0.3f}'.format(time))
-        self.orientation_objects['tx_vec'].set_text('TX Vector: x:{:0.3f}, y:{:0.3f}, z:{:0.3f}'.format(tx_x, tx_y, tx_z))
-        self.orientation_objects['rx_vec'].set_text('RX Vector: x:{:0.3f}, y:{:0.3f}, z:{:0.3f}'.format(rx_x, rx_y, rx_z))
+        self.orientation_objects["tx_vec"].set_text(
+            "TX Vector: x:{:0.3f}, y:{:0.3f}, z:{:0.3f}".format(tx_x, tx_y, tx_z)
+        )
+        self.orientation_objects["rx_vec"].set_text(
+            "RX Vector: x:{:0.3f}, y:{:0.3f}, z:{:0.3f}".format(rx_x, rx_y, rx_z)
+        )
 
     def visualize_orientation_vector(self, system_index: int = 0):
         """
@@ -701,39 +832,59 @@ class FqprVisualizations:
             int, optional will automatically choose the first (only matters with dual head, which would have two systems)
         """
 
-        search_for_these = ['tx', 'rx']
+        search_for_these = ["tx", "rx"]
         for rec in search_for_these:
             if rec not in self.fqpr.multibeam.raw_ping[system_index]:
-                print('visualize_orientation_vector: Unable to find {} record.  Make sure you have run "All Processing - Compute Orientation" first'.format(rec))
+                print(
+                    'visualize_orientation_vector: Unable to find {} record.  Make sure you have run "All Processing - Compute Orientation" first'.format(
+                        rec
+                    )
+                )
                 return None
 
         self.orientation_objects = {}
 
-        self.fqpr.multibeam.raw_ping[system_index]['tx'] = self.fqpr.multibeam.raw_ping[system_index]['tx'].compute()
-        self.fqpr.multibeam.raw_ping[system_index]['rx'] = self.fqpr.multibeam.raw_ping[system_index]['rx'].compute()
+        self.fqpr.multibeam.raw_ping[system_index]["tx"] = self.fqpr.multibeam.raw_ping[
+            system_index
+        ]["tx"].compute()
+        self.fqpr.multibeam.raw_ping[system_index]["rx"] = self.fqpr.multibeam.raw_ping[
+            system_index
+        ]["rx"].compute()
 
-        fig = plt.figure('Transducer Orientation Vectors', figsize=(10, 8))
-        self.orientation_figure = fig.add_subplot(111, projection='3d')
+        fig = plt.figure("Transducer Orientation Vectors", figsize=(10, 8))
+        self.orientation_figure = fig.add_subplot(111, projection="3d")
         self.orientation_figure.set_xlim(-1.2, 1.2)
         self.orientation_figure.set_ylim(-1.2, 1.2)
         self.orientation_figure.set_zlim(-1.2, 1.2)
-        self.orientation_figure.set_xlabel('+ Forward')
-        self.orientation_figure.set_ylabel('+ Starboard')
-        self.orientation_figure.set_zlabel('+ Down')
+        self.orientation_figure.set_xlabel("+ Forward")
+        self.orientation_figure.set_ylabel("+ Starboard")
+        self.orientation_figure.set_zlabel("+ Down")
 
         # self.orientation_objects['time'] = self.orientation_figure.text2D(-0.1, 0.11, '')
-        self.orientation_objects['tx_vec'] = self.orientation_figure.text2D(0, 0.11, '', color='blue')
-        self.orientation_objects['rx_vec'] = self.orientation_figure.text2D(0, 0.10, '', color='red')
+        self.orientation_objects["tx_vec"] = self.orientation_figure.text2D(
+            0, 0.11, "", color="blue"
+        )
+        self.orientation_objects["rx_vec"] = self.orientation_figure.text2D(
+            0, 0.10, "", color="red"
+        )
 
         self.orientation_system = system_index
-        self.orientation_quiver = self.orientation_figure.quiver(*self._generate_orientation_vector(system_index),
-                                                                 color=['blue', 'red'])
+        self.orientation_quiver = self.orientation_figure.quiver(
+            *self._generate_orientation_vector(system_index), color=["blue", "red"]
+        )
 
-        outfold = self.fqpr.multibeam.converted_pth  # parent folder to all the currently written data
+        outfold = (
+            self.fqpr.multibeam.converted_pth
+        )  # parent folder to all the currently written data
         frames = self.fqpr.multibeam.raw_ping[system_index].time.values
-        self.orientation_anim = Player(fig, self._update_orientation_vector, frames=frames,
-                                       save_count=len(frames), save_pth=os.path.join(outfold, 'vessel_orientation.mpeg'),
-                                       pos=(0.125, 0.02))
+        self.orientation_anim = Player(
+            fig,
+            self._update_orientation_vector,
+            frames=frames,
+            save_count=len(frames),
+            save_pth=os.path.join(outfold, "vessel_orientation.mpeg"),
+            pos=(0.125, 0.02),
+        )
         self.orientation_anim.bind_to(self._orientation_cleanup)
 
     def _generate_bpv_arrs(self, dat: xr.Dataset):
@@ -772,8 +923,12 @@ class FqprVisualizations:
         maxbeams = bpa.shape[0]
         u = np.sin(bpa) * tt
         v = np.cos(bpa) * tt
-        u = -u / np.max(u)  # negative here for beam pointing angle so the port angles (pos) are on the left side
-        v = -v / np.max(v)  # negative here for travel time so the vectors point down in the graph
+        u = -u / np.max(
+            u
+        )  # negative here for beam pointing angle so the port angles (pos) are on the left side
+        v = -v / np.max(
+            v
+        )  # negative here for travel time so the vectors point down in the graph
 
         x = np.zeros(maxbeams)
         y = np.zeros(maxbeams)
@@ -814,10 +969,22 @@ class FqprVisualizations:
                 nextangles = nextangles[nextvalid_idx]
                 nexttraveltime = nexttraveltime[nextvalid_idx]
 
-                pouterang = [str(round(np.rad2deg(angles[0]), 3)), str(round(np.rad2deg(nextangles[0]), 3))]
-                poutertt = [str(round(traveltime[0], 3)), str(round(nexttraveltime[0], 3))]
-                pinnerang = [str(round(np.rad2deg(angles[-1]), 3)), str(round(np.rad2deg(nextangles[-1]), 3))]
-                pinnertt = [str(round(traveltime[-1], 3)), str(round(nexttraveltime[-1], 3))]
+                pouterang = [
+                    str(round(np.rad2deg(angles[0]), 3)),
+                    str(round(np.rad2deg(nextangles[0]), 3)),
+                ]
+                poutertt = [
+                    str(round(traveltime[0], 3)),
+                    str(round(nexttraveltime[0], 3)),
+                ]
+                pinnerang = [
+                    str(round(np.rad2deg(angles[-1]), 3)),
+                    str(round(np.rad2deg(nextangles[-1]), 3)),
+                ]
+                pinnertt = [
+                    str(round(traveltime[-1], 3)),
+                    str(round(nexttraveltime[-1], 3)),
+                ]
                 idx = [time_val, float(subset_next.time.values)]
             except IndexError:  # EOF
                 pouterang = str(round(np.rad2deg(angles[0]), 3))
@@ -832,15 +999,26 @@ class FqprVisualizations:
             pinnertt = str(round(traveltime[-1], 3))
             idx = time_val
 
-        self.proc_bpv_quiver = self.proc_bpv_figure.quiver(*self._generate_bpv_arrs(self.proc_bpv_dat.sel(time=idx)),
-                                                           color=self._generate_bpv_colors(self.proc_bpv_dat.sel(time=idx)),
-                                                           units='xy', scale=1)
+        self.proc_bpv_quiver = self.proc_bpv_figure.quiver(
+            *self._generate_bpv_arrs(self.proc_bpv_dat.sel(time=idx)),
+            color=self._generate_bpv_colors(self.proc_bpv_dat.sel(time=idx)),
+            units="xy",
+            scale=1,
+        )
         # self.proc_bpv_objects['Time'].set_text('Time: {}'.format(idx))
 
-        self.proc_bpv_objects['Port_outer_angle'].set_text('Port outermost angle: {}°'.format(pouterang))
-        self.proc_bpv_objects['Port_outer_traveltime'].set_text('Port outermost traveltime: {}s'.format(poutertt))
-        self.proc_bpv_objects['Starboard_outer_angle'].set_text('Starboard outermost angle: {}°'.format(pinnerang))
-        self.proc_bpv_objects['Starboard_outer_traveltime'].set_text('Starboard outermost traveltime: {}s'.format(pinnertt))
+        self.proc_bpv_objects["Port_outer_angle"].set_text(
+            "Port outermost angle: {}°".format(pouterang)
+        )
+        self.proc_bpv_objects["Port_outer_traveltime"].set_text(
+            "Port outermost traveltime: {}s".format(poutertt)
+        )
+        self.proc_bpv_objects["Starboard_outer_angle"].set_text(
+            "Starboard outermost angle: {}°".format(pinnerang)
+        )
+        self.proc_bpv_objects["Starboard_outer_traveltime"].set_text(
+            "Starboard outermost traveltime: {}s".format(pinnertt)
+        )
 
     def _update_uncorr_bpv(self, time_val: float):
         """
@@ -877,10 +1055,22 @@ class FqprVisualizations:
                 nextangles = nextangles[nextvalid_idx]
                 nexttraveltime = nexttraveltime[nextvalid_idx]
 
-                pouterang = [str(round(np.rad2deg(angles[0]), 3)), str(round(np.rad2deg(nextangles[0]), 3))]
-                poutertt = [str(round(traveltime[0], 3)), str(round(nexttraveltime[0], 3))]
-                pinnerang = [str(round(np.rad2deg(angles[-1]), 3)), str(round(np.rad2deg(nextangles[-1]), 3))]
-                pinnertt = [str(round(traveltime[-1], 3)), str(round(nexttraveltime[-1], 3))]
+                pouterang = [
+                    str(round(np.rad2deg(angles[0]), 3)),
+                    str(round(np.rad2deg(nextangles[0]), 3)),
+                ]
+                poutertt = [
+                    str(round(traveltime[0], 3)),
+                    str(round(nexttraveltime[0], 3)),
+                ]
+                pinnerang = [
+                    str(round(np.rad2deg(angles[-1]), 3)),
+                    str(round(np.rad2deg(nextangles[-1]), 3)),
+                ]
+                pinnertt = [
+                    str(round(traveltime[-1], 3)),
+                    str(round(nexttraveltime[-1], 3)),
+                ]
                 idx = [time_val, float(subset_next.time.values)]
             except IndexError:  # EOF
                 pouterang = str(round(np.rad2deg(angles[0]), 3))
@@ -895,15 +1085,26 @@ class FqprVisualizations:
             pinnertt = str(round(traveltime[-1], 3))
             idx = time_val
 
-        self.raw_bpv_quiver = self.raw_bpv_figure.quiver(*self._generate_bpv_arrs(self.raw_bpv_dat.sel(time=idx)),
-                                                         color=self._generate_bpv_colors(self.raw_bpv_dat.sel(time=idx)),
-                                                         units='xy', scale=1)
+        self.raw_bpv_quiver = self.raw_bpv_figure.quiver(
+            *self._generate_bpv_arrs(self.raw_bpv_dat.sel(time=idx)),
+            color=self._generate_bpv_colors(self.raw_bpv_dat.sel(time=idx)),
+            units="xy",
+            scale=1,
+        )
         # self.raw_bpv_objects['Time'].set_text('Time: {}'.format(idx))
 
-        self.raw_bpv_objects['Port_outer_angle'].set_text('Port outermost angle: {}°'.format(pouterang))
-        self.raw_bpv_objects['Port_outer_traveltime'].set_text('Port outermost traveltime: {}s'.format(poutertt))
-        self.raw_bpv_objects['Starboard_outer_angle'].set_text('Starboard outermost angle: {}°'.format(pinnerang))
-        self.raw_bpv_objects['Starboard_outer_traveltime'].set_text('Starboard outermost traveltime: {}s'.format(pinnertt))
+        self.raw_bpv_objects["Port_outer_angle"].set_text(
+            "Port outermost angle: {}°".format(pouterang)
+        )
+        self.raw_bpv_objects["Port_outer_traveltime"].set_text(
+            "Port outermost traveltime: {}s".format(poutertt)
+        )
+        self.raw_bpv_objects["Starboard_outer_angle"].set_text(
+            "Starboard outermost angle: {}°".format(pinnerang)
+        )
+        self.raw_bpv_objects["Starboard_outer_traveltime"].set_text(
+            "Starboard outermost traveltime: {}s".format(pinnertt)
+        )
 
     def _generate_bpv_colors(self, dat: xr.Dataset):
         """
@@ -962,15 +1163,23 @@ class FqprVisualizations:
             if True uses the 'corr_pointing_angle', else raw beam pointing angle 'beampointingangle'
         """
 
-        if not corrected and ('beampointingangle' not in self.fqpr.multibeam.raw_ping[0]):
-            print('visualize_beam_pointing_vectors: Unable to find the raw beampointingangle record, this record comes in during conversion, you must reconvert')
+        if not corrected and (
+            "beampointingangle" not in self.fqpr.multibeam.raw_ping[0]
+        ):
+            print(
+                "visualize_beam_pointing_vectors: Unable to find the raw beampointingangle record, this record comes in during conversion, you must reconvert"
+            )
             return None
-        elif corrected and ('corr_pointing_angle' not in self.fqpr.multibeam.raw_ping[0]):
-            print('visualize_beam_pointing_vectors: Unable to plot the corr_pointing_angle record, Make sure you have run "All Processing - Compute Beam Vectors" first')
+        elif corrected and (
+            "corr_pointing_angle" not in self.fqpr.multibeam.raw_ping[0]
+        ):
+            print(
+                'visualize_beam_pointing_vectors: Unable to plot the corr_pointing_angle record, Make sure you have run "All Processing - Compute Beam Vectors" first'
+            )
             return None
 
         if corrected:
-            fg = plt.figure('Corrected Beam Vectors', figsize=(10, 8))
+            fg = plt.figure("Corrected Beam Vectors", figsize=(10, 8))
 
             self.proc_bpv_objects = {}
             obj = self.proc_bpv_objects
@@ -978,20 +1187,25 @@ class FqprVisualizations:
 
             self.proc_bpv_figure.set_xlim(-1.5, 1.5)
             self.proc_bpv_figure.set_ylim(-1.5, 0.5)
-            self.proc_bpv_figure.set_xlabel('Acrosstrack (scaled)')
-            self.proc_bpv_figure.set_ylabel('Travel Time (scaled)')
+            self.proc_bpv_figure.set_xlabel("Acrosstrack (scaled)")
+            self.proc_bpv_figure.set_ylabel("Travel Time (scaled)")
             self.proc_bpv_figure.set_axis_off()
 
-            obj['Time'] = self.proc_bpv_figure.text(-1.4, 0.45, '')
-            obj['Port_outer_angle'] = self.proc_bpv_figure.text(-1.4, 0.40, '')
-            obj['Port_outer_traveltime'] = self.proc_bpv_figure.text(-1.4, 0.35, '')
-            obj['Starboard_outer_angle'] = self.proc_bpv_figure.text(0.35, 0.40, '')
-            obj['Starboard_outer_traveltime'] = self.proc_bpv_figure.text(0.35, 0.35, '')
+            obj["Time"] = self.proc_bpv_figure.text(-1.4, 0.45, "")
+            obj["Port_outer_angle"] = self.proc_bpv_figure.text(-1.4, 0.40, "")
+            obj["Port_outer_traveltime"] = self.proc_bpv_figure.text(-1.4, 0.35, "")
+            obj["Starboard_outer_angle"] = self.proc_bpv_figure.text(0.35, 0.40, "")
+            obj["Starboard_outer_traveltime"] = self.proc_bpv_figure.text(
+                0.35, 0.35, ""
+            )
 
-            self.proc_bpv_dat = self.fqpr.subset_variables(['corr_pointing_angle', 'traveltime', 'txsector_beam'], skip_subset_by_time=True)
+            self.proc_bpv_dat = self.fqpr.subset_variables(
+                ["corr_pointing_angle", "traveltime", "txsector_beam"],
+                skip_subset_by_time=True,
+            )
             dat = self.proc_bpv_dat
         else:
-            fg = plt.figure('Raw Beam Vectors', figsize=(10, 8))
+            fg = plt.figure("Raw Beam Vectors", figsize=(10, 8))
 
             self.raw_bpv_objects = {}
             obj = self.raw_bpv_objects
@@ -999,33 +1213,54 @@ class FqprVisualizations:
 
             self.raw_bpv_figure.set_xlim(-1.5, 1.5)
             self.raw_bpv_figure.set_ylim(-1.5, 0.5)
-            self.raw_bpv_figure.set_xlabel('Acrosstrack (scaled)')
-            self.raw_bpv_figure.set_ylabel('Travel Time (scaled)')
+            self.raw_bpv_figure.set_xlabel("Acrosstrack (scaled)")
+            self.raw_bpv_figure.set_ylabel("Travel Time (scaled)")
             self.raw_bpv_figure.set_axis_off()
 
-            obj['Time'] = self.raw_bpv_figure.text(-1.4, 0.45, '')
-            obj['Port_outer_angle'] = self.raw_bpv_figure.text(-1.4, 0.40, '')
-            obj['Port_outer_traveltime'] = self.raw_bpv_figure.text(-1.4, 0.35, '')
-            obj['Starboard_outer_angle'] = self.raw_bpv_figure.text(0.35, 0.40, '')
-            obj['Starboard_outer_traveltime'] = self.raw_bpv_figure.text(0.35, 0.35, '')
+            obj["Time"] = self.raw_bpv_figure.text(-1.4, 0.45, "")
+            obj["Port_outer_angle"] = self.raw_bpv_figure.text(-1.4, 0.40, "")
+            obj["Port_outer_traveltime"] = self.raw_bpv_figure.text(-1.4, 0.35, "")
+            obj["Starboard_outer_angle"] = self.raw_bpv_figure.text(0.35, 0.40, "")
+            obj["Starboard_outer_traveltime"] = self.raw_bpv_figure.text(0.35, 0.35, "")
 
-            self.raw_bpv_dat = self.fqpr.subset_variables(['beampointingangle', 'traveltime', 'txsector_beam'], skip_subset_by_time=True)
-            self.raw_bpv_dat['beampointingangle'] = np.deg2rad(self.raw_bpv_dat['beampointingangle'])
+            self.raw_bpv_dat = self.fqpr.subset_variables(
+                ["beampointingangle", "traveltime", "txsector_beam"],
+                skip_subset_by_time=True,
+            )
+            self.raw_bpv_dat["beampointingangle"] = np.deg2rad(
+                self.raw_bpv_dat["beampointingangle"]
+            )
             dat = self.raw_bpv_dat
 
-        if self.fqpr.multibeam.is_dual_head():  # for dual head, we end up plotting two records each time
+        if (
+            self.fqpr.multibeam.is_dual_head()
+        ):  # for dual head, we end up plotting two records each time
             frames = dat.time.values[::2]
         else:
             frames = dat.time.values
 
-        outfold = self.fqpr.multibeam.converted_pth  # parent folder to all the currently written data
+        outfold = (
+            self.fqpr.multibeam.converted_pth
+        )  # parent folder to all the currently written data
         if not corrected:
-            self.raw_bpv_anim = Player(fg, self._update_uncorr_bpv, frames=frames, save_count=len(frames),
-                                       save_pth=os.path.join(outfold, 'raw_beam_vectors.mpeg'), pos=(0.125, 0.02))
+            self.raw_bpv_anim = Player(
+                fg,
+                self._update_uncorr_bpv,
+                frames=frames,
+                save_count=len(frames),
+                save_pth=os.path.join(outfold, "raw_beam_vectors.mpeg"),
+                pos=(0.125, 0.02),
+            )
             self.raw_bpv_anim.bind_to(self._uncorr_cleanup)
         else:
-            self.proc_bpv_anim = Player(fg, self._update_corr_bpv, frames=frames, save_count=len(frames),
-                                        save_pth=os.path.join(outfold, 'corrected_beam_vectors.mpeg'), pos=(0.125, 0.02))
+            self.proc_bpv_anim = Player(
+                fg,
+                self._update_corr_bpv,
+                frames=frames,
+                save_count=len(frames),
+                save_pth=os.path.join(outfold, "corrected_beam_vectors.mpeg"),
+                pos=(0.125, 0.02),
+            )
             self.proc_bpv_anim.bind_to(self._corr_cleanup)
 
     def _orientation_cleanup(self):
@@ -1065,13 +1300,13 @@ class FqprVisualizations:
         """
 
         for rp in self.fqpr.multibeam.raw_ping:
-            ping_path = self.fqpr._get_zarr_path('ping', rp.system_identifier)
-            tvu_image = os.path.join(ping_path, 'vertical_tpu_sample.png')
+            ping_path = self.fqpr._get_zarr_path("ping", rp.system_identifier)
+            tvu_image = os.path.join(ping_path, "vertical_tpu_sample.png")
             if os.path.exists(tvu_image):
-                print('Opening {}'.format(tvu_image))
+                print("Opening {}".format(tvu_image))
                 os.startfile(tvu_image)
             else:
-                print('Unable to find {}'.format(tvu_image))
+                print("Unable to find {}".format(tvu_image))
 
     def plot_thu_sample(self):
         """
@@ -1080,13 +1315,13 @@ class FqprVisualizations:
         """
 
         for rp in self.fqpr.multibeam.raw_ping:
-            ping_path = self.fqpr._get_zarr_path('ping', rp.system_identifier)
-            thu_image = os.path.join(ping_path, 'horizontal_tpu_sample.png')
+            ping_path = self.fqpr._get_zarr_path("ping", rp.system_identifier)
+            thu_image = os.path.join(ping_path, "horizontal_tpu_sample.png")
             if os.path.exists(thu_image):
-                print('Opening {}'.format(thu_image))
+                print("Opening {}".format(thu_image))
                 os.startfile(thu_image)
             else:
-                print('Unable to find {}'.format(thu_image))
+                print("Unable to find {}".format(thu_image))
 
     def plot_backscatter_sample(self):
         """
@@ -1094,13 +1329,13 @@ class FqprVisualizations:
         backscatter processing.  This method will show the image for you to see.
         """
         for rp in self.fqpr.multibeam.raw_ping:
-            ping_path = self.fqpr._get_zarr_path('ping', rp.system_identifier)
-            bs_image = os.path.join(ping_path, 'backscatter_firstping_sample.png')
+            ping_path = self.fqpr._get_zarr_path("ping", rp.system_identifier)
+            bs_image = os.path.join(ping_path, "backscatter_firstping_sample.png")
             if os.path.exists(bs_image):
-                print('Opening {}'.format(bs_image))
+                print("Opening {}".format(bs_image))
                 os.startfile(bs_image)
             else:
-                print('Unable to find {}'.format(bs_image))
+                print("Unable to find {}".format(bs_image))
 
 
 def save_animation_mpeg(anim_instance: FuncAnimation, output_pth: str):

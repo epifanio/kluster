@@ -1,5 +1,10 @@
 import os
-from HSTB.shared import path_to_NOAA, path_to_root_env, path_to_conda, path_to_supplementals
+from HSTB.shared import (
+    path_to_NOAA,
+    path_to_root_env,
+    path_to_conda,
+    path_to_supplementals,
+)
 
 
 def is_pydro():
@@ -28,7 +33,7 @@ def retrieve_vdatum_folder_path():
         folder path to the supplementals/vdatum folder as string
     """
 
-    folder_path = path_to_supplementals('VDatum')
+    folder_path = path_to_supplementals("VDatum")
     if not os.path.exists(folder_path):
         return None
     return folder_path

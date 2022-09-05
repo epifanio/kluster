@@ -13,81 +13,93 @@ class ExportDialog(SaveStateDialog):
     fqpr = fully qualified ping record, the term for the datastore in kluster
     """
 
-    def __init__(self, parent=None, title='', settings=None):
-        super().__init__(parent, settings, widgetname='export')
+    def __init__(self, parent=None, title="", settings=None):
+        super().__init__(parent, settings, widgetname="export")
 
-        self.setWindowTitle('Export Soundings')
+        self.setWindowTitle("Export Soundings")
         layout = QtWidgets.QVBoxLayout()
 
-        self.basic_export_group = QtWidgets.QGroupBox('Export from the following datasets:')
+        self.basic_export_group = QtWidgets.QGroupBox(
+            "Export from the following datasets:"
+        )
         self.basic_export_group.setCheckable(True)
         self.basic_export_group.setChecked(True)
         self.hlayout_zero = QtWidgets.QHBoxLayout()
         self.input_fqpr = BrowseListWidget(self)
         self.input_fqpr.sizeHint()
-        self.input_fqpr.setup(mode='directory', registry_key='kluster', app_name='klusterbrowse',
-                              filebrowse_title='Select input processed folder')
+        self.input_fqpr.setup(
+            mode="directory",
+            registry_key="kluster",
+            app_name="klusterbrowse",
+            filebrowse_title="Select input processed folder",
+        )
         self.input_fqpr.setMinimumWidth(600)
         self.hlayout_zero.addWidget(self.input_fqpr)
         self.basic_export_group.setLayout(self.hlayout_zero)
 
-        self.line_export = QtWidgets.QCheckBox('Export selected lines')
+        self.line_export = QtWidgets.QCheckBox("Export selected lines")
         self.line_export.setChecked(False)
 
-        self.points_view_export = QtWidgets.QCheckBox('Export points in Points View')
+        self.points_view_export = QtWidgets.QCheckBox("Export points in Points View")
         self.points_view_export.setChecked(False)
 
         self.hlayout_one = QtWidgets.QHBoxLayout()
-        self.start_msg = QtWidgets.QLabel('Export to: ')
+        self.start_msg = QtWidgets.QLabel("Export to: ")
         self.hlayout_one.addWidget(self.start_msg)
         self.export_opts = QtWidgets.QComboBox()
         # self.export_opts.addItems(['csv', 'las', 'entwine'])  need to add entwine to the env
-        self.export_opts.addItems(['csv', 'las'])
+        self.export_opts.addItems(["csv", "las"])
         self.hlayout_one.addWidget(self.export_opts)
-        self.csvdelimiter_lbl = QtWidgets.QLabel('Delimiter')
+        self.csvdelimiter_lbl = QtWidgets.QLabel("Delimiter")
         self.hlayout_one.addWidget(self.csvdelimiter_lbl)
         self.csvdelimiter_dropdown = QtWidgets.QComboBox(self)
-        self.csvdelimiter_dropdown.addItems(['comma', 'space'])
+        self.csvdelimiter_dropdown.addItems(["comma", "space"])
         self.hlayout_one.addWidget(self.csvdelimiter_dropdown)
-        self.format_lbl = QtWidgets.QLabel('Format')
+        self.format_lbl = QtWidgets.QLabel("Format")
         self.hlayout_one.addWidget(self.format_lbl)
         self.format_dropdown = QtWidgets.QComboBox(self)
-        self.format_dropdown.addItems(['xyz', 'xyzv', 'xyzhv'])
-        self.format_dropdown.setToolTip('xyz = easting,northing,depth\nxyzv = easting,northing,depth,vertical_uncertainty\nxyzhv = easting,northing,depth,horizontal_uncertainty,vertical_uncertainty')
+        self.format_dropdown.addItems(["xyz", "xyzv", "xyzhv"])
+        self.format_dropdown.setToolTip(
+            "xyz = easting,northing,depth\nxyzv = easting,northing,depth,vertical_uncertainty\nxyzhv = easting,northing,depth,horizontal_uncertainty,vertical_uncertainty"
+        )
         self.hlayout_one.addWidget(self.format_dropdown)
         self.hlayout_one.addStretch()
 
         self.hlayout_one_one = QtWidgets.QHBoxLayout()
-        self.zdirect_check = QtWidgets.QCheckBox('Make Z Positive Down')
+        self.zdirect_check = QtWidgets.QCheckBox("Make Z Positive Down")
         self.zdirect_check.setChecked(True)
         self.hlayout_one_one.addWidget(self.zdirect_check)
         self.hlayout_one_one.addStretch()
 
         self.hlayout_one_three = QtWidgets.QHBoxLayout()
-        self.filter_chk = QtWidgets.QCheckBox('Filter Rejected')
+        self.filter_chk = QtWidgets.QCheckBox("Filter Rejected")
         self.filter_chk.setChecked(True)
         self.hlayout_one_three.addWidget(self.filter_chk)
-        self.byidentifier_chk = QtWidgets.QCheckBox('Separate Files by Sector/Frequency')
+        self.byidentifier_chk = QtWidgets.QCheckBox(
+            "Separate Files by Sector/Frequency"
+        )
         self.byidentifier_chk.setChecked(False)
         self.hlayout_one_three.addWidget(self.byidentifier_chk)
         self.hlayout_one_three.addStretch()
 
-        self.status_msg = QtWidgets.QLabel('')
-        self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
+        self.status_msg = QtWidgets.QLabel("")
+        self.status_msg.setStyleSheet(
+            "QLabel { color : " + kluster_variables.error_color + "; }"
+        )
 
         self.hlayout_two = QtWidgets.QHBoxLayout()
         self.hlayout_two.addStretch(1)
-        self.ok_button = QtWidgets.QPushButton('OK', self)
+        self.ok_button = QtWidgets.QPushButton("OK", self)
         self.hlayout_two.addWidget(self.ok_button)
         self.hlayout_two.addStretch(1)
-        self.cancel_button = QtWidgets.QPushButton('Cancel', self)
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
         self.hlayout_two.addWidget(self.cancel_button)
         self.hlayout_two.addStretch(1)
 
         layout.addWidget(self.basic_export_group)
         layout.addWidget(self.line_export)
         layout.addWidget(self.points_view_export)
-        layout.addWidget(QtWidgets.QLabel(' '))
+        layout.addWidget(QtWidgets.QLabel(" "))
         layout.addLayout(self.hlayout_one)
         layout.addLayout(self.hlayout_one_one)
         layout.addLayout(self.hlayout_one_three)
@@ -106,11 +118,19 @@ class ExportDialog(SaveStateDialog):
         self.ok_button.clicked.connect(self.start_export)
         self.cancel_button.clicked.connect(self.cancel_export)
 
-        self.text_controls = [['export_ops', self.export_opts], ['csvdelimiter_dropdown', self.csvdelimiter_dropdown],
-                              ['format_dropdown', self.format_dropdown]]
-        self.checkbox_controls = [['basic_export_group', self.basic_export_group], ['line_export', self.line_export],
-                                  ['points_view_export', self.points_view_export], ['zdirect_check', self.zdirect_check],
-                                  ['filter_chk', self.filter_chk], ['byidentifier_chk', self.byidentifier_chk]]
+        self.text_controls = [
+            ["export_ops", self.export_opts],
+            ["csvdelimiter_dropdown", self.csvdelimiter_dropdown],
+            ["format_dropdown", self.format_dropdown],
+        ]
+        self.checkbox_controls = [
+            ["basic_export_group", self.basic_export_group],
+            ["line_export", self.line_export],
+            ["points_view_export", self.points_view_export],
+            ["zdirect_check", self.zdirect_check],
+            ["filter_chk", self.filter_chk],
+            ["byidentifier_chk", self.byidentifier_chk],
+        ]
         self.read_settings()
         self._event_update_status(self.export_opts.currentText())
 
@@ -122,8 +142,10 @@ class ExportDialog(SaveStateDialog):
         if evt:
             self.line_export.setChecked(False)
             self.points_view_export.setChecked(False)
-            self.status_msg.setStyleSheet("QLabel { color: " + kluster_variables.pass_color + "; }")
-            self.status_msg.setText('')
+            self.status_msg.setStyleSheet(
+                "QLabel { color: " + kluster_variables.pass_color + "; }"
+            )
+            self.status_msg.setText("")
 
     def _handle_line_checked(self, evt):
         """
@@ -133,8 +155,10 @@ class ExportDialog(SaveStateDialog):
         if evt:
             self.basic_export_group.setChecked(False)
             self.points_view_export.setChecked(False)
-            self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.pass_color + "; }")
-            self.status_msg.setText('')
+            self.status_msg.setStyleSheet(
+                "QLabel { color : " + kluster_variables.pass_color + "; }"
+            )
+            self.status_msg.setText("")
 
     def _handle_points_checked(self, evt):
         """
@@ -145,11 +169,17 @@ class ExportDialog(SaveStateDialog):
             self.line_export.setChecked(False)
             self.basic_export_group.setChecked(False)
             if not self.fqpr_inst:
-                self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
-                self.status_msg.setText('Error: Ensure you have one of the datasets that contain these points listed in "Export from the following datasets"')
+                self.status_msg.setStyleSheet(
+                    "QLabel { color : " + kluster_variables.error_color + "; }"
+                )
+                self.status_msg.setText(
+                    'Error: Ensure you have one of the datasets that contain these points listed in "Export from the following datasets"'
+                )
             else:
-                self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.pass_color + "; }")
-                self.status_msg.setText('')
+                self.status_msg.setStyleSheet(
+                    "QLabel { color : " + kluster_variables.pass_color + "; }"
+                )
+                self.status_msg.setText("")
 
     def _event_update_fqpr_instances(self):
         """
@@ -170,26 +200,32 @@ class ExportDialog(SaveStateDialog):
         """
 
         self._show_hide_options(combobox_text)
-        if combobox_text == 'entwine':
+        if combobox_text == "entwine":
             ispydro = is_pydro()
             if ispydro:  # If this is the pydro environment, we know it has Entwine
-                self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.pass_color + "; }")
-                self.status_msg.setText('Pydro found, entwine export allowed')
+                self.status_msg.setStyleSheet(
+                    "QLabel { color : " + kluster_variables.pass_color + "; }"
+                )
+                self.status_msg.setText("Pydro found, entwine export allowed")
                 self.ok_button.setEnabled(True)
             else:
-                self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
-                self.status_msg.setText('Error: Pydro not found, entwine export is not allowed')
+                self.status_msg.setStyleSheet(
+                    "QLabel { color : " + kluster_variables.error_color + "; }"
+                )
+                self.status_msg.setText(
+                    "Error: Pydro not found, entwine export is not allowed"
+                )
                 self.ok_button.setEnabled(False)
         else:
-            self.status_msg.setText('')
+            self.status_msg.setText("")
             self.ok_button.setEnabled(True)
-        if combobox_text == 'csv':
+        if combobox_text == "csv":
             self.zdirect_check.show()
         else:
             self.zdirect_check.hide()
 
     def _show_hide_options(self, combobox_text):
-        if combobox_text == 'csv':
+        if combobox_text == "csv":
             self.csvdelimiter_dropdown.show()
             self.csvdelimiter_lbl.show()
             self.format_dropdown.show()
@@ -211,7 +247,10 @@ class ExportDialog(SaveStateDialog):
         """
         if addtl_files is not None:
             self.input_fqpr.add_new_files(addtl_files)
-        self.fqpr_inst = [self.input_fqpr.list_widget.item(i).text() for i in range(self.input_fqpr.list_widget.count())]
+        self.fqpr_inst = [
+            self.input_fqpr.list_widget.item(i).text()
+            for i in range(self.input_fqpr.list_widget.count())
+        ]
         if self.points_view_export.isChecked():
             self._handle_points_checked(True)
 
@@ -220,17 +259,39 @@ class ExportDialog(SaveStateDialog):
         Dialog completes if the specified widgets are populated
         """
         if self.basic_export_group.isChecked() and not self.fqpr_inst:
-            self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
-            self.status_msg.setText('Error: No data provided')
+            self.status_msg.setStyleSheet(
+                "QLabel { color : " + kluster_variables.error_color + "; }"
+            )
+            self.status_msg.setText("Error: No data provided")
         elif self.points_view_export.isChecked() and not self.fqpr_inst:
-            self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
-            self.status_msg.setText('Error: You must provide at least one dataset that the points come from before exporting')
-        elif self.points_view_export.isChecked() and self.export_opts.currentText() == 'csv' and self.format_dropdown.currentText() == 'xyzhv':
-            self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
-            self.status_msg.setText('Error: xyzhv + points view export not currently supported, as horizontal uncertainty is not available.')
-        elif not self.basic_export_group.isChecked() and not self.line_export.isChecked() and not self.points_view_export.isChecked():
-            self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
-            self.status_msg.setText('Error: You must select one of the three export modes (export datasets, export lines, export points)')
+            self.status_msg.setStyleSheet(
+                "QLabel { color : " + kluster_variables.error_color + "; }"
+            )
+            self.status_msg.setText(
+                "Error: You must provide at least one dataset that the points come from before exporting"
+            )
+        elif (
+            self.points_view_export.isChecked()
+            and self.export_opts.currentText() == "csv"
+            and self.format_dropdown.currentText() == "xyzhv"
+        ):
+            self.status_msg.setStyleSheet(
+                "QLabel { color : " + kluster_variables.error_color + "; }"
+            )
+            self.status_msg.setText(
+                "Error: xyzhv + points view export not currently supported, as horizontal uncertainty is not available."
+            )
+        elif (
+            not self.basic_export_group.isChecked()
+            and not self.line_export.isChecked()
+            and not self.points_view_export.isChecked()
+        ):
+            self.status_msg.setStyleSheet(
+                "QLabel { color : " + kluster_variables.error_color + "; }"
+            )
+            self.status_msg.setText(
+                "Error: You must select one of the three export modes (export datasets, export lines, export points)"
+            )
         else:
             self.canceled = False
             self.save_settings()
@@ -244,7 +305,7 @@ class ExportDialog(SaveStateDialog):
         self.accept()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

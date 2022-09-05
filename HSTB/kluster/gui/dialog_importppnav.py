@@ -13,45 +13,60 @@ class ImportPostProcNavigationDialog(QtWidgets.QDialog):
 
     fqpr = fully qualified ping record, the term for the datastore in kluster
     """
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle('Import Post Processed Navigation')
+        self.setWindowTitle("Import Post Processed Navigation")
         layout = QtWidgets.QVBoxLayout()
 
-        self.input_msg = QtWidgets.QLabel('Apply to the following:')
+        self.input_msg = QtWidgets.QLabel("Apply to the following:")
 
         self.hlayout_zero = QtWidgets.QHBoxLayout()
         self.input_fqpr = BrowseListWidget(self)
         self.input_fqpr.sizeHint()
-        self.input_fqpr.setup(mode='directory', registry_key='kluster', app_name='klusterbrowse',
-                              filebrowse_title='Select input processed folder')
+        self.input_fqpr.setup(
+            mode="directory",
+            registry_key="kluster",
+            app_name="klusterbrowse",
+            filebrowse_title="Select input processed folder",
+        )
         self.hlayout_zero.addWidget(self.input_fqpr)
 
-        self.sbet_msg = QtWidgets.QLabel('POSPac SBET Files')
+        self.sbet_msg = QtWidgets.QLabel("POSPac SBET Files")
 
         self.hlayout_two = QtWidgets.QHBoxLayout()
         self.sbetfiles = BrowseListWidget(self)
-        self.sbetfiles.setup(registry_key='kluster', app_name='klusterbrowse', supported_file_extension=['.out', '.sbet'],
-                             multiselect=True, filebrowse_title='Select SBET files',
-                             filebrowse_filter='POSPac SBET files (*.out;*.sbet)')
+        self.sbetfiles.setup(
+            registry_key="kluster",
+            app_name="klusterbrowse",
+            supported_file_extension=[".out", ".sbet"],
+            multiselect=True,
+            filebrowse_title="Select SBET files",
+            filebrowse_filter="POSPac SBET files (*.out;*.sbet)",
+        )
         self.hlayout_two.addWidget(self.sbetfiles)
 
-        self.smrmsg_msg = QtWidgets.QLabel('POSPac SMRMSG Files')
+        self.smrmsg_msg = QtWidgets.QLabel("POSPac SMRMSG Files")
 
         self.hlayout_three = QtWidgets.QHBoxLayout()
         self.smrmsgfiles = BrowseListWidget(self)
-        self.smrmsgfiles.setup(registry_key='kluster', app_name='klusterbrowse', supported_file_extension=['.out', '.smrmsg'],
-                               multiselect=True, filebrowse_title='Select SMRMSG files',
-                               filebrowse_filter='POSPac SMRMSG files (*.out;*.smrmsg)')
+        self.smrmsgfiles.setup(
+            registry_key="kluster",
+            app_name="klusterbrowse",
+            supported_file_extension=[".out", ".smrmsg"],
+            multiselect=True,
+            filebrowse_title="Select SMRMSG files",
+            filebrowse_filter="POSPac SMRMSG files (*.out;*.smrmsg)",
+        )
         self.hlayout_three.addWidget(self.smrmsgfiles)
 
-        self.log_check = QtWidgets.QGroupBox('Load from POSPac export log')
+        self.log_check = QtWidgets.QGroupBox("Load from POSPac export log")
         self.log_check.setCheckable(True)
         self.log_check.setChecked(True)
         self.logopts = QtWidgets.QVBoxLayout()
         self.hlayout_one = QtWidgets.QHBoxLayout()
-        self.log_file = QtWidgets.QLineEdit('', self)
+        self.log_file = QtWidgets.QLineEdit("", self)
         self.log_file.setReadOnly(True)
         self.hlayout_one.addWidget(self.log_file)
         self.browse_button = QtWidgets.QPushButton("Browse", self)
@@ -59,37 +74,41 @@ class ImportPostProcNavigationDialog(QtWidgets.QDialog):
         self.logopts.addLayout(self.hlayout_one)
         self.log_check.setLayout(self.logopts)
 
-        self.override_check = QtWidgets.QGroupBox('Manually set metadata')
+        self.override_check = QtWidgets.QGroupBox("Manually set metadata")
         self.override_check.setCheckable(True)
         self.override_check.setChecked(False)
         self.overrideopts = QtWidgets.QVBoxLayout()
         self.hlayout_four_one = QtWidgets.QHBoxLayout()
-        self.caltext = QtWidgets.QLabel('Date of SBET')
+        self.caltext = QtWidgets.QLabel("Date of SBET")
         self.hlayout_four_one.addWidget(self.caltext)
         self.calendar_widget = QtWidgets.QDateEdit()
         self.calendar_widget.setCalendarPopup(True)
         currdate = datetime.now()
-        self.calendar_widget.setDate(QtCore.QDate(currdate.year, currdate.month, currdate.day))
+        self.calendar_widget.setDate(
+            QtCore.QDate(currdate.year, currdate.month, currdate.day)
+        )
         self.hlayout_four_one.addWidget(self.calendar_widget)
         self.hlayout_four_two = QtWidgets.QHBoxLayout()
-        self.datumtext = QtWidgets.QLabel('Coordinate System')
+        self.datumtext = QtWidgets.QLabel("Coordinate System")
         self.hlayout_four_two.addWidget(self.datumtext)
         self.datum_val = QtWidgets.QComboBox()
-        self.datum_val.addItems(['NAD83', 'WGS84'])
+        self.datum_val.addItems(["NAD83", "WGS84"])
         self.hlayout_four_two.addWidget(self.datum_val)
         self.overrideopts.addLayout(self.hlayout_four_one)
         self.overrideopts.addLayout(self.hlayout_four_two)
         self.override_check.setLayout(self.overrideopts)
 
-        self.status_msg = QtWidgets.QLabel('')
-        self.status_msg.setStyleSheet("QLabel { color : " + kluster_variables.error_color + "; }")
+        self.status_msg = QtWidgets.QLabel("")
+        self.status_msg.setStyleSheet(
+            "QLabel { color : " + kluster_variables.error_color + "; }"
+        )
 
         self.hlayout_five = QtWidgets.QHBoxLayout()
         self.hlayout_five.addStretch(1)
-        self.ok_button = QtWidgets.QPushButton('OK', self)
+        self.ok_button = QtWidgets.QPushButton("OK", self)
         self.hlayout_five.addWidget(self.ok_button)
         self.hlayout_five.addStretch(1)
-        self.cancel_button = QtWidgets.QPushButton('Cancel', self)
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
         self.hlayout_five.addWidget(self.cancel_button)
         self.hlayout_five.addStretch(1)
 
@@ -105,7 +124,7 @@ class ImportPostProcNavigationDialog(QtWidgets.QDialog):
         layout.addLayout(self.hlayout_five)
         self.setLayout(layout)
 
-        self.log_file_path = ''
+        self.log_file_path = ""
         self.sbet_files = []
         self.smrmsg_files = []
         self.fqpr_inst = []
@@ -124,10 +143,14 @@ class ImportPostProcNavigationDialog(QtWidgets.QDialog):
 
     def file_browse(self):
         # dirpath will be None or a string
-        msg, self.log_file_path = RegistryHelpers.GetFilenameFromUserQT(self, RegistryKey='Kluster',
-                                                                        Title='Select POSPac Export Log',
-                                                                        AppName='\\reghelp', bSave=False,
-                                                                        fFilter="Log Files | *.txt;*.log")
+        msg, self.log_file_path = RegistryHelpers.GetFilenameFromUserQT(
+            self,
+            RegistryKey="Kluster",
+            Title="Select POSPac Export Log",
+            AppName="\\reghelp",
+            bSave=False,
+            fFilter="Log Files | *.txt;*.log",
+        )
         if self.log_file_path is not None:
             self.log_file.setText(self.log_file_path)
 
@@ -190,7 +213,9 @@ class ImportPostProcNavigationDialog(QtWidgets.QDialog):
             override_datum = None
         else:
             logfiles = None
-            weekstart_year, weekstart_week, dy = datetime.strptime(self.calendar_widget.text(), '%m/%d/%Y').isocalendar()
+            weekstart_year, weekstart_week, dy = datetime.strptime(
+                self.calendar_widget.text(), "%m/%d/%Y"
+            ).isocalendar()
             override_datum = self.datum_val.currentText()
 
         if not self.smrmsg_files:
@@ -198,9 +223,16 @@ class ImportPostProcNavigationDialog(QtWidgets.QDialog):
 
         # always overwrite when the user uses the manual import with this dialog
         if not self.canceled:
-            opts = {'fqpr_inst': self.fqpr_inst, 'navfiles': self.sbet_files, 'errorfiles': self.smrmsg_files,
-                    'logfiles': logfiles, 'weekstart_year': weekstart_year, 'weekstart_week': weekstart_week,
-                    'override_datum': override_datum, 'overwrite': True}
+            opts = {
+                "fqpr_inst": self.fqpr_inst,
+                "navfiles": self.sbet_files,
+                "errorfiles": self.smrmsg_files,
+                "logfiles": logfiles,
+                "weekstart_year": weekstart_year,
+                "weekstart_week": weekstart_week,
+                "override_datum": override_datum,
+                "overwrite": True,
+            }
         else:
             opts = None
         return opts
@@ -211,7 +243,9 @@ class ImportPostProcNavigationDialog(QtWidgets.QDialog):
         settings the user entered into the dialog.
         """
         if not self.fqpr_inst and not self.sbet_files:
-            self.status_msg.setText('Error: You must select source data and sbet files to continue')
+            self.status_msg.setText(
+                "Error: You must select source data and sbet files to continue"
+            )
         else:
             self.canceled = False
             self.accept()
@@ -224,7 +258,7 @@ class ImportPostProcNavigationDialog(QtWidgets.QDialog):
         self.accept()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

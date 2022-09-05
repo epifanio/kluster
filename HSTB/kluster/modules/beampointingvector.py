@@ -22,17 +22,28 @@ def distrib_run_build_beam_pointing_vector(dat: list):
         [relative azimuth, beam pointing angle, processing_status]
     """
 
-    ans = build_beam_pointing_vectors(dat[0], dat[1], dat[2], dat[3][0], dat[3][1], dat[4], dat[5])
+    ans = build_beam_pointing_vectors(
+        dat[0], dat[1], dat[2], dat[3][0], dat[3][1], dat[4], dat[5]
+    )
     # return processing status = 2 for all affected soundings
-    processing_status = xr.DataArray(np.full_like(dat[1], 2, dtype=np.uint8),
-                                     coords={'time': dat[1].coords['time'], 'beam': dat[1].coords['beam']},
-                                     dims=['time', 'beam'])
+    processing_status = xr.DataArray(
+        np.full_like(dat[1], 2, dtype=np.uint8),
+        coords={"time": dat[1].coords["time"], "beam": dat[1].coords["beam"]},
+        dims=["time", "beam"],
+    )
     ans.append(processing_status)
     return ans
 
 
-def build_beam_pointing_vectors(hdng: xr.DataArray, bpa: xr.DataArray, tiltangle: xr.DataArray, tx_vecs: xr.DataArray,
-                                rx_vecs: xr.DataArray, tx_reversed: bool = False, rx_reversed: bool = False):
+def build_beam_pointing_vectors(
+    hdng: xr.DataArray,
+    bpa: xr.DataArray,
+    tiltangle: xr.DataArray,
+    tx_vecs: xr.DataArray,
+    rx_vecs: xr.DataArray,
+    tx_reversed: bool = False,
+    rx_reversed: bool = False,
+):
     """
     Beam pointing vector is the beam specific vector that arises from the intersection of the tx ping and rx cone
     of sensitivity.  Points at that area.  Is in the geographic coordinate system, built using the tx/rx at time of
@@ -86,8 +97,12 @@ def build_beam_pointing_vectors(hdng: xr.DataArray, bpa: xr.DataArray, tiltangle
     return [rel_azimuth, new_pointing_angle]
 
 
-def construct_array_relative_beamvector(maintx: xr.DataArray, mainrx: xr.DataArray, tx_angle: xr.DataArray,
-                                        rx_angle: xr.DataArray):
+def construct_array_relative_beamvector(
+    maintx: xr.DataArray,
+    mainrx: xr.DataArray,
+    tx_angle: xr.DataArray,
+    rx_angle: xr.DataArray,
+):
     """
     Given the orientation vectors representing the transmitter/receiver at time of ping/receive (maintx, mainrx) and
     the TX/RX steering angles (tx_angle, rx_angle), determine new 3d beam vector components at the midpoint between
@@ -129,7 +144,7 @@ def construct_array_relative_beamvector(maintx: xr.DataArray, mainrx: xr.DataArr
     """
 
     # delta - alignment angle between tx/rx vecs
-    delt = np.arccos(xr.dot(maintx, mainrx, dims=['xyz'])) - np.pi / 2
+    delt = np.arccos(xr.dot(maintx, mainrx, dims=["xyz"])) - np.pi / 2
     ysub1 = -np.sin(rx_angle)
 
     # solve for components of 3d beam vector
@@ -142,7 +157,7 @@ def construct_array_relative_beamvector(maintx: xr.DataArray, mainrx: xr.DataArr
 
     # generate new dataarray object for beam vectors
     newx, _ = xr.broadcast(x, y)  # broadcast to duplicate x along beam dimension
-    beamvecs = xr.concat([newx, y, z], pd.Index(list('xyz'), name='xyz'))
+    beamvecs = xr.concat([newx, y, z], pd.Index(list("xyz"), name="xyz"))
     return beamvecs
 
 
@@ -176,19 +191,21 @@ def return_array_geographic_rotation(maintx: xr.DataArray, mainrx: xr.DataArray)
 
     # build rotation matrix for going from locally level to geographic coord sys
     x_prime = maintx
-    z_prime = cross(x_prime, mainrx, 'xyz')
-    y_prime = cross(z_prime, x_prime, 'xyz')
-    rotgeo = xr.concat([x_prime, y_prime, z_prime], pd.Index([0, 1, 2], name='rot_j')).T
+    z_prime = cross(x_prime, mainrx, "xyz")
+    y_prime = cross(z_prime, x_prime, "xyz")
+    rotgeo = xr.concat([x_prime, y_prime, z_prime], pd.Index([0, 1, 2], name="rot_j")).T
     # to do the dot product correctly, you need to align the right dimension in both matrices by giving
     # them the same name (xyz for rotgeo and bv_geo in this case)
-    rotgeo = rotgeo.rename({'xyz': 'rot_i'})
-    rotgeo.coords['rot_i'] = [0, 1, 2]
-    rotgeo = rotgeo.rename({'rot_j': 'xyz'})
-    rotgeo.coords['xyz'] = ['x', 'y', 'z']
+    rotgeo = rotgeo.rename({"xyz": "rot_i"})
+    rotgeo.coords["rot_i"] = [0, 1, 2]
+    rotgeo = rotgeo.rename({"rot_j": "xyz"})
+    rotgeo.coords["xyz"] = ["x", "y", "z"]
     return rotgeo
 
 
-def cross(a: xr.DataArray, b: xr.DataArray, spatial_dim: str, output_dtype: np.dtype = None):
+def cross(
+    a: xr.DataArray, b: xr.DataArray, spatial_dim: str, output_dtype: np.dtype = None
+):
     """
     Xarray-compatible cross product.  Compatible with dask, parallelization uses a.dtype as output_dtype
 
@@ -211,17 +228,23 @@ def cross(a: xr.DataArray, b: xr.DataArray, spatial_dim: str, output_dtype: np.d
 
     for d in (a, b):
         if spatial_dim not in d.dims:
-            raise ValueError('dimension {} not in {}'.format(spatial_dim, d))
+            raise ValueError("dimension {} not in {}".format(spatial_dim, d))
         if d.sizes[spatial_dim] != 3:
-            raise ValueError('dimension {} has not length 3 in {}'.format(spatial_dim, d))
+            raise ValueError(
+                "dimension {} has not length 3 in {}".format(spatial_dim, d)
+            )
 
     if output_dtype is None:
         output_dtype = a.dtype
-    c = xr.apply_ufunc(np.cross, a, b,
-                       input_core_dims=[[spatial_dim], [spatial_dim]],
-                       output_core_dims=[[spatial_dim]],
-                       dask='parallelized', output_dtypes=[output_dtype]
-                       )
+    c = xr.apply_ufunc(
+        np.cross,
+        a,
+        b,
+        input_core_dims=[[spatial_dim], [spatial_dim]],
+        output_core_dims=[[spatial_dim]],
+        dask="parallelized",
+        output_dtypes=[output_dtype],
+    )
     return c
 
 
@@ -242,10 +265,10 @@ def build_geographic_beam_vectors(rotgeo: xr.DataArray, beamvecs: xr.DataArray):
         beam vectors in geographic ref frame, of shape (time, beam, bv_xyz)
     """
 
-    bv_geo = xr.dot(rotgeo, beamvecs, dims='xyz')
-    bv_geo = bv_geo.rename({'rot_i': 'bv_xyz'})
-    bv_geo.coords['bv_xyz'] = ['x', 'y', 'z']
-    bv_geo = bv_geo.transpose('time', 'beam', 'bv_xyz')
+    bv_geo = xr.dot(rotgeo, beamvecs, dims="xyz")
+    bv_geo = bv_geo.rename({"rot_i": "bv_xyz"})
+    bv_geo.coords["bv_xyz"] = ["x", "y", "z"]
+    bv_geo = bv_geo.transpose("time", "beam", "bv_xyz")
     return bv_geo
 
 
@@ -267,7 +290,7 @@ def compute_relative_azimuth(bv_geo: xr.DataArray, heading: xr.DataArray):
     """
 
     # derive azimuth/angle from the newly created geographic beam vectors
-    bv_azimuth = np.rad2deg(np.arctan2(bv_geo.sel(bv_xyz='y'), bv_geo.sel(bv_xyz='x')))
+    bv_azimuth = np.rad2deg(np.arctan2(bv_geo.sel(bv_xyz="y"), bv_geo.sel(bv_xyz="x")))
     rel_azimuth = np.deg2rad((bv_azimuth - heading + 360) % 360)
     return rel_azimuth
 
@@ -290,10 +313,14 @@ def compute_geo_beam_pointing_angle(bv_geo: xr.DataArray, rx_angle: xr.DataArray
         2 dim (time, beam) values for beampointingangle at each beam
     """
 
-    bvangle_divisor = np.sqrt(np.square(bv_geo.sel(bv_xyz='x')) + np.square(bv_geo.sel(bv_xyz='y')))
+    bvangle_divisor = np.sqrt(
+        np.square(bv_geo.sel(bv_xyz="x")) + np.square(bv_geo.sel(bv_xyz="y"))
+    )
     # new pointing angle is equal to pi/2 - depression angle (depression angle relative to horiz, pointing
     #    angle is the incidence angle relative to vertical)
-    new_pointing_angle = (np.pi / 2) - np.arctan(bv_geo.sel(bv_xyz='z') / bvangle_divisor)
+    new_pointing_angle = (np.pi / 2) - np.arctan(
+        bv_geo.sel(bv_xyz="z") / bvangle_divisor
+    )
     # flip the sign where the azimuth is pointing to port, allows us to maintain which side the angle is on
     newindx = np.ones_like(new_pointing_angle)
     newindx = np.negative(newindx, out=newindx, where=rx_angle < 0)

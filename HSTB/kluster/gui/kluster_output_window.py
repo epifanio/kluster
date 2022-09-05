@@ -1,6 +1,7 @@
 import sys, os
 import logging
 from HSTB.kluster.gui.backends._qt import QtGui, QtCore, QtWidgets, Signal, qgis_enabled
+
 if qgis_enabled:
     from HSTB.kluster.gui.backends._qt import qgis_core, qgis_gui
 
@@ -39,11 +40,12 @@ class KlusterOutput(QtWidgets.QTextEdit):
     """
     TextEdit widget for displaying stdout/stderr messages.
     """
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.setWindowTitle("Output")
-        self.setObjectName('kluster_output')
+        self.setObjectName("kluster_output")
         self.setReadOnly(True)
         self.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         # self.setStyleSheet(('font: 11pt "Consolas";'))
@@ -56,7 +58,7 @@ class KlusterOutput(QtWidgets.QTextEdit):
     def contextMenuEvent(self, e: QtGui.QContextMenuEvent) -> None:
         # add a clear action
         menu = self.createStandardContextMenu(e.pos())
-        newaction = QtWidgets.QAction('Clear', self)
+        newaction = QtWidgets.QAction("Clear", self)
         newaction.triggered.connect(self._clr_window)
         menu.addAction(newaction)
         menu.exec(e.globalPos())
@@ -85,12 +87,12 @@ class KlusterOutput(QtWidgets.QTextEdit):
             if True, is stdout
         """
         cursor = self.textCursor()
-        if text.lstrip()[0:2] in ['[#', '[ '] or text[-10:] == '% Complete':
+        if text.lstrip()[0:2] in ["[#", "[ "] or text[-10:] == "% Complete":
             # try and see if we need to continue a previous bar, so you dont get a list of 100% progress bars
             cursor.select(QtGui.QTextCursor.LineUnderCursor)
             cursor.removeSelectedText()
             cursor.deletePreviousChar()
-            if text[-10:] == '% Complete':
+            if text[-10:] == "% Complete":
                 cursor.select(QtGui.QTextCursor.LineUnderCursor)
                 cursor.removeSelectedText()
                 cursor.deletePreviousChar()
@@ -114,7 +116,7 @@ class OutWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self.resize(800, 400)
-        self.setWindowTitle('Kluster Output Window')
+        self.setWindowTitle("Kluster Output Window")
         self.top_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.top_widget)
         layout = QtWidgets.QHBoxLayout()
@@ -124,7 +126,9 @@ class OutWindow(QtWidgets.QMainWindow):
         self.k_output.moveCursor(QtGui.QTextCursor.Start)
         self.k_output.setLineWrapColumnOrWidth(500)
         self.k_output.setLineWrapMode(QtWidgets.QTextEdit.FixedPixelWidth)
-        self.k_output.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.k_output.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         layout.addWidget(self.k_output)
 
         layout.layout()
@@ -132,11 +136,11 @@ class OutWindow(QtWidgets.QMainWindow):
         self.centralWidget().setLayout(layout)
         self.show()
 
-        print('test stdout', file=sys.stdout)
-        print('test stderr', file=sys.stderr)
+        print("test stdout", file=sys.stdout)
+        print("test stderr", file=sys.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if qgis_enabled:
         app = qgis_core.QgsApplication([], True)
         app.initQgis()

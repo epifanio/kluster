@@ -64,13 +64,15 @@ def crs_to_osgeo(input_crs: Union[CRS, str, int]):
             epsg = int(input_crs)
             err = crs.ImportFromEPSG(epsg)
             if err:
-                raise ValueError('Error trying to ImportFromEPSG: {}'.format(epsg))
+                raise ValueError("Error trying to ImportFromEPSG: {}".format(epsg))
         except ValueError:  # a wkt or proj4 is provided
             err = crs.ImportFromWkt(input_crs)
             if err:
                 err = crs.ImportFromProj4(input_crs)
                 if err:
-                    raise ValueError('{} is neither a valid Wkt or Proj4 string'.format(input_crs))
+                    raise ValueError(
+                        "{} is neither a valid Wkt or Proj4 string".format(input_crs)
+                    )
     return crs
 
 
@@ -169,8 +171,17 @@ def gdal_output_file_exists(pth: str):
     return True
 
 
-def gdal_raster_create(output_raster: str, data: list, geo_transform: list, crs: Union[CRS, int], nodatavalue: float = 1000000.0,
-                       bandnames: tuple = (), driver: str = 'GTiff', transpose: bool = True, creation_options: list = []):
+def gdal_raster_create(
+    output_raster: str,
+    data: list,
+    geo_transform: list,
+    crs: Union[CRS, int],
+    nodatavalue: float = 1000000.0,
+    bandnames: tuple = (),
+    driver: str = "GTiff",
+    transpose: bool = True,
+    creation_options: list = [],
+):
     """
     Build a gdal product from the provided data using the provided driver.  Can perform a Transpose on the provided
     data to align with GDAL/Image standards.
@@ -205,7 +216,9 @@ def gdal_raster_create(output_raster: str, data: list, geo_transform: list, crs:
     rows, cols = data[0].shape
     no_bands = len(data)
 
-    dataset = gdal_driver.Create(output_raster, cols, rows, no_bands, gdal.GDT_Float32, creation_options)
+    dataset = gdal_driver.Create(
+        output_raster, cols, rows, no_bands, gdal.GDT_Float32, creation_options
+    )
     dataset.SetGeoTransform(geo_transform)
     dataset.SetProjection(srs.ExportToWkt())
 
@@ -214,11 +227,11 @@ def gdal_raster_create(output_raster: str, data: list, geo_transform: list, crs:
         if bandnames:
             rband.SetDescription(bandnames[cnt])
         rband.WriteArray(d)
-        if driver != 'GTiff':
+        if driver != "GTiff":
             rband.SetNoDataValue(nodatavalue)
-    if driver == 'GTiff':  # gtiff driver wants one no data value for all bands
+    if driver == "GTiff":  # gtiff driver wants one no data value for all bands
         dataset.GetRasterBand(1).SetNoDataValue(nodatavalue)
-    if driver != 'MEM':  # MEM driver relies on you returning the dataset for use
+    if driver != "MEM":  # MEM driver relies on you returning the dataset for use
         dataset = None
     return dataset
 
@@ -276,25 +289,25 @@ def get_raster_attribution(raster_source: str):
         return None
 
     rdict = {}
-    rdict['type'] = ds.GetDriver().GetDescription()
-    rdict['horizontal datum'] = ds.GetProjection()
+    rdict["type"] = ds.GetDriver().GetDescription()
+    rdict["horizontal datum"] = ds.GetProjection()
     try:
-        rdict['EPSG'] = CRS.from_wkt(ds.GetProjection()).to_epsg()
+        rdict["EPSG"] = CRS.from_wkt(ds.GetProjection()).to_epsg()
     except:
-        rdict['EPSG'] = 'Unknown'
+        rdict["EPSG"] = "Unknown"
     try:
-        rdict['vertical datum'] = return_bag_vertical_wkt(raster_source)
+        rdict["vertical datum"] = return_bag_vertical_wkt(raster_source)
     except:
-        rdict['vertical datum'] = ''
+        rdict["vertical datum"] = ""
 
     gtrans = ds.GetGeoTransform()
-    rdict['resolution'] = gtrans[1]
-    rdict['min x'] = gtrans[0]
-    rdict['max x'] = gtrans[0] + gtrans[1] * ds.RasterXSize
-    rdict['min y'] = gtrans[3] + gtrans[5] * ds.RasterYSize
-    rdict['max y'] = gtrans[3]
-    rdict['width'] = ds.RasterXSize
-    rdict['height'] = ds.RasterYSize
+    rdict["resolution"] = gtrans[1]
+    rdict["min x"] = gtrans[0]
+    rdict["max x"] = gtrans[0] + gtrans[1] * ds.RasterXSize
+    rdict["min y"] = gtrans[3] + gtrans[5] * ds.RasterYSize
+    rdict["max y"] = gtrans[3]
+    rdict["width"] = ds.RasterXSize
+    rdict["height"] = ds.RasterYSize
 
     for bandcount in range(ds.RasterCount):
         bandcount += 1  # gdal is 1 indexed
@@ -302,7 +315,7 @@ def get_raster_attribution(raster_source: str):
         bandname = band.GetDescription()
         mdict = band.GetMetadata()
         for mky, mval in mdict.items():
-            rdict[f'{bandname}_{mky.lower()}'] = mval
+            rdict[f"{bandname}_{mky.lower()}"] = mval
         band = None
 
     ds = None
@@ -357,13 +370,18 @@ def get_vector_attribution(vector_source: str):
         return None
 
     vdict = {}
-    vdict['type'] = ds.GetDriver().GetDescription()
-    vdict['number of layers'] = ds.GetLayerCount()
-    if os.path.splitext(vector_source)[1] == '.000':
+    vdict["type"] = ds.GetDriver().GetDescription()
+    vdict["number of layers"] = ds.GetLayerCount()
+    if os.path.splitext(vector_source)[1] == ".000":
         try:
-            vdict['feature count'] = {ds.GetLayerByIndex(i).GetDescription(): ds.GetLayerByIndex(i).GetFeatureCount() for i in range(ds.GetLayerCount())}
+            vdict["feature count"] = {
+                ds.GetLayerByIndex(i)
+                .GetDescription(): ds.GetLayerByIndex(i)
+                .GetFeatureCount()
+                for i in range(ds.GetLayerCount())
+            }
         except:
-            vdict['feature count'] = 'Unknown'
+            vdict["feature count"] = "Unknown"
 
     ds = None
     return vdict
@@ -387,26 +405,43 @@ class VectorLayer:
     vl = VectorLayer('/vsimem/tst.gpkg', 'GPKG', 26917, False)
     """
 
-    def __init__(self, output_file: str, driver_name: str, input_crs: Union[CRS, str, int], update: bool, silent: bool = True):
+    def __init__(
+        self,
+        output_file: str,
+        driver_name: str,
+        input_crs: Union[CRS, str, int],
+        update: bool,
+        silent: bool = True,
+    ):
         self.output_file = output_file
         self.driver_name = driver_name
         self.driver = ogr.GetDriverByName(driver_name)
         self.silent = silent
         if not self.driver:
-            raise ValueError('Provided driver name {} is not a valid ogr driver'.format(driver_name))
+            raise ValueError(
+                "Provided driver name {} is not a valid ogr driver".format(driver_name)
+            )
 
         self.update = update
         output_file_exists = ogr_output_file_exists(output_file)
 
         self.ds = None
         if output_file_exists:
-            self._print_with_silent('Opening existing file {}, update={}'.format(self.output_file, self.update))
+            self._print_with_silent(
+                "Opening existing file {}, update={}".format(
+                    self.output_file, self.update
+                )
+            )
             self.ds = self.driver.Open(output_file, int(self.update))
         else:
-            self._print_with_silent('Creating new file {}'.format(self.output_file))
+            self._print_with_silent("Creating new file {}".format(self.output_file))
             self.ds = self.driver.CreateDataSource(output_file)
         if self.ds is None:
-            raise ValueError('Unable to create data source for {} using {} driver'.format(output_file, driver_name))
+            raise ValueError(
+                "Unable to create data source for {} using {} driver".format(
+                    output_file, driver_name
+                )
+            )
         self.crs = crs_to_osgeo(input_crs)
 
         self.hidden_layers = {}
@@ -416,7 +451,7 @@ class VectorLayer:
         """
         Returns if the output_file is a gdal virtual file system path
         """
-        return self.output_file.find('vsimem') != -1
+        return self.output_file.find("vsimem") != -1
 
     def _print_with_silent(self, msg):
         if not self.silent:
@@ -440,7 +475,11 @@ class VectorLayer:
         """
 
         if coords.ndim != 2:
-            raise ValueError('Must have multiple coordinates for 2dim geom, dim='.format(coords.shape))
+            raise ValueError(
+                "Must have multiple coordinates for 2dim geom, dim=".format(
+                    coords.shape
+                )
+            )
         geom = ogr.Geometry(geom_type)
         [geom.AddPoint_2D(float(coord[0]), float(coord[1])) for coord in coords]
         return geom
@@ -461,7 +500,11 @@ class VectorLayer:
         """
 
         if coord.ndim != 1:
-            raise ValueError('Coordinates for point must be one dimensional, dim='.format(coord.shape))
+            raise ValueError(
+                "Coordinates for point must be one dimensional, dim=".format(
+                    coord.shape
+                )
+            )
         geom = ogr.Geometry(ogr.wkbPoint)
         geom.AddPoint_2D(coord[0], coord[1])
         return geom
@@ -533,27 +576,39 @@ class VectorLayer:
         default_layer = os.path.splitext(os.path.split(self.output_file)[1])[0]
         # create this default layer if it is not in there already and you aren't trying to do it anyway
         if not self.ds.GetLayerByName(default_layer) and default_layer != layer_name:
-            self._print_with_silent('Initializing new file...')
+            self._print_with_silent("Initializing new file...")
             lyr = self.ds.CreateLayer(default_layer, self.crs, geom_type)
             lyr = None
 
         lyr = self.ds.GetLayer(layer_name)
         if lyr is not None:
-            if self.update and lyr.GetGeomType() != geom_type:  # found a layer of that name, which is fine with update, just make sure the geom matches
-                raise ValueError('Provided geometry type {} does not match layer {} which is {}'.format(geom_type, layer_name, lyr.GetGeomType()))
+            if (
+                self.update and lyr.GetGeomType() != geom_type
+            ):  # found a layer of that name, which is fine with update, just make sure the geom matches
+                raise ValueError(
+                    "Provided geometry type {} does not match layer {} which is {}".format(
+                        geom_type, layer_name, lyr.GetGeomType()
+                    )
+                )
             elif not self.update:
-                raise ValueError('Layer {} exists already, update must be enabled to update the layer'.format(layer_name))
-            self._print_with_silent('Updating layer {}'.format(layer_name))
+                raise ValueError(
+                    "Layer {} exists already, update must be enabled to update the layer".format(
+                        layer_name
+                    )
+                )
+            self._print_with_silent("Updating layer {}".format(layer_name))
         else:
             lyr = self.ds.CreateLayer(layer_name, self.crs, geom_type)
-            self._print_with_silent('Creating new layer {}'.format(layer_name))
+            self._print_with_silent("Creating new layer {}".format(layer_name))
         lg = logging.getLogger()
         success_count = 0
         for coords in coords_dset:
             # deal with gdal non-finite error
             nanmask = np.isnan(coords)
             if nanmask.any():
-                self._print_with_silent('WARNING: Found some NaN in coordinates, removing these elements...')
+                self._print_with_silent(
+                    "WARNING: Found some NaN in coordinates, removing these elements..."
+                )
                 nanmask = np.logical_and(nanmask[:, 0], nanmask[:, 1])
                 coords = coords[~nanmask]
             feat = ogr.Feature(lyr.GetLayerDefn())
@@ -564,16 +619,20 @@ class VectorLayer:
             elif geom_type == ogr.wkbPoint:
                 geom = self._create_point(coords)
             else:
-                raise ValueError('Unrecognized geom_type {}'.format(geom_type))
+                raise ValueError("Unrecognized geom_type {}".format(geom_type))
             feat.SetGeometry(geom)
             err = lyr.CreateFeature(feat)
             if not err and ogr_output_file_exists(self.output_file):
                 success_count += 1
             else:
-                print(f'ERROR: Unable to generate feature {self.output_file}')
+                print(f"ERROR: Unable to generate feature {self.output_file}")
             feat = None
         lyr = None
-        self._print_with_silent('Successfully written {} out of {} features in layer {}'.format(success_count, len(coords_dset), layer_name))
+        self._print_with_silent(
+            "Successfully written {} out of {} features in layer {}".format(
+                success_count, len(coords_dset), layer_name
+            )
+        )
 
     def delete_layer(self, layer_name: str):
         """
@@ -588,21 +647,29 @@ class VectorLayer:
         if lyr is not None:
             self.ds.DeleteLayer(layer_name)
         else:
-            self._print_with_silent('{} does not exist in lines data, cannot remove line')
+            self._print_with_silent(
+                "{} does not exist in lines data, cannot remove line"
+            )
 
     def hide_layer(self, layer_name: str):
         if layer_name in self.hidden_layers:
-            raise ValueError('hide_layer: layer is already in hidden layers: {}'.format(layer_name))
+            raise ValueError(
+                "hide_layer: layer is already in hidden layers: {}".format(layer_name)
+            )
         lyr = self.ds.GetLayer(layer_name)
         if lyr is not None:
             self.hidden_layers[layer_name] = lyr
             self.ds.DeleteLayer(layer_name)
         else:
-            self._print_with_silent('{} does not exist in lines data, cannot remove line')
+            self._print_with_silent(
+                "{} does not exist in lines data, cannot remove line"
+            )
 
     def show_layer(self, layer_name: str):
         if layer_name not in self.hidden_layers:
-            raise ValueError('show_layer: layer is not in hidden layers: {}'.format(layer_name))
+            raise ValueError(
+                "show_layer: layer is not in hidden layers: {}".format(layer_name)
+            )
         lyr = self.hidden_layers[layer_name]
         self.ds.CopyLayer(layer_name, layer_name)
 

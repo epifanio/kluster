@@ -6,10 +6,10 @@ from HSTB.kluster import kluster_variables
 class PatchTestDialog(SaveStateDialog):
     patch_query = Signal(str)  # submit new query to main for data
 
-    def __init__(self, parent=None, title='', settings=None):
-        super().__init__(parent, settings, widgetname='patchtestdialog')
+    def __init__(self, parent=None, title="", settings=None):
+        super().__init__(parent, settings, widgetname="patchtestdialog")
 
-        self.setWindowTitle('Patch Test')
+        self.setWindowTitle("Patch Test")
         self.setMinimumWidth(900)
         self.setMinimumHeight(400)
 
@@ -18,10 +18,10 @@ class PatchTestDialog(SaveStateDialog):
         self.listlayout = QtWidgets.QHBoxLayout()
         self.leftlayout = QtWidgets.QVBoxLayout()
         self.choose_layout = QtWidgets.QHBoxLayout()
-        self.from_selected_lines = QtWidgets.QRadioButton('Use selected lines')
+        self.from_selected_lines = QtWidgets.QRadioButton("Use selected lines")
         self.from_selected_lines.setChecked(True)
         self.choose_layout.addWidget(self.from_selected_lines)
-        self.from_points_view = QtWidgets.QRadioButton('Use Points View selection')
+        self.from_points_view = QtWidgets.QRadioButton("Use Points View selection")
         self.from_points_view.setChecked(False)
         self.from_points_view.setDisabled(True)
         self.choose_layout.addWidget(self.from_points_view)
@@ -29,7 +29,7 @@ class PatchTestDialog(SaveStateDialog):
         self.leftlayout.addLayout(self.choose_layout)
 
         self.button_layout = QtWidgets.QHBoxLayout()
-        self.analyze_button = QtWidgets.QPushButton('Analyze')
+        self.analyze_button = QtWidgets.QPushButton("Analyze")
         self.button_layout.addWidget(self.analyze_button)
         self.button_layout.addStretch()
         self.leftlayout.addLayout(self.button_layout)
@@ -38,7 +38,7 @@ class PatchTestDialog(SaveStateDialog):
         self.leftlayout.addWidget(self.line_list)
 
         self.rightlayout = QtWidgets.QHBoxLayout()
-        self.explanation = QtWidgets.QTextEdit('', self)
+        self.explanation = QtWidgets.QTextEdit("", self)
         self.explanation.setMinimumWidth(150)
         self.rightlayout.addWidget(self.explanation)
 
@@ -48,17 +48,19 @@ class PatchTestDialog(SaveStateDialog):
 
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.addStretch(1)
-        self.ok_button = QtWidgets.QPushButton('Run', self)
+        self.ok_button = QtWidgets.QPushButton("Run", self)
         self.button_layout.addWidget(self.ok_button)
         self.button_layout.addStretch(1)
-        self.cancel_button = QtWidgets.QPushButton('Cancel', self)
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
         self.button_layout.addWidget(self.cancel_button)
         self.button_layout.addStretch(1)
         self.main_layout.addLayout(self.button_layout)
 
         self.hlayout_msg = QtWidgets.QHBoxLayout()
-        self.warning_message = QtWidgets.QLabel('', self)
-        self.warning_message.setStyleSheet("color : {};".format(kluster_variables.error_color))
+        self.warning_message = QtWidgets.QLabel("", self)
+        self.warning_message.setStyleSheet(
+            "color : {};".format(kluster_variables.error_color)
+        )
         self.hlayout_msg.addWidget(self.warning_message)
         self.main_layout.addLayout(self.hlayout_msg)
 
@@ -73,7 +75,10 @@ class PatchTestDialog(SaveStateDialog):
         self.cancel_button.clicked.connect(self.cancel_patch)
 
         self.text_controls = []
-        self.checkbox_controls = [['from_points_view', self.from_points_view], ['from_selected_lines', self.from_selected_lines]]
+        self.checkbox_controls = [
+            ["from_points_view", self.from_points_view],
+            ["from_selected_lines", self.from_selected_lines],
+        ]
         self.read_settings()
         self._set_explanation()
 
@@ -83,22 +88,22 @@ class PatchTestDialog(SaveStateDialog):
 
     def _set_explanation(self):
         msg = 'Based on "Computation of Calibration Parameters for Multibeam Echo Sounders Using the Least Squares Method"'
-        msg += ', by Jan Terje Bjorke\n\nCompute new offsets/angles for the data provided using this automated least squares'
-        msg += ' adjustment.'
+        msg += ", by Jan Terje Bjorke\n\nCompute new offsets/angles for the data provided using this automated least squares"
+        msg += " adjustment."
         self.explanation.setText(msg)
 
-    def err_message(self, text: str = ''):
+    def err_message(self, text: str = ""):
         if text:
-            self.warning_message.setText('ERROR: ' + text)
+            self.warning_message.setText("ERROR: " + text)
         else:
-            self.warning_message.setText('')
+            self.warning_message.setText("")
 
     def analyze_data(self):
         self.err_message()
         if self.from_selected_lines.isChecked():
-            self.patch_query.emit('lines')
+            self.patch_query.emit("lines")
         elif self.from_points_view.isChecked():
-            self.patch_query.emit('pointsview')
+            self.patch_query.emit("pointsview")
 
     def radio_selected(self, ev):
         if self.from_selected_lines.isChecked():
@@ -137,8 +142,12 @@ class LineList(QtWidgets.QTableWidget):
 
         self.setDragEnabled(True)  # enable support for dragging table items
         self.setAcceptDrops(True)  # enable drop events
-        self.viewport().setAcceptDrops(True)  # viewport is the total rendered area, this is recommended from my reading
-        self.setDragDropOverwriteMode(False)  # False makes sure we don't overwrite rows on dragging
+        self.viewport().setAcceptDrops(
+            True
+        )  # viewport is the total rendered area, this is recommended from my reading
+        self.setDragDropOverwriteMode(
+            False
+        )  # False makes sure we don't overwrite rows on dragging
         self.setDropIndicatorShown(True)
 
         self.setSortingEnabled(True)
@@ -150,7 +159,7 @@ class LineList(QtWidgets.QTableWidget):
         # makes it so no editing is possible with the table
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        self.headr = ['Pair', 'Line Name', 'Heading']
+        self.headr = ["Pair", "Line Name", "Heading"]
         self.setColumnCount(3)
         self.setHorizontalHeaderLabels(self.headr)
         self.setColumnWidth(0, 40)
@@ -162,7 +171,9 @@ class LineList(QtWidgets.QTableWidget):
     def final_attribution(self):
         curdata = self.row_full_attribution
         actual_lines = []
-        for row in range(self.rowCount()):  # update the pair numbers from the table comboboxes first
+        for row in range(
+            self.rowCount()
+        ):  # update the pair numbers from the table comboboxes first
             pair_num = int(self.cellWidget(row, 0).currentText())
             line_name = str(self.item(row, 1).text())
             curdata[line_name][0] = pair_num
@@ -198,7 +209,9 @@ class LineList(QtWidgets.QTableWidget):
         e: QEvent which is sent to a widget when a drag and drop action enters it
 
         """
-        if e.source() == self:  # allow MIME type files, have a 'file://', 'http://', etc.
+        if (
+            e.source() == self
+        ):  # allow MIME type files, have a 'file://', 'http://', etc.
             e.accept()
         else:
             e.ignore()
@@ -287,9 +300,16 @@ class LineList(QtWidgets.QTableWidget):
         """
 
         self.setSortingEnabled(False)
-        rows = sorted(set(item.row() for item in self.selectedItems()))  # pull all the selected rows
-        rows_to_move = [[QtWidgets.QTableWidgetItem(self.item(row_index, column_index)) for column_index in
-                         range(self.columnCount())] for row_index in rows]  # get the data for the rows
+        rows = sorted(
+            set(item.row() for item in self.selectedItems())
+        )  # pull all the selected rows
+        rows_to_move = [
+            [
+                QtWidgets.QTableWidgetItem(self.item(row_index, column_index))
+                for column_index in range(self.columnCount())
+            ]
+            for row_index in rows
+        ]  # get the data for the rows
 
         for row_index in reversed(rows):
             self.removeRow(row_index)
@@ -317,7 +337,11 @@ class LineList(QtWidgets.QTableWidget):
             self.setSortingEnabled(False)
             pair_number, linename, heading = line_data
             if linename in self.row_full_attribution:
-                raise Exception("ERROR: PatchTest - Unable to add line {} when this line already exists".format(linename))
+                raise Exception(
+                    "ERROR: PatchTest - Unable to add line {} when this line already exists".format(
+                        linename
+                    )
+                )
             self.row_full_attribution[linename] = [pair_number, heading]
             next_row = self.rowCount()
             self.insertRow(next_row)
@@ -330,7 +354,9 @@ class LineList(QtWidgets.QTableWidget):
                     self.setCellWidget(next_row, column_index, item)
                 else:
                     if column_index == 2:  # heading
-                        item = QtWidgets.QTableWidgetItem('{:3.3f}'.format(float(column_data)).zfill(7))
+                        item = QtWidgets.QTableWidgetItem(
+                            "{:3.3f}".format(float(column_data)).zfill(7)
+                        )
                     else:
                         item = QtWidgets.QTableWidgetItem(str(column_data))
                     self.setItem(next_row, column_index, item)
@@ -340,7 +366,7 @@ class LineList(QtWidgets.QTableWidget):
         pair_dict = {}
         az_dict = {}
         err = False
-        msg = ''
+        msg = ""
         for lname, ldata in self.final_attribution.items():
             pair_index = int(ldata[0])
             azimuth = float(ldata[1])
@@ -352,24 +378,30 @@ class LineList(QtWidgets.QTableWidget):
                 az_dict[pair_index] = [azimuth]
         for pair_cnt, pair_lines in pair_dict.items():
             if len(pair_lines) > 2:
-                msg = 'Pair {} has {} lines, can only have 2'.format(pair_cnt, len(pair_lines))
+                msg = "Pair {} has {} lines, can only have 2".format(
+                    pair_cnt, len(pair_lines)
+                )
                 err = True
             elif len(pair_lines) < 2:
-                msg = 'Pair {} has less than 2 lines, each pair must have 2 lines'.format(pair_cnt)
+                msg = (
+                    "Pair {} has less than 2 lines, each pair must have 2 lines".format(
+                        pair_cnt
+                    )
+                )
                 err = True
         for pairidx, az_list in az_dict.items():  # tack on the lowest azimuth
             pair_dict[pairidx].append(min(az_list))
         return pair_dict, err, msg
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5
         app = QtWidgets.QApplication([])
     dlog = PatchTestDialog()
-    dlog.add_line([1, 'tstline', 0.0])
-    dlog.add_line([2, 'tstline2', 180.0])
+    dlog.add_line([1, "tstline", 0.0])
+    dlog.add_line([2, "tstline2", 180.0])
     dlog.show()
     if dlog.exec_():
         pass

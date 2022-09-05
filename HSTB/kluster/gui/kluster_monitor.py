@@ -10,6 +10,7 @@ class MonitorPath(QtWidgets.QWidget):
     Base widget for interacting with the fqpr_intelligence.DirectoryMonitor object.  Each instance of this class
     has a file browse button, status light, etc.
     """
+
     monitor_file_event = Signal(str, str)
     monitor_start = Signal(str)
 
@@ -27,23 +28,25 @@ class MonitorPath(QtWidgets.QWidget):
         self.vlayout = QtWidgets.QVBoxLayout()
 
         self.hlayoutone = QtWidgets.QHBoxLayout()
-        self.statuslight = QtWidgets.QCheckBox('')
-        self.statuslight.setStyleSheet("QCheckBox::indicator {background-color : black;}")
+        self.statuslight = QtWidgets.QCheckBox("")
+        self.statuslight.setStyleSheet(
+            "QCheckBox::indicator {background-color : black;}"
+        )
         self.statuslight.setDisabled(True)
         self.hlayoutone.addWidget(self.statuslight)
-        self.fil_text = QtWidgets.QLineEdit('')
+        self.fil_text = QtWidgets.QLineEdit("")
         self.hlayoutone.addWidget(self.fil_text)
         self.browse_button = QtWidgets.QPushButton("Browse")
         self.hlayoutone.addWidget(self.browse_button)
 
         self.hlayouttwo = QtWidgets.QHBoxLayout()
-        self.start_button = QtWidgets.QPushButton('Start')
+        self.start_button = QtWidgets.QPushButton("Start")
         self.hlayouttwo.addWidget(self.start_button)
-        self.stop_button = QtWidgets.QPushButton('Stop')
+        self.stop_button = QtWidgets.QPushButton("Stop")
         self.hlayouttwo.addWidget(self.stop_button)
-        spcr = QtWidgets.QLabel('    ')
+        spcr = QtWidgets.QLabel("    ")
         self.hlayouttwo.addWidget(spcr)
-        self.include_subdirectories = QtWidgets.QCheckBox('Include Subdirectories')
+        self.include_subdirectories = QtWidgets.QCheckBox("Include Subdirectories")
         self.hlayouttwo.addWidget(self.include_subdirectories)
 
         self.vlayout.addLayout(self.hlayoutone)
@@ -75,12 +78,19 @@ class MonitorPath(QtWidgets.QWidget):
 
         if not self.is_running():
             # dirpath will be None or a string
-            msg, pth = RegistryHelpers.GetDirFromUserQT(self, RegistryKey='klusterintel',
-                                                        Title='Select directory to monitor', AppName='klusterintel')
+            msg, pth = RegistryHelpers.GetDirFromUserQT(
+                self,
+                RegistryKey="klusterintel",
+                Title="Select directory to monitor",
+                AppName="klusterintel",
+            )
             if pth is not None:
                 self.fil_text.setText(pth)
         else:
-            self.print('You have to stop monitoring before you can change the path', logging.WARNING)
+            self.print(
+                "You have to stop monitoring before you can change the path",
+                logging.WARNING,
+            )
 
     def return_monitoring_path(self):
         """
@@ -139,11 +149,15 @@ class MonitorPath(QtWidgets.QWidget):
             self.monitor.start()
             self.monitor_start.emit(pth)
             self.include_subdirectories.setEnabled(False)
-            self.statuslight.setStyleSheet("QCheckBox::indicator {background-color : green;}")
-            self.print('Monitoring {}'.format(pth), logging.INFO)
+            self.statuslight.setStyleSheet(
+                "QCheckBox::indicator {background-color : green;}"
+            )
+            self.print("Monitoring {}".format(pth), logging.INFO)
             self.fil_text.setDisabled(True)
         else:
-            self.print('MonitorPath: Path does not exist: {}'.format(pth), logging.ERROR)
+            self.print(
+                "MonitorPath: Path does not exist: {}".format(pth), logging.ERROR
+            )
 
     def stop_monitoring(self):
         """
@@ -153,8 +167,13 @@ class MonitorPath(QtWidgets.QWidget):
         if self.is_running():
             self.monitor.stop()
             self.include_subdirectories.setEnabled(True)
-            self.statuslight.setStyleSheet("QCheckBox::indicator {background-color : black;}")
-            self.print('No longer monitoring {}'.format(self.return_monitoring_path()), logging.INFO)
+            self.statuslight.setStyleSheet(
+                "QCheckBox::indicator {background-color : black;}"
+            )
+            self.print(
+                "No longer monitoring {}".format(self.return_monitoring_path()),
+                logging.INFO,
+            )
             self.fil_text.setDisabled(False)
 
     def emit_monitor_event(self, newfile: str, file_event: str):
@@ -239,7 +258,9 @@ class KlusterMonitorWidget(QtWidgets.QWidget):
         """
 
         if self.parent() is not None:
-            if self.parent().parent().parent().parent() is not None:  # widget is docked, kluster_main is the parent of the dock
+            if (
+                self.parent().parent().parent().parent() is not None
+            ):  # widget is docked, kluster_main is the parent of the dock
                 self.parent().parent().parent().parent().print(msg, loglevel)
             else:  # widget is undocked, kluster_main is the parent
                 self.parent().parent().parent().print(msg, loglevel)
@@ -259,7 +280,9 @@ class KlusterMonitorWidget(QtWidgets.QWidget):
         """
 
         if self.parent() is not None:
-            if self.parent().parent() is not None:  # widget is docked, kluster_main is the parent of the dock
+            if (
+                self.parent().parent() is not None
+            ):  # widget is docked, kluster_main is the parent of the dock
                 self.parent().parent().debug_print(msg, loglevel)
             else:  # widget is undocked, kluster_main is the parent
                 self.parent().debug_print(msg, loglevel)
@@ -307,40 +330,77 @@ class KlusterMonitorWidget(QtWidgets.QWidget):
         """
         Save the settings to the Qsettings
         """
-        settings.setValue('Kluster/monitor_one_path', self.monitorone.fil_text.text())
-        settings.setValue('Kluster/monitor_two_path', self.monitortwo.fil_text.text())
-        settings.setValue('Kluster/monitor_three_path', self.monitorthree.fil_text.text())
-        settings.setValue('Kluster/monitor_four_path', self.monitorfour.fil_text.text())
-        settings.setValue('Kluster/monitor_five_path', self.monitorfive.fil_text.text())
+        settings.setValue("Kluster/monitor_one_path", self.monitorone.fil_text.text())
+        settings.setValue("Kluster/monitor_two_path", self.monitortwo.fil_text.text())
+        settings.setValue(
+            "Kluster/monitor_three_path", self.monitorthree.fil_text.text()
+        )
+        settings.setValue("Kluster/monitor_four_path", self.monitorfour.fil_text.text())
+        settings.setValue("Kluster/monitor_five_path", self.monitorfive.fil_text.text())
 
-        settings.setValue('Kluster/monitor_one_subdir', self.monitorone.include_subdirectories.isChecked())
-        settings.setValue('Kluster/monitor_two_subdir', self.monitortwo.include_subdirectories.isChecked())
-        settings.setValue('Kluster/monitor_three_subdir', self.monitorthree.include_subdirectories.isChecked())
-        settings.setValue('Kluster/monitor_four_subdir', self.monitorfour.include_subdirectories.isChecked())
-        settings.setValue('Kluster/monitor_five_subdir', self.monitorfive.include_subdirectories.isChecked())
+        settings.setValue(
+            "Kluster/monitor_one_subdir",
+            self.monitorone.include_subdirectories.isChecked(),
+        )
+        settings.setValue(
+            "Kluster/monitor_two_subdir",
+            self.monitortwo.include_subdirectories.isChecked(),
+        )
+        settings.setValue(
+            "Kluster/monitor_three_subdir",
+            self.monitorthree.include_subdirectories.isChecked(),
+        )
+        settings.setValue(
+            "Kluster/monitor_four_subdir",
+            self.monitorfour.include_subdirectories.isChecked(),
+        )
+        settings.setValue(
+            "Kluster/monitor_five_subdir",
+            self.monitorfive.include_subdirectories.isChecked(),
+        )
 
     def read_settings(self, settings: QtCore.QSettings):
         """
         Read from the Qsettings
         """
         try:
-            if settings.value('Kluster/monitor_one_path'):
-                self.monitorone.fil_text.setText(settings.value('Kluster/monitor_one_path'))
-            if settings.value('Kluster/monitor_two_path'):
-                self.monitortwo.fil_text.setText(settings.value('Kluster/monitor_two_path'))
-            if settings.value('Kluster/monitor_three_path'):
-                self.monitorthree.fil_text.setText(settings.value('Kluster/monitor_three_path'))
-            if settings.value('Kluster/monitor_four_path'):
-                self.monitorfour.fil_text.setText(settings.value('Kluster/monitor_four_path'))
-            if settings.value('Kluster/monitor_five_path'):
-                self.monitorfive.fil_text.setText(settings.value('Kluster/monitor_five_path'))
+            if settings.value("Kluster/monitor_one_path"):
+                self.monitorone.fil_text.setText(
+                    settings.value("Kluster/monitor_one_path")
+                )
+            if settings.value("Kluster/monitor_two_path"):
+                self.monitortwo.fil_text.setText(
+                    settings.value("Kluster/monitor_two_path")
+                )
+            if settings.value("Kluster/monitor_three_path"):
+                self.monitorthree.fil_text.setText(
+                    settings.value("Kluster/monitor_three_path")
+                )
+            if settings.value("Kluster/monitor_four_path"):
+                self.monitorfour.fil_text.setText(
+                    settings.value("Kluster/monitor_four_path")
+                )
+            if settings.value("Kluster/monitor_five_path"):
+                self.monitorfive.fil_text.setText(
+                    settings.value("Kluster/monitor_five_path")
+                )
 
             # loads as the word 'false' or 'true'...ugh
-            self.monitorone.include_subdirectories.setChecked(settings.value('Kluster/monitor_one_subdir').lower() == 'true')
-            self.monitortwo.include_subdirectories.setChecked(settings.value('Kluster/monitor_two_subdir').lower() == 'true')
-            self.monitorthree.include_subdirectories.setChecked(settings.value('Kluster/monitor_three_subdir').lower() == 'true')
-            self.monitorfour.include_subdirectories.setChecked(settings.value('Kluster/monitor_four_subdir').lower() == 'true')
-            self.monitorfive.include_subdirectories.setChecked(settings.value('Kluster/monitor_five_subdir').lower() == 'true')
+            self.monitorone.include_subdirectories.setChecked(
+                settings.value("Kluster/monitor_one_subdir").lower() == "true"
+            )
+            self.monitortwo.include_subdirectories.setChecked(
+                settings.value("Kluster/monitor_two_subdir").lower() == "true"
+            )
+            self.monitorthree.include_subdirectories.setChecked(
+                settings.value("Kluster/monitor_three_subdir").lower() == "true"
+            )
+            self.monitorfour.include_subdirectories.setChecked(
+                settings.value("Kluster/monitor_four_subdir").lower() == "true"
+            )
+            self.monitorfive.include_subdirectories.setChecked(
+                settings.value("Kluster/monitor_five_subdir").lower() == "true"
+            )
         except AttributeError:
             # no settings exist yet for this app, .lower failed
             pass
@@ -367,7 +427,7 @@ class OutWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.setWindowTitle('Kluster Monitor')
+        self.setWindowTitle("Kluster Monitor")
         self.top_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.top_widget)
         layout = QtWidgets.QHBoxLayout()
@@ -382,7 +442,7 @@ class OutWindow(QtWidgets.QMainWindow):
         self.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

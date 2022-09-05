@@ -9,7 +9,9 @@ from HSTB.kluster import kluster_variables
 from HSTB.kluster.fqpr_drivers import is_valid_multibeam_file
 
 
-def build_crs(zone_num: str = None, datum: str = None, epsg: str = None, projected: bool = True):
+def build_crs(
+    zone_num: str = None, datum: str = None, epsg: str = None, projected: bool = True
+):
     horizontal_crs = None
     if epsg:
         try:
@@ -18,16 +20,18 @@ def build_crs(zone_num: str = None, datum: str = None, epsg: str = None, project
             horizontal_crs = CRS.from_string(epsg)
     elif not epsg and not projected:
         datum = datum.upper()
-        if datum == 'NAD83':
-            horizontal_crs = CRS.from_epsg(epsg_determinator('nad83(2011)'))
-        elif datum == 'NAD83 PA11':
-            horizontal_crs = CRS.from_epsg(epsg_determinator('nad83(pa11)'))
-        elif datum == 'NAD83 MA11':
-            horizontal_crs = CRS.from_epsg(epsg_determinator('nad83(ma11)'))
-        elif datum == 'WGS84':
-            horizontal_crs = CRS.from_epsg(epsg_determinator('wgs84'))
+        if datum == "NAD83":
+            horizontal_crs = CRS.from_epsg(epsg_determinator("nad83(2011)"))
+        elif datum == "NAD83 PA11":
+            horizontal_crs = CRS.from_epsg(epsg_determinator("nad83(pa11)"))
+        elif datum == "NAD83 MA11":
+            horizontal_crs = CRS.from_epsg(epsg_determinator("nad83(ma11)"))
+        elif datum == "WGS84":
+            horizontal_crs = CRS.from_epsg(epsg_determinator("wgs84"))
         else:
-            err = 'ERROR: {} not supported (geographic).  Only supports WGS84, NAD83, NAD83 PA11, NAD83 MA11'.format(datum)
+            err = "ERROR: {} not supported (geographic).  Only supports WGS84, NAD83, NAD83 PA11, NAD83 MA11".format(
+                datum
+            )
             return horizontal_crs, err
     elif not epsg and projected:
         datum = datum.upper()
@@ -35,40 +39,52 @@ def build_crs(zone_num: str = None, datum: str = None, epsg: str = None, project
         try:
             zone, hemi = int(zone[:-1]), str(zone[-1:])
         except:
-            err = 'ERROR: found invalid projected zone/hemisphere identifier: {}, expected something like "10N"'.format(zone)
+            err = 'ERROR: found invalid projected zone/hemisphere identifier: {}, expected something like "10N"'.format(
+                zone
+            )
             return horizontal_crs, err
-        if datum == 'NAD83':
+        if datum == "NAD83":
             try:
-                myepsg = epsg_determinator('nad83(2011)', zone=zone, hemisphere=hemi)
+                myepsg = epsg_determinator("nad83(2011)", zone=zone, hemisphere=hemi)
             except:
-                err = 'ERROR: unable to determine epsg for NAD83(2011), zone={}, hemisphere={}, out of bounds?'.format(zone, hemi)
+                err = "ERROR: unable to determine epsg for NAD83(2011), zone={}, hemisphere={}, out of bounds?".format(
+                    zone, hemi
+                )
                 return horizontal_crs, err
             horizontal_crs = CRS.from_epsg(myepsg)
-        elif datum == 'NAD83 PA11':
+        elif datum == "NAD83 PA11":
             try:
-                myepsg = epsg_determinator('nad83(pa11)', zone=zone, hemisphere=hemi)
+                myepsg = epsg_determinator("nad83(pa11)", zone=zone, hemisphere=hemi)
             except:
-                err = 'ERROR: unable to determine epsg for NAD83 PA11, zone={}, hemisphere={}, out of bounds?'.format(zone, hemi)
+                err = "ERROR: unable to determine epsg for NAD83 PA11, zone={}, hemisphere={}, out of bounds?".format(
+                    zone, hemi
+                )
                 return horizontal_crs, err
             horizontal_crs = CRS.from_epsg(myepsg)
-        elif datum == 'NAD83 MA11':
+        elif datum == "NAD83 MA11":
             try:
-                myepsg = epsg_determinator('nad83(ma11)', zone=zone, hemisphere=hemi)
+                myepsg = epsg_determinator("nad83(ma11)", zone=zone, hemisphere=hemi)
             except:
-                err = 'ERROR: unable to determine epsg for NAD83 MA11, zone={}, hemisphere={}, out of bounds?'.format(zone, hemi)
+                err = "ERROR: unable to determine epsg for NAD83 MA11, zone={}, hemisphere={}, out of bounds?".format(
+                    zone, hemi
+                )
                 return horizontal_crs, err
             horizontal_crs = CRS.from_epsg(myepsg)
-        elif datum == 'WGS84':
+        elif datum == "WGS84":
             try:
-                myepsg = epsg_determinator('wgs84', zone=zone, hemisphere=hemi)
+                myepsg = epsg_determinator("wgs84", zone=zone, hemisphere=hemi)
             except:
-                err = 'ERROR: unable to determine epsg for WGS84, zone={}, hemisphere={}, out of bounds?'.format(zone, hemi)
+                err = "ERROR: unable to determine epsg for WGS84, zone={}, hemisphere={}, out of bounds?".format(
+                    zone, hemi
+                )
                 return horizontal_crs, err
             horizontal_crs = CRS.from_epsg(myepsg)
         else:
-            err = 'ERROR: {} not supported (projected).  Only supports WGS84, NAD83, NAD83 PA11, NAD83 MA11'.format(datum)
+            err = "ERROR: {} not supported (projected).  Only supports WGS84, NAD83, NAD83 PA11, NAD83 MA11".format(
+                datum
+            )
             return horizontal_crs, err
-    return horizontal_crs, ''
+    return horizontal_crs, ""
 
 
 def epsg_determinator(datum: str, zone: int = None, hemisphere: str = None):
@@ -93,46 +109,71 @@ def epsg_determinator(datum: str, zone: int = None, hemisphere: str = None):
     try:
         datum = datum.lower()
     except:
-        raise ValueError('epsg_determinator: {} is not a valid datum string, expected "nad83(2011)" or "wgs84"')
+        raise ValueError(
+            'epsg_determinator: {} is not a valid datum string, expected "nad83(2011)" or "wgs84"'
+        )
 
     if zone is None and hemisphere is not None:
-        raise ValueError('epsg_determinator: zone is required for projected epsg determination')
+        raise ValueError(
+            "epsg_determinator: zone is required for projected epsg determination"
+        )
     if zone is not None and hemisphere is None:
-        raise ValueError('epsg_determinator: hemisphere is required for projected epsg determination')
-    if datum not in ['nad83', 'nad83(2011)', 'nad83 pa11', 'nad83(pa11)', 'nad83 ma11', 'nad83(ma11)', 'wgs84']:
-        raise ValueError('epsg_determinator: {} not supported'.format(datum))
+        raise ValueError(
+            "epsg_determinator: hemisphere is required for projected epsg determination"
+        )
+    if datum not in [
+        "nad83",
+        "nad83(2011)",
+        "nad83 pa11",
+        "nad83(pa11)",
+        "nad83 ma11",
+        "nad83(ma11)",
+        "wgs84",
+    ]:
+        raise ValueError("epsg_determinator: {} not supported".format(datum))
 
     if zone is None and hemisphere is None:
-        if datum in ['nad83', 'nad83(2011)', 'nad83 pa11', 'nad83(pa11)', 'nad83 ma11', 'nad83(ma11)']:  # using the 3d geodetic NAD83(2011)
+        if datum in [
+            "nad83",
+            "nad83(2011)",
+            "nad83 pa11",
+            "nad83(pa11)",
+            "nad83 ma11",
+            "nad83(ma11)",
+        ]:  # using the 3d geodetic NAD83(2011)
             return kluster_variables.epsg_nad83
-        elif datum == 'wgs84':  # using the 3d geodetic WGS84/ITRF2008
+        elif datum == "wgs84":  # using the 3d geodetic WGS84/ITRF2008
             return kluster_variables.epsg_wgs84
     else:
         hemisphere = hemisphere.lower()
-        if datum in ['nad83(2011)', 'nad83']:
-            if hemisphere == 'n':
+        if datum in ["nad83(2011)", "nad83"]:
+            if hemisphere == "n":
                 if zone <= 19:
                     return 6329 + zone
                 elif zone == 59:
                     return 6328
                 elif zone == 60:
                     return 6329
-        elif datum in ['nad83(pa11)', 'nad83 pa11']:
-            if zone in [4, 5] and hemisphere == 'n':
+        elif datum in ["nad83(pa11)", "nad83 pa11"]:
+            if zone in [4, 5] and hemisphere == "n":
                 return 6630 + zone
-            elif zone == 2 and hemisphere == 's':
+            elif zone == 2 and hemisphere == "s":
                 return 6636
-        elif datum in ['nad83(ma11)', 'nad83 ma11']:
-            if zone == 54 and hemisphere == 'n':
+        elif datum in ["nad83(ma11)", "nad83 ma11"]:
+            if zone == 54 and hemisphere == "n":
                 return 8692
-            elif zone == 55 and hemisphere == 's':
+            elif zone == 55 and hemisphere == "s":
                 return 8693
-        elif datum == 'wgs84':
-            if hemisphere == 's':
+        elif datum == "wgs84":
+            if hemisphere == "s":
                 return 32700 + zone
-            elif hemisphere == 'n':
+            elif hemisphere == "n":
                 return 32600 + zone
-    raise ValueError('epsg_determinator: no valid epsg for datum={} zone={} hemisphere={}'.format(datum, zone, hemisphere))
+    raise ValueError(
+        "epsg_determinator: no valid epsg for datum={} zone={} hemisphere={}".format(
+            datum, zone, hemisphere
+        )
+    )
 
 
 def return_files_from_path(pth: str, in_chunks: bool = True):
@@ -164,13 +205,15 @@ def return_files_from_path(pth: str, in_chunks: bool = True):
         fils = pth
     elif os.path.isdir(pth):
         for fext in kluster_variables.supported_sonar:
-            fils = glob(os.path.join(pth, '*{}'.format(fext)))
+            fils = glob(os.path.join(pth, "*{}".format(fext)))
             if fils:
                 break
     elif os.path.isfile(pth):
         fils = [pth]
     else:
-        raise ValueError('_chunks_of_files: Expected either a multibeam file, a list of multibeam files or a directory')
+        raise ValueError(
+            "_chunks_of_files: Expected either a multibeam file, a list of multibeam files or a directory"
+        )
     if not fils:
         return []
 
@@ -185,7 +228,10 @@ def return_files_from_path(pth: str, in_chunks: bool = True):
         maxchunks = kluster_variables.converted_files_at_once
         maxchunksize = kluster_variables.max_converted_chunk_size
         #  first divide the input files into groups of files with max number of files equal to maxchunks
-        final_fils = [fils[i * maxchunks:(i + 1) * maxchunks] for i in range(int(np.ceil((len(fils) + maxchunks - 1) / maxchunks)))]
+        final_fils = [
+            fils[i * maxchunks : (i + 1) * maxchunks]
+            for i in range(int(np.ceil((len(fils) + maxchunks - 1) / maxchunks)))
+        ]
         if final_fils[-1] == []:
             final_fils = final_fils[:-1]
         # now ensure each file group is at most equal to maxchunksize in terms of file size
@@ -245,19 +291,23 @@ def seconds_to_formatted_string(seconds: Union[float, int]):
     """
 
     if seconds < 1:
-        return '1 second'
+        return "1 second"
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     if h:
-        return f'{h} hours, {m} minutes, {int(s)} seconds'
+        return f"{h} hours, {m} minutes, {int(s)} seconds"
     elif m:
-        return f'{m} minutes, {int(s)} seconds'
+        return f"{m} minutes, {int(s)} seconds"
     else:
-        return f'{int(s)} seconds'
+        return f"{int(s)} seconds"
 
 
-def haversine(lon1: Union[float, int, np.ndarray], lat1: Union[float, int, np.ndarray],
-              lon2: Union[float, int, np.ndarray], lat2: Union[float, int, np.ndarray]):
+def haversine(
+    lon1: Union[float, int, np.ndarray],
+    lat1: Union[float, int, np.ndarray],
+    lon2: Union[float, int, np.ndarray],
+    lat2: Union[float, int, np.ndarray],
+):
     """
     Calculate the great circle distance in kilometers between two points on the earth (specified in decimal degrees).
     Can take numpy arrays as inputs, doing a vectorized calculation of multiple points.
@@ -275,18 +325,32 @@ def haversine(lon1: Union[float, int, np.ndarray], lat1: Union[float, int, np.nd
     """
 
     # convert decimal degrees to radians
-    lon1, lat1, lon2, lat2 = np.deg2rad(lon1), np.deg2rad(lat1), np.deg2rad(lon2), np.deg2rad(lat2)
+    lon1, lat1, lon2, lat2 = (
+        np.deg2rad(lon1),
+        np.deg2rad(lat1),
+        np.deg2rad(lon2),
+        np.deg2rad(lat2),
+    )
 
     # haversine formula
     dlon = lon2 - lon1
     dlat = lat2 - lat1
-    a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
     c = 2 * np.arcsin(np.sqrt(a))
     r = 6371  # Radius of earth in kilometers. Use 3956 for miles. Determines return value units.
     return c * r
 
 
-def print_progress_bar(iteration, total, prefix='Progress:', suffix='Complete', decimals=1, length=70, fill='█', print_end="\r"):
+def print_progress_bar(
+    iteration,
+    total,
+    prefix="Progress:",
+    suffix="Complete",
+    decimals=1,
+    length=70,
+    fill="█",
+    print_end="\r",
+):
     """
     Call in a loop to generate a text progress bar, ex:
     # A List of Items
@@ -322,5 +386,5 @@ def print_progress_bar(iteration, total, prefix='Progress:', suffix='Complete', 
 
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filled_length = int(length * iteration // total)
-    bar = fill * filled_length + '-' * (length - filled_length)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=print_end)
+    bar = fill * filled_length + "-" * (length - filled_length)
+    print(f"\r{prefix} |{bar}| {percent}% {suffix}", end=print_end)

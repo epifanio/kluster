@@ -10,8 +10,15 @@ from xarray.core.combine import _infer_concat_order_from_positions, _nested_comb
 from typing import Union
 
 
-def my_open_mfdataset(paths: list, chnks: dict = None, concat_dim: str = 'time', compat: str = 'no_conflicts',
-                      data_vars: str = 'all', coords: str = 'different', join: str = 'outer'):
+def my_open_mfdataset(
+    paths: list,
+    chnks: dict = None,
+    concat_dim: str = "time",
+    compat: str = "no_conflicts",
+    data_vars: str = "all",
+    coords: str = "different",
+    join: str = "outer",
+):
     """
     Trying to address the limitations of the existing xr.open_mfdataset function.  This is my modification using
     the existing function and tweaking to resolve the issues i've found.
@@ -52,10 +59,12 @@ def my_open_mfdataset(paths: list, chnks: dict = None, concat_dim: str = 'time',
     # ensure file paths are valid
     pth_chk = np.all([os.path.exists(x) for x in paths])
     if not pth_chk:
-        raise ValueError('Check paths supplied to function.  Some/all files do not exist.')
+        raise ValueError(
+            "Check paths supplied to function.  Some/all files do not exist."
+        )
 
     # sort by filename index, e.g. rangeangle_0.nc, rangeangle_1.nc, rangeangle_2.nc, etc.
-    idxs = [int(os.path.splitext(os.path.split(x)[1])[0].split('_')[1]) for x in paths]
+    idxs = [int(os.path.splitext(os.path.split(x)[1])[0].split("_")[1]) for x in paths]
     sortorder = sorted(range(len(idxs)), key=lambda k: idxs[k])
 
     # sort_paths are the paths in sorted order by the filename index
@@ -69,15 +78,27 @@ def my_open_mfdataset(paths: list, chnks: dict = None, concat_dim: str = 'time',
     if chnks is None:
         chnks = {}
 
-    datasets = [xr.open_dataset(p, engine='netcdf4', chunks=chnks, lock=None, autoclose=None) for p in paths]
+    datasets = [
+        xr.open_dataset(p, engine="netcdf4", chunks=chnks, lock=None, autoclose=None)
+        for p in paths
+    ]
 
-    combined = _nested_combine(datasets, concat_dims=concat_dim, compat=compat, data_vars=data_vars,
-                               coords=coords, ids=ids, join=join)
+    combined = _nested_combine(
+        datasets,
+        concat_dims=concat_dim,
+        compat=compat,
+        data_vars=data_vars,
+        coords=coords,
+        ids=ids,
+        join=join,
+    )
     combined.attrs = combine_xr_attributes(datasets)
     return combined
 
 
-def xarr_to_netcdf(xarr: xr.Dataset, pth: str, fname: str, attrs: dict = None, idx: int = None):
+def xarr_to_netcdf(
+    xarr: xr.Dataset, pth: str, fname: str, attrs: dict = None, idx: int = None
+):
     """
     Takes in an xarray Dataset and pushes it to netcdf.
     For use with the output from combine_xarrs and/or _sequential_to_xarray
@@ -102,14 +123,14 @@ def xarr_to_netcdf(xarr: xr.Dataset, pth: str, fname: str, attrs: dict = None, i
     """
 
     if idx is not None:
-        finalpth = os.path.join(pth, os.path.splitext(fname)[0] + '_{}.nc'.format(idx))
+        finalpth = os.path.join(pth, os.path.splitext(fname)[0] + "_{}.nc".format(idx))
     else:
         finalpth = os.path.join(pth, fname)
 
     if attrs is not None:
         xarr.attrs = attrs
 
-    xarr.to_netcdf(path=finalpth, format='NETCDF4', engine='netcdf4')
+    xarr.to_netcdf(path=finalpth, format="NETCDF4", engine="netcdf4")
     return finalpth
 
 
@@ -139,11 +160,13 @@ def xarr_to_zarr(xarr: xr.Dataset, outputpth: str, attrs: dict = None):
         xarr.attrs = attrs
 
     if not os.path.exists(outputpth):
-        xarr.to_zarr(outputpth, mode='w-', compute=False)
+        xarr.to_zarr(outputpth, mode="w-", compute=False)
     else:
         # sync = zarr.ProcessSynchronizer(outputpth + '.sync')
         sync = None
-        xarr.to_zarr(outputpth, mode='a', synchronizer=sync, compute=False, append_dim='time')
+        xarr.to_zarr(
+            outputpth, mode="a", synchronizer=sync, compute=False, append_dim="time"
+        )
 
     return outputpth
 
@@ -162,14 +185,14 @@ def resize_zarr(zarrpth: str, finaltimelength: int = None):
 
     # the last write will often be less than the block size.  This is allowed in the zarr store, but we
     #    need to correct the index for it.
-    rootgroup = zarr.open(zarrpth, mode='r+')
+    rootgroup = zarr.open(zarrpth, mode="r+")
     if finaltimelength is None:
-        finaltimelength = np.count_nonzero(~np.isnan(rootgroup['time']))
+        finaltimelength = np.count_nonzero(~np.isnan(rootgroup["time"]))
     for var in rootgroup.arrays():
-        if var[0] not in ['beam', 'sector', 'xyz']:
+        if var[0] not in ["beam", "sector", "xyz"]:
             varname = var[0]
-            dims = rootgroup[varname].attrs['_ARRAY_DIMENSIONS']
-            time_index = dims.index('time')
+            dims = rootgroup[varname].attrs["_ARRAY_DIMENSIONS"]
+            time_index = dims.index("time")
             new_shape = list(rootgroup[varname].shape)
             new_shape[time_index] = finaltimelength
             rootgroup[varname].resize(tuple(new_shape))
@@ -195,15 +218,21 @@ def combine_xr_attributes(datasets: list):
         contains all unique attributes across all dataset, will append unique prim/secondary serial numbers and ignore duplicate settings entries
     """
 
-    sig_keys = ['transducer_{}_athwart_location', 'transducer_{}_vertical_location', 'transducer_{}_along_location',
-                'transducer_{}_roll_angle', 'transducer_{}_pitch_angle', 'transducer_{}_heading_angle']
+    sig_keys = [
+        "transducer_{}_athwart_location",
+        "transducer_{}_vertical_location",
+        "transducer_{}_along_location",
+        "transducer_{}_roll_angle",
+        "transducer_{}_pitch_angle",
+        "transducer_{}_heading_angle",
+    ]
     sig_keys = [sk.format(i) for i in range(4) for sk in sig_keys]
-    sig_keys += ['waterline_vertical_location']
+    sig_keys += ["waterline_vertical_location"]
 
     finaldict = {}
 
     buffered_settings = []
-    buffered_runtime_settings = ''
+    buffered_runtime_settings = ""
 
     fnames = []
     survey_nums = []
@@ -221,10 +250,12 @@ def combine_xr_attributes(datasets: list):
     for d in all_attrs:
         for k, v in d.items():
             # settings gets special treatment for a few reasons...
-            if k[0:7] == 'install':
-                vals = json.loads(v)  # stored as a json string for serialization reasons
+            if k[0:7] == "install":
+                vals = json.loads(
+                    v
+                )  # stored as a json string for serialization reasons
                 try:
-                    fname = vals.pop('raw_file_name')
+                    fname = vals.pop("raw_file_name")
                     if fname not in fnames:
                         # keep .all file names for their own attribute
                         fnames.append(fname)
@@ -232,14 +263,16 @@ def combine_xr_attributes(datasets: list):
                     pass
                     # print('{}: Unable to find "raw_file_name" key'.format(k))
                 try:
-                    sname = vals.pop('survey_identifier')
+                    sname = vals.pop("survey_identifier")
                     if sname not in survey_nums:
                         # keep survey identifiers for their own attribute
                         survey_nums.append(sname)
                 except KeyError:  # key exists in .all file but not in .kmall
                     pass
                     # print('{}: Unable to find "raw_file_name" key'.format(k))
-                chk_keys = [ky for sigk in sig_keys for ky in vals.keys() if ky.find(sigk) != -1]
+                chk_keys = [
+                    ky for sigk in sig_keys for ky in vals.keys() if ky.find(sigk) != -1
+                ]
                 chk_values = [vals[ky] for ky in chk_keys]
                 chk_value_string = json.dumps(chk_values)
                 vals = json.dumps(vals)
@@ -254,24 +287,26 @@ def combine_xr_attributes(datasets: list):
                 # all unique entries after the first are saved
                 else:
                     finaldict[k] = vals
-            elif k[0:7] == 'runtime':
-                vals = json.loads(v)  # stored as a json string for serialization reasons
+            elif k[0:7] == "runtime":
+                vals = json.loads(
+                    v
+                )  # stored as a json string for serialization reasons
                 # we pop out these three keys because they are unique across all runtime params.  You end up with like
                 # fourty records, all with only them being unique.  Not useful.  Rather only store important differences.
                 try:
-                    counter = vals.pop('Counter')
+                    counter = vals.pop("Counter")
                 except KeyError:  # key exists in .all file but not in .kmall
-                    counter = ''
+                    counter = ""
                     # print('{}: Unable to find "raw_file_name" key'.format(k))
                 try:
-                    mindepth = vals.pop('MinDepth')
+                    mindepth = vals.pop("MinDepth")
                 except KeyError:  # key exists in .all file but not in .kmall
-                    mindepth = ''
+                    mindepth = ""
                     # print('{}: Unable to find "MinDepth" key'.format(k))
                 try:
-                    maxdepth = vals.pop('MaxDepth')
+                    maxdepth = vals.pop("MaxDepth")
                 except KeyError:  # key exists in .all file but not in .kmall
-                    maxdepth = ''
+                    maxdepth = ""
                     # print('{}: Unable to find "MaxDepth" key'.format(k))
                 vals = json.dumps(vals)
 
@@ -282,32 +317,35 @@ def combine_xr_attributes(datasets: list):
                 elif not buffered_runtime_settings:
                     buffered_runtime_settings = vals
                     vals = json.loads(v)
-                    vals['Counter'] = counter
+                    vals["Counter"] = counter
                     finaldict[k] = json.dumps(vals)
                 # all unique entries after the first are saved
                 else:
                     vals = json.loads(v)
-                    vals['Counter'] = counter
+                    vals["Counter"] = counter
                     finaldict[k] = json.dumps(vals)
 
             # save all unique serial numbers
-            elif k in ['system_serial_number', 'secondary_system_serial_number'] and k in list(finaldict.keys()):
+            elif k in [
+                "system_serial_number",
+                "secondary_system_serial_number",
+            ] and k in list(finaldict.keys()):
                 if finaldict[k] != v:
                     finaldict[k] = np.array(finaldict[k])
                     finaldict[k] = np.append(finaldict[k], v)
             # save all casts, use this to only pull the first unique cast later (casts are being saved in each line
             #   with a time stamp of when they appear in the data.  Earliest time represents the closest to the actual
             #   cast time).
-            elif k[0:7] == 'profile':
+            elif k[0:7] == "profile":
                 cast_dump[k] = v
-            elif k[0:11] == 'attributes_':
+            elif k[0:11] == "attributes_":
                 attrs_dump[k] = v
-            elif k[0:3] == 'min':
+            elif k[0:3] == "min":
                 if k in finaldict:
                     finaldict[k] = np.min([v, finaldict[k]])
                 else:
                     finaldict[k] = v
-            elif k[0:3] == 'max':
+            elif k[0:3] == "max":
                 if k in finaldict:
                     finaldict[k] = np.max([v, finaldict[k]])
                 else:
@@ -316,17 +354,19 @@ def combine_xr_attributes(datasets: list):
                 finaldict[k] = v
 
     if fnames:
-        finaldict['system_serial_number'] = finaldict['system_serial_number'].tolist()
-        finaldict['secondary_system_serial_number'] = finaldict['secondary_system_serial_number'].tolist()
-        finaldict['multibeam_files'] = list(np.unique(sorted(fnames)))
+        finaldict["system_serial_number"] = finaldict["system_serial_number"].tolist()
+        finaldict["secondary_system_serial_number"] = finaldict[
+            "secondary_system_serial_number"
+        ].tolist()
+        finaldict["multibeam_files"] = list(np.unique(sorted(fnames)))
     if survey_nums:
-        finaldict['survey_number'] = list(np.unique(survey_nums))
+        finaldict["survey_number"] = list(np.unique(survey_nums))
     if cast_dump:
         sorted_kys = sorted(cast_dump)
         unique_casts = []
         for k in sorted_kys:
-            tstmp = k.split('_')[1]
-            matching_attr = 'attributes_{}'.format(tstmp)
+            tstmp = k.split("_")[1]
+            matching_attr = "attributes_{}".format(tstmp)
             if cast_dump[k] not in unique_casts:
                 unique_casts.append(cast_dump[k])
                 finaldict[k] = cast_dump[k]
@@ -375,19 +415,25 @@ def combine_arrays_to_dataset(arrs: Union[list, xr.DataArray], arrnames: list):
     """
 
     if isinstance(arrs, list) and len(arrs) != len(arrnames):
-        raise ValueError(f'combine_arrays_to_dataset: Please provide an equal number of names to dataarrays, {[ar.name for ar in arrs]} vs {arrnames}')
+        raise ValueError(
+            f"combine_arrays_to_dataset: Please provide an equal number of names to dataarrays, {[ar.name for ar in arrs]} vs {arrnames}"
+        )
 
     if isinstance(arrs, list):
         dat = {a: arrs[arrnames.index(a)] for a in arrnames}
     elif isinstance(arrs, xr.DataArray):  # if arrs is just a single dataarray
         dat = {arrnames[0]: arrs}
     else:
-        raise ValueError(f'combine_arrays_to_dataset: expected either a list of Dataarrays or a single Dataarray, got {type(arrs)}')
+        raise ValueError(
+            f"combine_arrays_to_dataset: expected either a list of Dataarrays or a single Dataarray, got {type(arrs)}"
+        )
     dset = xr.Dataset(dat)
     return dset
 
 
-def _interp_across_chunks_xarrayinterp(xarr: Union[xr.Dataset, xr.DataArray], dimname: str, chnk_time: xr.DataArray):
+def _interp_across_chunks_xarrayinterp(
+    xarr: Union[xr.Dataset, xr.DataArray], dimname: str, chnk_time: xr.DataArray
+):
     """
     Runs xarr interp on an individual chunk, extrapolating to cover boundary case
 
@@ -406,19 +452,26 @@ def _interp_across_chunks_xarrayinterp(xarr: Union[xr.Dataset, xr.DataArray], di
         Interpolated xarr object
     """
 
-    if dimname == 'time':
+    if dimname == "time":
         try:  # dataarray workflow, use 'values' to access the numpy array
             chnk_time = chnk_time.values
         except AttributeError:
             pass
         # use extrapolate for when pings are in the file after the last attitude/navigation time stamp
-        ans = xarr.interp(time=chnk_time, method='linear', assume_sorted=True, kwargs={'fill_value': 'extrapolate'})
+        ans = xarr.interp(
+            time=chnk_time,
+            method="linear",
+            assume_sorted=True,
+            kwargs={"fill_value": "extrapolate"},
+        )
         return ans
     else:
         raise NotImplementedError('Only "time" currently supported dim name')
 
 
-def _interp_across_chunks_construct_times(xarr: Union[xr.Dataset, xr.DataArray], new_times: xr.DataArray, dimname: str):
+def _interp_across_chunks_construct_times(
+    xarr: Union[xr.Dataset, xr.DataArray], new_times: xr.DataArray, dimname: str
+):
     """
     Takes in the existing xarray dataarray/dataset (xarr) and returns chunk indexes and times that allow for
     interpolating to the desired xarray dataarray/dataset (given as new_times).  This allows us to interp across
@@ -468,18 +521,29 @@ def _interp_across_chunks_construct_times(xarr: Union[xr.Dataset, xr.DataArray],
     # build out the slices
     # add one to get the next entry for each chunk
     slices_endtime_idx = np.insert(chnk_end + 1, 0, 0)
-    chnk_idxs = [[slices_endtime_idx[i], slices_endtime_idx[i+1]] for i in range(len(slices_endtime_idx)-1)]
+    chnk_idxs = [
+        [slices_endtime_idx[i], slices_endtime_idx[i + 1]]
+        for i in range(len(slices_endtime_idx) - 1)
+    ]
 
     # only return chunk blocks that have valid times in them
-    empty_chunks = np.array([chnkwise_times.index(i) for i in chnkwise_times if i.size == 0])
-    for idx in empty_chunks[::-1]:  # go backwards to preserve index in list as we remove elements
+    empty_chunks = np.array(
+        [chnkwise_times.index(i) for i in chnkwise_times if i.size == 0]
+    )
+    for idx in empty_chunks[
+        ::-1
+    ]:  # go backwards to preserve index in list as we remove elements
         del chnk_idxs[idx]
         del chnkwise_times[idx]
     return chnk_idxs, chnkwise_times
 
 
-def slice_xarray_by_dim(arr: Union[xr.Dataset, xr.DataArray], dimname: str = 'time', start_time: float = None,
-                        end_time: float = None):
+def slice_xarray_by_dim(
+    arr: Union[xr.Dataset, xr.DataArray],
+    dimname: str = "time",
+    start_time: float = None,
+    end_time: float = None,
+):
     """
     Slice the input xarray dataset/dataarray by provided start_time and end_time. Start/end time do not have to be
     values in the dataarray index to be used, this function will find the nearest times.
@@ -531,17 +595,25 @@ def slice_xarray_by_dim(arr: Union[xr.Dataset, xr.DataArray], dimname: str = 'ti
 
     if start_time is not None and end_time is not None:
         if nearest_end == nearest_start:
-            if (nearest_end == float(arr[dimname][-1])) or (nearest_end == float(arr[dimname][0])):
+            if (nearest_end == float(arr[dimname][-1])) or (
+                nearest_end == float(arr[dimname][0])
+            ):
                 # if this is true, you have start/end times that are outside the scope of the data.  The start/end times will
                 #  be equal to either the start of the dataset or the end of the dataset, depending on when they fall
                 return None
     rnav = arr.sel(time=slice(nearest_start, nearest_end))
-    rnav = rnav.chunk(rnav.sizes)  # do this to get past the unify chunks issue, since you are slicing here, you end up with chunks of different sizes
+    rnav = rnav.chunk(
+        rnav.sizes
+    )  # do this to get past the unify chunks issue, since you are slicing here, you end up with chunks of different sizes
     return rnav
 
 
-def interp_across_chunks(xarr: Union[xr.Dataset, xr.DataArray], new_times: xr.DataArray, dimname: str = 'time',
-                         daskclient: Client = None):
+def interp_across_chunks(
+    xarr: Union[xr.Dataset, xr.DataArray],
+    new_times: xr.DataArray,
+    dimname: str = "time",
+    daskclient: Client = None,
+):
     """
     Takes in xarr and interpolates to new_times.  Ideally we could use xarray interp_like or interp, but neither
     of these are implemented with support for chunked dask arrays.  Therefore, we have to determine the times of
@@ -566,9 +638,9 @@ def interp_across_chunks(xarr: Union[xr.Dataset, xr.DataArray], new_times: xr.Da
     """
 
     if type(xarr) not in [xr.DataArray, xr.Dataset]:
-        raise NotImplementedError('Only xarray DataArray and Dataset objects allowed.')
+        raise NotImplementedError("Only xarray DataArray and Dataset objects allowed.")
     if len(list(xarr.dims)) > 1:
-        raise NotImplementedError('Only one dimensional data is currently supported.')
+        raise NotImplementedError("Only one dimensional data is currently supported.")
 
     # chunking and scattering large arrays takes way too long, we load here to avoid this
     xarr = xarr.load()
@@ -578,38 +650,62 @@ def interp_across_chunks(xarr: Union[xr.Dataset, xr.DataArray], new_times: xr.Da
     #  to 0-360 domain after
     needs_reverting = False
     if type(xarr) == xr.DataArray:
-        if xarr.name == 'heading':
+        if xarr.name == "heading":
             needs_reverting = True
-            xarr = xr.DataArray(np.float32(np.rad2deg(np.unwrap(np.deg2rad(xarr)))), coords=[xarr.time], dims=['time'])
+            xarr = xr.DataArray(
+                np.float32(np.rad2deg(np.unwrap(np.deg2rad(xarr)))),
+                coords=[xarr.time],
+                dims=["time"],
+            )
     else:
-        if 'heading' in list(xarr.data_vars.keys()):
+        if "heading" in list(xarr.data_vars.keys()):
             needs_reverting = True
-            xarr['heading'] = xr.DataArray(np.float32(np.rad2deg(np.unwrap(np.deg2rad(xarr.heading)))), coords=[xarr.time],
-                                           dims=['time'])
+            xarr["heading"] = xr.DataArray(
+                np.float32(np.rad2deg(np.unwrap(np.deg2rad(xarr.heading)))),
+                coords=[xarr.time],
+                dims=["time"],
+            )
 
-    chnk_idxs, chnkwise_times = _interp_across_chunks_construct_times(xarr, new_times, dimname)
-    xarrs_chunked = [xarr.isel({dimname: slice(i, j)}).chunk(j-i,) for i, j in chnk_idxs]
+    chnk_idxs, chnkwise_times = _interp_across_chunks_construct_times(
+        xarr, new_times, dimname
+    )
+    xarrs_chunked = [
+        xarr.isel({dimname: slice(i, j)}).chunk(
+            j - i,
+        )
+        for i, j in chnk_idxs
+    ]
     if daskclient is None:
         interp_arrs = []
         for ct, xar in enumerate(xarrs_chunked):
-            interp_arrs.append(_interp_across_chunks_xarrayinterp(xar, dimname, chnkwise_times[ct]))
+            interp_arrs.append(
+                _interp_across_chunks_xarrayinterp(xar, dimname, chnkwise_times[ct])
+            )
         newarr = xr.concat(interp_arrs, dimname)
     else:
         xarrs_chunked = daskclient.scatter(xarrs_chunked)
-        interp_futs = daskclient.map(_interp_across_chunks_xarrayinterp, xarrs_chunked, [dimname] * len(chnkwise_times),
-                                     daskclient.scatter(chnkwise_times))
+        interp_futs = daskclient.map(
+            _interp_across_chunks_xarrayinterp,
+            xarrs_chunked,
+            [dimname] * len(chnkwise_times),
+            daskclient.scatter(chnkwise_times),
+        )
         newarr = daskclient.submit(xr.concat, interp_futs, dimname).result()
 
     if needs_reverting and type(xarr) == xr.DataArray:
         newarr = newarr % 360
     elif needs_reverting and type(xarr) == xr.Dataset:
-        newarr['heading'] = newarr['heading'] % 360
+        newarr["heading"] = newarr["heading"] % 360
 
-    assert(len(new_times) == len(newarr[dimname])), 'interp_across_chunks: Input/Output shape is not equal'
+    assert len(new_times) == len(
+        newarr[dimname]
+    ), "interp_across_chunks: Input/Output shape is not equal"
     return newarr
 
 
-def clear_data_vars_from_dataset(dataset: Union[list, dict, xr.Dataset], datavars: Union[list, str]):
+def clear_data_vars_from_dataset(
+    dataset: Union[list, dict, xr.Dataset], datavars: Union[list, str]
+):
     """
     Some code to handle dropping data variables from xarray Datasets in different containers.  We use lists of Datasets,
     dicts of Datasets and individual Datasets in different places.  Here we can just pass in whatever, drop the
@@ -632,7 +728,9 @@ def clear_data_vars_from_dataset(dataset: Union[list, dict, xr.Dataset], datavar
         datavars = [datavars]
 
     for datavar in datavars:
-        if type(dataset) == dict:  # I frequently maintain a dict of datasets for each sector
+        if (
+            type(dataset) == dict
+        ):  # I frequently maintain a dict of datasets for each sector
             for sec_ident in dataset:
                 if datavar in dataset[sec_ident].data_vars:
                     dataset[sec_ident] = dataset[sec_ident].drop_vars(datavar)
@@ -646,7 +744,7 @@ def clear_data_vars_from_dataset(dataset: Union[list, dict, xr.Dataset], datavar
     return dataset
 
 
-def stack_nan_array(dataarray: xr.DataArray, stack_dims: tuple = ('time', 'beam')):
+def stack_nan_array(dataarray: xr.DataArray, stack_dims: tuple = ("time", "beam")):
     """
     To handle NaN values in our input arrays, we flatten and index only the valid values.  This comes into play with
     beamwise arrays that have NaN where there were no beams.
@@ -675,8 +773,13 @@ def stack_nan_array(dataarray: xr.DataArray, stack_dims: tuple = ('time', 'beam'
     return orig_idx, dataarray_stck
 
 
-def reform_nan_array(dataarray_stack: xr.DataArray, orig_idx: tuple, orig_shape: tuple, orig_coords: xr.DataArray,
-                     orig_dims: tuple):
+def reform_nan_array(
+    dataarray_stack: xr.DataArray,
+    orig_idx: tuple,
+    orig_shape: tuple,
+    orig_coords: xr.DataArray,
+    orig_dims: tuple,
+):
     """
     To handle NaN values in our input arrays, we flatten and index only the valid values.  Here we rebuild the
     original square shaped arrays we need using one of the original arrays as reference.
@@ -737,19 +840,33 @@ def reload_zarr_records(pth: str, skip_dask: bool = False, sort_by: str = None):
         # sync = zarr.ProcessSynchronizer(pth + '.sync')
         sync = None
         if not skip_dask:
-            data = xr.open_zarr(pth, synchronizer=sync, consolidated=False,
-                                mask_and_scale=False, decode_coords=False, decode_times=False,
-                                decode_cf=False, concat_characters=False)
+            data = xr.open_zarr(
+                pth,
+                synchronizer=sync,
+                consolidated=False,
+                mask_and_scale=False,
+                decode_coords=False,
+                decode_times=False,
+                decode_cf=False,
+                concat_characters=False,
+            )
         else:
-            data = xr.open_zarr(pth, synchronizer=None, consolidated=False,
-                                mask_and_scale=False, decode_coords=False, decode_times=False,
-                                decode_cf=False, concat_characters=False)
+            data = xr.open_zarr(
+                pth,
+                synchronizer=None,
+                consolidated=False,
+                mask_and_scale=False,
+                decode_coords=False,
+                decode_times=False,
+                decode_cf=False,
+                concat_characters=False,
+            )
         if sort_by:
             return data.sortby(sort_by)
         else:
             return data
     else:
-        print('Unable to reload, no paths found: {}'.format(pth))
+        print("Unable to reload, no paths found: {}".format(pth))
         return None
 
 
@@ -773,16 +890,20 @@ def return_chunk_slices(xarr: xr.Dataset):
     try:
         chunk_dim = list(xarr.chunks.keys())
         if len(chunk_dim) > 1:
-            raise NotImplementedError('Only 1 dimensional xarray objects supported at this time')
+            raise NotImplementedError(
+                "Only 1 dimensional xarray objects supported at this time"
+            )
             return None
     except AttributeError:
-        print('Only xarray objects are supported')
+        print("Only xarray objects are supported")
         return None
 
     chunk_dim = chunk_dim[0]
     chunks = list(xarr.chunks.values())[0]
     chunk_size = chunks[0]
-    chunk_slices = [slice(i * chunk_size, i * chunk_size + chunk_size) for i in range(len(chunks))]
+    chunk_slices = [
+        slice(i * chunk_size, i * chunk_size + chunk_size) for i in range(len(chunks))
+    ]
 
     # have to correct last slice, as last chunk is equal to the length of the array modulo chunk size
     total_len = xarr.dims[chunk_dim]
@@ -824,7 +945,9 @@ def _find_gaps_split(datagap_times: list, existing_gap_times: list):
     for dgtime in datagap_times:
         for existtime in existing_gap_times:
             # datagap contains an existing gap, have to split the datagap
-            if (dgtime[0] <= existtime[0] <= dgtime[1]) and (dgtime[0] <= existtime[1] <= dgtime[1]):
+            if (dgtime[0] <= existtime[0] <= dgtime[1]) and (
+                dgtime[0] <= existtime[1] <= dgtime[1]
+            ):
                 split_dgtime.append([dgtime[0], existtime[0]])
                 split_dgtime.append([existtime[1], dgtime[1]])
                 split = True
@@ -836,8 +959,12 @@ def _find_gaps_split(datagap_times: list, existing_gap_times: list):
     return split_dgtime
 
 
-def compare_and_find_gaps(source_dat: Union[xr.DataArray, xr.Dataset], new_dat: Union[xr.DataArray, xr.Dataset],
-                          max_gap_length: float = 1.0, dimname: str = 'time'):
+def compare_and_find_gaps(
+    source_dat: Union[xr.DataArray, xr.Dataset],
+    new_dat: Union[xr.DataArray, xr.Dataset],
+    max_gap_length: float = 1.0,
+    dimname: str = "time",
+):
     """
     So far, mostly used with Applanix POSPac SBETs.  Converted SBET would be the new_dat and the existing navigation in
     Kluster would be the source_dat.  You'd be interested to know if there were gaps in the sbet greater than a certain
@@ -862,18 +989,30 @@ def compare_and_find_gaps(source_dat: Union[xr.DataArray, xr.Dataset], new_dat: 
     """
 
     # gaps in source, if a gap in the new data is within a gap in the source, it is not a gap
-    existing_gaps = np.argwhere(source_dat[dimname].diff(dimname).values > max_gap_length)
-    existing_gap_times = [[float(source_dat[dimname][gp]), float(source_dat[dimname][gp + 1])] for gp in existing_gaps]
+    existing_gaps = np.argwhere(
+        source_dat[dimname].diff(dimname).values > max_gap_length
+    )
+    existing_gap_times = [
+        [float(source_dat[dimname][gp]), float(source_dat[dimname][gp + 1])]
+        for gp in existing_gaps
+    ]
 
     # look for gaps in the new data
     datagaps = np.argwhere(new_dat[dimname].diff(dimname).values > max_gap_length)
-    datagap_times = [[float(new_dat[dimname][gp]), float(new_dat[dimname][gp + 1])] for gp in datagaps]
+    datagap_times = [
+        [float(new_dat[dimname][gp]), float(new_dat[dimname][gp + 1])]
+        for gp in datagaps
+    ]
 
     # consider postprocessed nav starting too late or ending too early as a gap as well
     if new_dat[dimname].min() > source_dat[dimname].time.min() + max_gap_length:
-        datagap_times.insert(0, [float(source_dat[dimname].time.min()), float(new_dat[dimname].min())])
+        datagap_times.insert(
+            0, [float(source_dat[dimname].time.min()), float(new_dat[dimname].min())]
+        )
     if new_dat[dimname].max() + max_gap_length < source_dat[dimname].time.max():
-        datagap_times.append([float(new_dat[dimname].max()), float(source_dat[dimname].time.max())])
+        datagap_times.append(
+            [float(new_dat[dimname].max()), float(source_dat[dimname].time.max())]
+        )
 
     # first, split all the gaps if they contain existing time gaps, keep going until you no longer find contained gaps
     splitting = True
@@ -889,7 +1028,9 @@ def compare_and_find_gaps(source_dat: Union[xr.DataArray, xr.Dataset], new_dat: 
     for dgtime in datagap_times:
         for existtime in existing_gap_times:
             # datagap is fully within an existing gap in the source data, just dont include it
-            if (existtime[0] <= dgtime[0] <= existtime[1]) and (existtime[0] <= dgtime[1] <= existtime[1]):
+            if (existtime[0] <= dgtime[0] <= existtime[1]) and (
+                existtime[0] <= dgtime[1] <= existtime[1]
+            ):
                 continue
             # partially covered
             if existtime[0] < dgtime[0] < existtime[1]:
@@ -902,7 +1043,9 @@ def compare_and_find_gaps(source_dat: Union[xr.DataArray, xr.Dataset], new_dat: 
     return np.array(finalgaps)
 
 
-def get_beamwise_interpolation(pingtime: xr.DataArray, additional: xr.DataArray, interp_this: xr.DataArray):
+def get_beamwise_interpolation(
+    pingtime: xr.DataArray, additional: xr.DataArray, interp_this: xr.DataArray
+):
     """
     Given ping time and beamwise time addition (delay), return a 2d interpolated version of the provided 1d Dataarray.
 
@@ -929,12 +1072,21 @@ def get_beamwise_interpolation(pingtime: xr.DataArray, additional: xr.DataArray,
     """
 
     beam_tstmp = pingtime + additional
-    rx_tstmp_idx, rx_tstmp_stck = stack_nan_array(beam_tstmp, stack_dims=('time', 'beam'))
+    rx_tstmp_idx, rx_tstmp_stck = stack_nan_array(
+        beam_tstmp, stack_dims=("time", "beam")
+    )
     unique_rx_times, inv_idx = np.unique(rx_tstmp_stck.values, return_inverse=True)
-    rx_interptimes = xr.DataArray(unique_rx_times, coords=[unique_rx_times], dims=['time']).chunk()
+    rx_interptimes = xr.DataArray(
+        unique_rx_times, coords=[unique_rx_times], dims=["time"]
+    ).chunk()
 
     interpolated_flattened = interp_across_chunks(interp_this, rx_interptimes.compute())
-    reformed_interpolated = reform_nan_array(interpolated_flattened.isel(time=inv_idx), rx_tstmp_idx, beam_tstmp.shape,
-                                             beam_tstmp.coords, beam_tstmp.dims)
+    reformed_interpolated = reform_nan_array(
+        interpolated_flattened.isel(time=inv_idx),
+        rx_tstmp_idx,
+        beam_tstmp.shape,
+        beam_tstmp.coords,
+        beam_tstmp.dims,
+    )
 
     return reformed_interpolated

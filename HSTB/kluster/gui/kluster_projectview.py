@@ -29,8 +29,12 @@ class MultibeamTable(QtWidgets.QWidget):
         self.table.setColumnWidth(1, 200)
         self.table.setColumnWidth(2, 200)
 
-        self.table.setHorizontalHeaderLabels(['Multibeam File Name', 'Multibeam Start Time', 'Multibeam End Time'])
-        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.table.setHorizontalHeaderLabels(
+            ["Multibeam File Name", "Multibeam Start Time", "Multibeam End Time"]
+        )
+        self.table.horizontalHeader().setSectionResizeMode(
+            0, QtWidgets.QHeaderView.Stretch
+        )
 
         self.multibeam_dict = multibeam_dict
         self.populate()
@@ -42,14 +46,27 @@ class MultibeamTable(QtWidgets.QWidget):
             next_row = self.table.rowCount()
             self.table.insertRow(next_row)
             self.table.setItem(next_row, 0, QtWidgets.QTableWidgetItem(mbesfile))
-            self.table.setItem(next_row, 1, QtWidgets.QTableWidgetItem(datetime.fromtimestamp(times[0], tz=timezone.utc).strftime('%c')))
-            self.table.setItem(next_row, 2, QtWidgets.QTableWidgetItem(datetime.fromtimestamp(times[1], tz=timezone.utc).strftime('%c')))
+            self.table.setItem(
+                next_row,
+                1,
+                QtWidgets.QTableWidgetItem(
+                    datetime.fromtimestamp(times[0], tz=timezone.utc).strftime("%c")
+                ),
+            )
+            self.table.setItem(
+                next_row,
+                2,
+                QtWidgets.QTableWidgetItem(
+                    datetime.fromtimestamp(times[1], tz=timezone.utc).strftime("%c")
+                ),
+            )
 
 
 class StatusTable(QtWidgets.QWidget):
     """
     Contains the QTableWidget that has all the information about the processed status of each sounding in the project
     """
+
     def __init__(self, status_dict: dict, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.vlayout = QtWidgets.QVBoxLayout()
@@ -62,7 +79,9 @@ class StatusTable(QtWidgets.QWidget):
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
         self.status_dict = status_dict
-        self.headr = ['SerialNumber_SectorNumber_Frequency'] + list(self.status_dict[list(self.status_dict.keys())[0]].keys())
+        self.headr = ["SerialNumber_SectorNumber_Frequency"] + list(
+            self.status_dict[list(self.status_dict.keys())[0]].keys()
+        )
 
         self.table.setColumnCount(len(self.headr))
         self.table.setColumnWidth(0, 250)
@@ -83,7 +102,9 @@ class StatusTable(QtWidgets.QWidget):
             self.table.insertRow(next_row)
             self.table.setItem(next_row, 0, QtWidgets.QTableWidgetItem(sector))
             for cnt, val in enumerate(status_values):
-                self.table.setItem(next_row, cnt + 1, QtWidgets.QTableWidgetItem(str(val)))
+                self.table.setItem(
+                    next_row, cnt + 1, QtWidgets.QTableWidgetItem(str(val))
+                )
 
 
 class LastRunTable(QtWidgets.QWidget):
@@ -99,7 +120,10 @@ class LastRunTable(QtWidgets.QWidget):
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
         self.lastrun_dict = lastrun_dict
-        self.headr = ['SerialNumber_SectorNumber_Frequency'] + [x[1:] + '_utc' for x in list(self.lastrun_dict[list(self.lastrun_dict.keys())[0]].keys())]
+        self.headr = ["SerialNumber_SectorNumber_Frequency"] + [
+            x[1:] + "_utc"
+            for x in list(self.lastrun_dict[list(self.lastrun_dict.keys())[0]].keys())
+        ]
 
         self.table.setColumnCount(len(self.headr))
         self.table.setColumnWidth(0, 250)
@@ -141,21 +165,21 @@ class KlusterFqprView(QtWidgets.QWidget):
         self.tree = QtWidgets.QTreeWidget()
         self.tree.setHeaderHidden(True)
 
-        mfile = QtWidgets.QTreeWidgetItem(['multibeam files'])
+        mfile = QtWidgets.QTreeWidgetItem(["multibeam files"])
         l1 = QtWidgets.QTreeWidgetItem(mfile)
-        self.mfile_table = MultibeamTable(self.dashboard_data['multibeam_files'])
+        self.mfile_table = MultibeamTable(self.dashboard_data["multibeam_files"])
         self.tree.setItemWidget(l1, 0, self.mfile_table)
         self.tree.addTopLevelItem(mfile)
 
-        sstatus = QtWidgets.QTreeWidgetItem(['sounding status'])
+        sstatus = QtWidgets.QTreeWidgetItem(["sounding status"])
         l2 = QtWidgets.QTreeWidgetItem(sstatus)
-        self.soundingstatus_table = StatusTable(self.dashboard_data['sounding_status'])
+        self.soundingstatus_table = StatusTable(self.dashboard_data["sounding_status"])
         self.tree.setItemWidget(l2, 0, self.soundingstatus_table)
         self.tree.addTopLevelItem(sstatus)
 
-        lrun = QtWidgets.QTreeWidgetItem(['last run process'])
+        lrun = QtWidgets.QTreeWidgetItem(["last run process"])
         l3 = QtWidgets.QTreeWidgetItem(lrun)
-        self.lastrun_table = LastRunTable(self.dashboard_data['last_run'])
+        self.lastrun_table = LastRunTable(self.dashboard_data["last_run"])
         self.tree.setItemWidget(l3, 0, self.lastrun_table)
         self.tree.addTopLevelItem(lrun)
 
@@ -182,7 +206,7 @@ class KlusterProjectView(QtWidgets.QWidget):
         self.mainlayout = QtWidgets.QVBoxLayout()
 
         self.hlayout = QtWidgets.QHBoxLayout()
-        self.fil_text = QtWidgets.QLineEdit('')
+        self.fil_text = QtWidgets.QLineEdit("")
         self.fil_text.setMinimumWidth(400)
         self.fil_text.setReadOnly(True)
         self.hlayout.addWidget(self.fil_text)
@@ -193,7 +217,9 @@ class KlusterProjectView(QtWidgets.QWidget):
         self.mainlayout.addLayout(self.hlayout)
 
         scroll = QtWidgets.QScrollArea()
-        scroll.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        scroll.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
 
         scroll_content = QtWidgets.QWidget()
         scroll_layout = QtWidgets.QVBoxLayout(scroll_content)
@@ -219,7 +245,9 @@ class KlusterProjectView(QtWidgets.QWidget):
 
         for fqpr_name, fqpr_inst in self.project.fqpr_instances.items():
             fqprview = KlusterFqprView(self, fqpr_inst)
-            new_expand = CollapsibleWidget(self, fqpr_name, 100, set_expanded_height=800)
+            new_expand = CollapsibleWidget(
+                self, fqpr_name, 100, set_expanded_height=800
+            )
             new_layout = QtWidgets.QVBoxLayout()
             new_layout.addWidget(fqprview)
             new_expand.setContentLayout(new_layout)
@@ -236,16 +264,22 @@ class KlusterProjectView(QtWidgets.QWidget):
         """
 
         # dirpath will be None or a string
-        msg, pth = RegistryHelpers.GetFilenameFromUserQT(self, RegistryKey='klusterintel', Title='Create a new Kluster project',
-                                                         AppName='klusterintel', fFilter="*.json", bSave=True,
-                                                         DefaultFile='kluster_project.json')
+        msg, pth = RegistryHelpers.GetFilenameFromUserQT(
+            self,
+            RegistryKey="klusterintel",
+            Title="Create a new Kluster project",
+            AppName="klusterintel",
+            fFilter="*.json",
+            bSave=True,
+            DefaultFile="kluster_project.json",
+        )
         if pth:
             # the project name is mandatory, just so that we can find it later, I ask for a file path for the project
             #    file and override the filename, kind of messy but works for now
             if os.path.exists(pth):
                 os.remove(pth)
             directory, filename = os.path.split(pth)
-            project_file = os.path.join(directory, 'kluster_project.json')
+            project_file = os.path.join(directory, "kluster_project.json")
 
             self.fil_text.setText(project_file)
             self.project_file = project_file
@@ -262,14 +296,20 @@ class KlusterProjectView(QtWidgets.QWidget):
         """
 
         # dirpath will be None or a string
-        msg, pth = RegistryHelpers.GetFilenameFromUserQT(self, RegistryKey='klusterintel', Title='Open an existing Kluster project',
-                                                         AppName='klusterintel', fFilter="*.json", bSave=False)
+        msg, pth = RegistryHelpers.GetFilenameFromUserQT(
+            self,
+            RegistryKey="klusterintel",
+            Title="Open an existing Kluster project",
+            AppName="klusterintel",
+            fFilter="*.json",
+            bSave=False,
+        )
         if pth:
             self.fil_text.setText(pth)
             self.build_from_project(pth)
 
     def close_project(self):
-        self.fil_text.setText('')
+        self.fil_text.setText("")
         self.project = None
         if self.parent:
             self.parent.set_project(self.project)
@@ -293,9 +333,9 @@ class KlusterProjectView(QtWidgets.QWidget):
                 self.parent.set_project(self.project)
 
             self._load_from_project()
-            print('Loaded {}'.format(project_path))
+            print("Loaded {}".format(project_path))
         else:
-            print('Unable to load from file, does not exist: {}'.format(project_path))
+            print("Unable to load from file, does not exist: {}".format(project_path))
 
     def clear_project(self):
         """
@@ -337,7 +377,7 @@ class OutWindow(QtWidgets.QMainWindow):
         self.top_widget.setLayout(layout)
 
         self.k_view = KlusterProjectView()
-        self.k_view.setObjectName('kluster_projectview')
+        self.k_view.setObjectName("kluster_projectview")
         layout.addWidget(self.k_view)
 
         layout.layout()
@@ -346,7 +386,7 @@ class OutWindow(QtWidgets.QMainWindow):
         self.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
     try:  # pyside2

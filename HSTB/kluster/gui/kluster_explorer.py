@@ -18,18 +18,23 @@ class KlusterExplorer(TableWithCopy):
     zarr object to the KlusterAttribution object.
 
     """
+
     # signals must be defined on the class, not the instance of the class
     row_selected = Signal(object)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.setObjectName('kluster_explorer')
+        self.setObjectName("kluster_explorer")
 
         self.setDragEnabled(True)  # enable support for dragging table items
         self.setAcceptDrops(True)  # enable drop events
-        self.viewport().setAcceptDrops(True)  # viewport is the total rendered area, this is recommended from my reading
-        self.setDragDropOverwriteMode(False)  # False makes sure we don't overwrite rows on dragging
+        self.viewport().setAcceptDrops(
+            True
+        )  # viewport is the total rendered area, this is recommended from my reading
+        self.setDragDropOverwriteMode(
+            False
+        )  # False makes sure we don't overwrite rows on dragging
         self.setDropIndicatorShown(True)
 
         self.setSortingEnabled(True)
@@ -44,9 +49,9 @@ class KlusterExplorer(TableWithCopy):
         self.cellDoubleClicked.connect(self.view_full_attribution)
         self.cellClicked.connect(self.update_attribution)
 
-        self.mode = ''
+        self.mode = ""
         self.headr = []
-        self.set_mode('line')
+        self.set_mode("line")
         self.row_full_attribution = {}
         self.row_translated_attribution = {}
 
@@ -63,7 +68,9 @@ class KlusterExplorer(TableWithCopy):
         """
 
         if self.parent() is not None:
-            if self.parent().parent() is not None:  # widget is docked, kluster_main is the parent of the dock
+            if (
+                self.parent().parent() is not None
+            ):  # widget is docked, kluster_main is the parent of the dock
                 self.parent().parent().print(msg, loglevel)
             else:  # widget is undocked, kluster_main is the parent
                 self.parent().print(msg, loglevel)
@@ -83,7 +90,9 @@ class KlusterExplorer(TableWithCopy):
         """
 
         if self.parent() is not None:
-            if self.parent().parent() is not None:  # widget is docked, kluster_main is the parent of the dock
+            if (
+                self.parent().parent() is not None
+            ):  # widget is docked, kluster_main is the parent of the dock
                 self.parent().parent().debug_print(msg, loglevel)
             else:  # widget is undocked, kluster_main is the parent
                 self.parent().debug_print(msg, loglevel)
@@ -103,7 +112,10 @@ class KlusterExplorer(TableWithCopy):
             rows = sorted(set(item.row() for item in self.selectedItems()))
             for row in rows:
                 self.removeRow(row)
-        elif int(e.key()) in [16777237, 16777235]:  # 237 is down arrow, 235 is up arrow, user selected a new row with arrow keys
+        elif int(e.key()) in [
+            16777237,
+            16777235,
+        ]:  # 237 is down arrow, 235 is up arrow, user selected a new row with arrow keys
             rows = sorted(set(item.row() for item in self.selectedItems()))
             self.update_attribution(rows[0], 0)
 
@@ -116,7 +128,9 @@ class KlusterExplorer(TableWithCopy):
         e: QEvent which is sent to a widget when a drag and drop action enters it
 
         """
-        if e.source() == self:  # allow MIME type files, have a 'file://', 'http://', etc.
+        if (
+            e.source() == self
+        ):  # allow MIME type files, have a 'file://', 'http://', etc.
             e.accept()
         else:
             e.ignore()
@@ -205,9 +219,16 @@ class KlusterExplorer(TableWithCopy):
         """
 
         self.setSortingEnabled(False)
-        rows = sorted(set(item.row() for item in self.selectedItems()))  # pull all the selected rows
-        rows_to_move = [[QtWidgets.QTableWidgetItem(self.item(row_index, column_index)) for column_index in
-                         range(self.columnCount())] for row_index in rows]  # get the data for the rows
+        rows = sorted(
+            set(item.row() for item in self.selectedItems())
+        )  # pull all the selected rows
+        rows_to_move = [
+            [
+                QtWidgets.QTableWidgetItem(self.item(row_index, column_index))
+                for column_index in range(self.columnCount())
+            ]
+            for row_index in rows
+        ]  # get the data for the rows
 
         for row_index in reversed(rows):
             self.removeRow(row_index)
@@ -238,9 +259,22 @@ class KlusterExplorer(TableWithCopy):
 
         self.mode = explorer_mode
         self.clear_explorer_data()
-        if explorer_mode == 'line':
+        if explorer_mode == "line":
             self.setColumnCount(12)
-            self.headr = ['Name', 'Survey Identifier', 'EPSG', 'Min Time', 'Max Time', 'Start Latitude', 'Start Longitude', 'End Latitude', 'End Longitude', 'Heading (deg)', 'Distance (m)', 'Source']
+            self.headr = [
+                "Name",
+                "Survey Identifier",
+                "EPSG",
+                "Min Time",
+                "Max Time",
+                "Start Latitude",
+                "Start Longitude",
+                "End Latitude",
+                "End Longitude",
+                "Heading (deg)",
+                "Distance (m)",
+                "Source",
+            ]
             self.setHorizontalHeaderLabels(self.headr)
             self.horizontalHeader().setStretchLastSection(True)
             self.setColumnWidth(0, 250)
@@ -255,9 +289,20 @@ class KlusterExplorer(TableWithCopy):
             self.setColumnWidth(9, 100)
             self.setColumnWidth(10, 100)
             self.setColumnWidth(11, 200)
-        elif explorer_mode == 'point':
+        elif explorer_mode == "point":
             self.setColumnCount(10)
-            self.headr = ['index', 'line', 'time', 'beam', 'x', 'y', 'z', 'tvu', 'status', 'Source']
+            self.headr = [
+                "index",
+                "line",
+                "time",
+                "beam",
+                "x",
+                "y",
+                "z",
+                "tvu",
+                "status",
+                "Source",
+            ]
             self.setHorizontalHeaderLabels(self.headr)
             self.horizontalHeader().setStretchLastSection(True)
             self.setColumnWidth(0, 60)
@@ -282,7 +327,7 @@ class KlusterExplorer(TableWithCopy):
         column: int, column number
 
         """
-        if self.mode == 'point':
+        if self.mode == "point":
             point_index = int(self.item(row, 0).text())
             self.row_selected.emit(point_index)
 
@@ -299,12 +344,12 @@ class KlusterExplorer(TableWithCopy):
         column: int, column number
 
         """
-        if self.mode == 'line':
+        if self.mode == "line":
             name_item = self.item(row, 0)
             linename = name_item.text()
 
             info = QtWidgets.QMessageBox()
-            info.setWindowTitle('Full Attribution')
+            info.setWindowTitle("Full Attribution")
             info.setText(pprint.pformat(self.row_full_attribution[linename]))
             info.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
             result = info.exec_()
@@ -328,35 +373,41 @@ class KlusterExplorer(TableWithCopy):
 
         """
         translated_attrs = []
-        if 'multibeam_files' in attrs:
-            line_names = list(attrs['multibeam_files'].items())
+        if "multibeam_files" in attrs:
+            line_names = list(attrs["multibeam_files"].items())
             for cnt, ln in enumerate(line_names):
                 # ln is tuple like ('0015_20200304_070725_S250.all', [1583305645.423, 1583305889.905])
-                newline_attr = OrderedDict([(h, '') for h in self.headr])
-                newline_attr['Source'] = os.path.split(attrs['output_path'])[1]
-                newline_attr['Name'] = ln[0]
-                if 'survey_number' in attrs:
-                    newline_attr['Survey Identifier'] = ', '.join(attrs['survey_number'])
+                newline_attr = OrderedDict([(h, "") for h in self.headr])
+                newline_attr["Source"] = os.path.split(attrs["output_path"])[1]
+                newline_attr["Name"] = ln[0]
+                if "survey_number" in attrs:
+                    newline_attr["Survey Identifier"] = ", ".join(
+                        attrs["survey_number"]
+                    )
                 else:
-                    newline_attr['Survey Identifier'] = ''
+                    newline_attr["Survey Identifier"] = ""
                 min_line_time = ln[1][0]
                 max_line_time = ln[1][1]
-                newline_attr['Min Time'] = datetime.utcfromtimestamp(min_line_time).strftime('%D %H%M%S')
-                newline_attr['Max Time'] = datetime.utcfromtimestamp(max_line_time).strftime('%D %H%M%S')
+                newline_attr["Min Time"] = datetime.utcfromtimestamp(
+                    min_line_time
+                ).strftime("%D %H%M%S")
+                newline_attr["Max Time"] = datetime.utcfromtimestamp(
+                    max_line_time
+                ).strftime("%D %H%M%S")
                 try:  # additional attributes added in 0.8.3
-                    newline_attr['Start Latitude'] = ln[1][2]
-                    newline_attr['Start Longitude'] = ln[1][3]
-                    newline_attr['End Latitude'] = ln[1][4]
-                    newline_attr['End Longitude'] = ln[1][5]
-                    newline_attr['Heading (deg)'] = '{:3.3f}'.format(ln[1][6]).zfill(7)
+                    newline_attr["Start Latitude"] = ln[1][2]
+                    newline_attr["Start Longitude"] = ln[1][3]
+                    newline_attr["End Latitude"] = ln[1][4]
+                    newline_attr["End Longitude"] = ln[1][5]
+                    newline_attr["Heading (deg)"] = "{:3.3f}".format(ln[1][6]).zfill(7)
                     if len(ln[1]) == 8:  # added distance in kluster 1.1.1
-                        newline_attr['Distance (m)'] = ln[1][7]
+                        newline_attr["Distance (m)"] = ln[1][7]
                     else:
-                        newline_attr['Distance (m)'] = ''
+                        newline_attr["Distance (m)"] = ""
                 except:
                     pass
-                if 'horizontal_crs' in attrs:
-                    newline_attr['EPSG'] = str(attrs['horizontal_crs'])
+                if "horizontal_crs" in attrs:
+                    newline_attr["EPSG"] = str(attrs["horizontal_crs"])
                 translated_attrs.append(newline_attr)
 
         return translated_attrs, attrs
@@ -380,12 +431,17 @@ class KlusterExplorer(TableWithCopy):
             line_data = None
             data, raw_attribution = self.translate_fqpr_attribution(raw_attrs)
             for line in data:
-                self.row_full_attribution[line['Name']] = raw_attribution
-                self.row_translated_attribution[line['Name']] = line
-                if line['Name'] == linename:
+                self.row_full_attribution[line["Name"]] = raw_attribution
+                self.row_translated_attribution[line["Name"]] = line
+                if line["Name"] == linename:
                     line_data = line
             if line_data is None:
-                self.print('build_line_attribution: Unable to find attribution for line {}'.format(linename), logging.ERROR)
+                self.print(
+                    "build_line_attribution: Unable to find attribution for line {}".format(
+                        linename
+                    ),
+                    logging.ERROR,
+                )
         return line_data
 
     def populate_explorer_with_lines(self, linename, raw_attrs):
@@ -402,8 +458,8 @@ class KlusterExplorer(TableWithCopy):
         """
 
         self.setSortingEnabled(False)
-        if self.mode != 'line':
-            self.set_mode('line')
+        if self.mode != "line":
+            self.set_mode("line")
         line_data = self.build_line_attribution(linename, raw_attrs)
         if line_data is not None:
             next_row = self.rowCount()
@@ -412,15 +468,25 @@ class KlusterExplorer(TableWithCopy):
             for column_index, column_data in enumerate(line_data):
                 item = QtWidgets.QTableWidgetItem(str(line_data[column_data]))
 
-                if self.headr[column_index] == 'Source':
-                    item.setToolTip(raw_attrs['output_path'])
+                if self.headr[column_index] == "Source":
+                    item.setToolTip(raw_attrs["output_path"])
 
                 self.setItem(next_row, column_index, item)
         self.setSortingEnabled(True)
 
-    def populate_explorer_with_points(self, point_index: np.array, linenames: np.array, point_times: np.array,
-                                      beam: np.array, x: np.array, y: np.array, z: np.array, tvu: np.array,
-                                      status: np.array, id: np.array):
+    def populate_explorer_with_points(
+        self,
+        point_index: np.array,
+        linenames: np.array,
+        point_times: np.array,
+        beam: np.array,
+        x: np.array,
+        y: np.array,
+        z: np.array,
+        tvu: np.array,
+        status: np.array,
+        id: np.array,
+    ):
         """
         Show the attributes for each point, where each point is in its own row.  All the inputs are of the same size,
         where size equals the number of points
@@ -450,27 +516,39 @@ class KlusterExplorer(TableWithCopy):
         """
 
         self.setSortingEnabled(False)
-        if self.mode != 'point':
-            self.set_mode('point')
+        if self.mode != "point":
+            self.set_mode("point")
         self.clear_explorer_data()
         if z.any():
-            converted_status = np.full(status.shape[0], '', dtype=object)
-            converted_status[np.where(status == 0)[0]] = 'amplitude'
-            converted_status[np.where(status == 1)[0]] = 'phase'
-            converted_status[np.where(status == 2)[0]] = 'rejected'
+            converted_status = np.full(status.shape[0], "", dtype=object)
+            converted_status[np.where(status == 0)[0]] = "amplitude"
+            converted_status[np.where(status == 1)[0]] = "phase"
+            converted_status[np.where(status == 2)[0]] = "rejected"
             for cnt, idx in enumerate(point_index):
                 next_row = self.rowCount()
                 self.insertRow(next_row)
                 self.setItem(next_row, 0, QtWidgets.QTableWidgetItem(str(idx)))
                 self.setItem(next_row, 1, QtWidgets.QTableWidgetItem(linenames[cnt]))
-                formattedtime = datetime.fromtimestamp(float(point_times[cnt]), tz=timezone.utc).strftime('%c')
-                self.setItem(next_row, 2, QtWidgets.QTableWidgetItem(str(formattedtime)))
-                self.setItem(next_row, 3, QtWidgets.QTableWidgetItem(str(int(beam[cnt]))))
+                formattedtime = datetime.fromtimestamp(
+                    float(point_times[cnt]), tz=timezone.utc
+                ).strftime("%c")
+                self.setItem(
+                    next_row, 2, QtWidgets.QTableWidgetItem(str(formattedtime))
+                )
+                self.setItem(
+                    next_row, 3, QtWidgets.QTableWidgetItem(str(int(beam[cnt])))
+                )
                 self.setItem(next_row, 4, QtWidgets.QTableWidgetItem(str(x[cnt])))
                 self.setItem(next_row, 5, QtWidgets.QTableWidgetItem(str(y[cnt])))
-                self.setItem(next_row, 6, QtWidgets.QTableWidgetItem(str(round(z[cnt], 3))))
-                self.setItem(next_row, 7, QtWidgets.QTableWidgetItem(str(round(tvu[cnt], 3))))
-                self.setItem(next_row, 8, QtWidgets.QTableWidgetItem(str(converted_status[cnt])))
+                self.setItem(
+                    next_row, 6, QtWidgets.QTableWidgetItem(str(round(z[cnt], 3)))
+                )
+                self.setItem(
+                    next_row, 7, QtWidgets.QTableWidgetItem(str(round(tvu[cnt], 3)))
+                )
+                self.setItem(
+                    next_row, 8, QtWidgets.QTableWidgetItem(str(converted_status[cnt]))
+                )
                 self.setItem(next_row, 9, QtWidgets.QTableWidgetItem(str(id[cnt])))
         self.setSortingEnabled(True)
 
@@ -493,7 +571,7 @@ class KlusterAttribution(TableWithCopy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.setObjectName('kluster_attribution')
+        self.setObjectName("kluster_attribution")
 
         self.setDragEnabled(False)
         self.setAcceptDrops(False)
@@ -512,7 +590,7 @@ class KlusterAttribution(TableWithCopy):
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         self.setColumnCount(2)
-        self.headr = ['Attribute', 'Value']
+        self.headr = ["Attribute", "Value"]
         self.setColumnWidth(0, 100)
         self.setColumnWidth(1, 250)
 
@@ -532,7 +610,9 @@ class KlusterAttribution(TableWithCopy):
         """
 
         if self.parent() is not None:
-            if self.parent().parent() is not None:  # widget is docked, kluster_main is the parent of the dock
+            if (
+                self.parent().parent() is not None
+            ):  # widget is docked, kluster_main is the parent of the dock
                 self.parent().parent().print(msg, loglevel)
             else:  # widget is undocked, kluster_main is the parent
                 self.parent().print(msg, loglevel)
@@ -552,7 +632,9 @@ class KlusterAttribution(TableWithCopy):
         """
 
         if self.parent() is not None:
-            if self.parent().parent() is not None:  # widget is docked, kluster_main is the parent of the dock
+            if (
+                self.parent().parent() is not None
+            ):  # widget is docked, kluster_main is the parent of the dock
                 self.parent().parent().debug_print(msg, loglevel)
             else:  # widget is undocked, kluster_main is the parent
                 self.parent().debug_print(msg, loglevel)
@@ -591,7 +673,7 @@ class KlusterAttribution(TableWithCopy):
                         att_item = QtWidgets.QTableWidgetItem(a)
                         self.setItem(hdr_row, 0, att_item)
 
-                    dat = '{}: {}'.format(k, v)
+                    dat = "{}: {}".format(k, v)
                     val_item = QtWidgets.QTableWidgetItem(dat)
                     val_item.setToolTip(dat)
                     self.setItem(cnt + rowoffset, 1, val_item)
@@ -617,14 +699,16 @@ class MyTestWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self.resize(1220, 450)
-        self.setWindowTitle('Kluster Explorer')
+        self.setWindowTitle("Kluster Explorer")
         self.top_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.top_widget)
         layout = QtWidgets.QHBoxLayout()
         self.top_widget.setLayout(layout)
 
         self.k_explorer = KlusterExplorer(self)
-        self.k_explorer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.k_explorer.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         self.k_explorer.setMinimumWidth(500)
         layout.addWidget(self.k_explorer)
 
@@ -639,11 +723,15 @@ class MyTestWindow(QtWidgets.QMainWindow):
                 self.k_explorer.setItem(j, i, item)
 
         self.k_attribution = KlusterAttribution(self)
-        self.k_attribution.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        self.k_attribution.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding
+        )
         self.k_attribution.setMinimumWidth(300)
         layout.addWidget(self.k_attribution)
 
-        self.k_explorer.row_selected.connect(self.k_attribution.display_file_attribution)
+        self.k_explorer.row_selected.connect(
+            self.k_attribution.display_file_attribution
+        )
 
         layout.layout()
         self.setLayout(layout)
@@ -651,7 +739,7 @@ class MyTestWindow(QtWidgets.QMainWindow):
         self.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

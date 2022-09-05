@@ -8,6 +8,7 @@ class ReprocessDialog(QtWidgets.QDialog):
     """
     Dialog for managing the sound velocity profiles currently within this kluster converted data instance
     """
+
     remove_cast_sig = Signal(str)
 
     def __init__(self, curstatus: int, fq_path: str, parent=None):
@@ -16,19 +17,22 @@ class ReprocessDialog(QtWidgets.QDialog):
         self.fq_path = fq_path
         self.newstatus = None
 
-        self.setWindowTitle('Reprocess')
+        self.setWindowTitle("Reprocess")
         layout = QtWidgets.QVBoxLayout()
 
         self.descrip_lbl = QtWidgets.QLabel(
-            f'Set the current processing status of:\n\n{fq_path}\n\nNote: Processing status cannot be set to a more advanced '
-            'status, can only be rolled back')
+            f"Set the current processing status of:\n\n{fq_path}\n\nNote: Processing status cannot be set to a more advanced "
+            "status, can only be rolled back"
+        )
         layout.addWidget(self.descrip_lbl)
 
-        self.curstatus_lbl = QtWidgets.QLabel(f'Current Status: {kluster_variables.status_lookup[curstatus]}')
+        self.curstatus_lbl = QtWidgets.QLabel(
+            f"Current Status: {kluster_variables.status_lookup[curstatus]}"
+        )
         layout.addWidget(self.curstatus_lbl)
 
         newstatus_layout = QtWidgets.QHBoxLayout()
-        self.newstatus_lbl = QtWidgets.QLabel('New Status: ')
+        self.newstatus_lbl = QtWidgets.QLabel("New Status: ")
         newstatus_layout.addWidget(self.newstatus_lbl)
         statkeys = []
         for ky, val in kluster_variables.status_reverse_lookup.items():
@@ -41,10 +45,10 @@ class ReprocessDialog(QtWidgets.QDialog):
 
         hlayout_two = QtWidgets.QHBoxLayout()
         hlayout_two.addStretch(1)
-        self.ok_button = QtWidgets.QPushButton('OK', self)
+        self.ok_button = QtWidgets.QPushButton("OK", self)
         hlayout_two.addWidget(self.ok_button)
         hlayout_two.addStretch(1)
-        self.cancel_button = QtWidgets.QPushButton('Cancel', self)
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
         hlayout_two.addWidget(self.cancel_button)
         hlayout_two.addStretch(1)
         layout.addLayout(hlayout_two)
@@ -66,12 +70,12 @@ class ReprocessDialog(QtWidgets.QDialog):
         self.accept()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5
         app = QtWidgets.QApplication([])
-    dlog = ReprocessDialog(4, 'test_path')
+    dlog = ReprocessDialog(4, "test_path")
     dlog.show()
     if dlog.exec_():
         print(dlog.newstatus)

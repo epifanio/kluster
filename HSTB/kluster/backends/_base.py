@@ -27,8 +27,19 @@ class BaseBackend:
             else:
                 print(msg)
 
-    def write(self, dataset_name, data, time_array, attributes, sys_id=None, append_dim='time', skip_dask=False):
-        raise NotImplementedError('BaseBackend: write method must be implemented')
+    def write(
+        self,
+        dataset_name,
+        data,
+        time_array,
+        attributes,
+        sys_id=None,
+        append_dim="time",
+        skip_dask=False,
+    ):
+        raise NotImplementedError("BaseBackend: write method must be implemented")
 
     def write_attributes(self, dataset_name, attributes, sys_id=None):
-        raise NotImplementedError('BaseBackend: write_attributes method must be implemented')
+        raise NotImplementedError(
+            "BaseBackend: write_attributes method must be implemented"
+        )

@@ -9,7 +9,7 @@ from HSTB.kluster.dms import parse_dms_to_dd
 from HSTB.kluster.rotations import build_rot_mat
 from HSTB.kluster.xarray_helpers import stack_nan_array, reform_nan_array
 
-supported_file_formats = ['.svp']
+supported_file_formats = [".svp"]
 
 
 class SoundSpeedProfile:
@@ -25,8 +25,16 @@ class SoundSpeedProfile:
     metadata
     """
 
-    def __init__(self, raw_profile: str, z_val: float, ss_sound_speed: xr.DataArray, prof_name: str = None,
-                 prof_time: float = None, prof_location: list = None, prof_type: str = 'raw_ping'):
+    def __init__(
+        self,
+        raw_profile: str,
+        z_val: float,
+        ss_sound_speed: xr.DataArray,
+        prof_name: str = None,
+        prof_time: float = None,
+        prof_location: list = None,
+        prof_type: str = "raw_ping",
+    ):
         """
         | Profile datastore, can accept inputs from:
         | - prof_type = raw_ping, soundspeed cast comes in from xarray Dataset attribute, used with xarray_conversion
@@ -107,8 +115,12 @@ class SoundSpeedProfile:
 
         soundspeed_size = sys.getsizeof(np.array(self.ss_sound_speed.values))
         prof_size = sys.getsizeof(self.raw_profile) + sys.getsizeof(self.profile)
-        corr_prof_size = sys.getsizeof(self.corr_profile_lkup) + sys.getsizeof(self.corr_profile)
-        lkup_size = sys.getsizeof(self.lkup_across_dist) + sys.getsizeof(self.lkup_down_dist)
+        corr_prof_size = sys.getsizeof(self.corr_profile_lkup) + sys.getsizeof(
+            self.corr_profile
+        )
+        lkup_size = sys.getsizeof(self.lkup_across_dist) + sys.getsizeof(
+            self.lkup_down_dist
+        )
         dim_size = sys.getsizeof(self.dim_raytime) + sys.getsizeof(self.dim_angle)
         return soundspeed_size + prof_size + corr_prof_size + lkup_size + dim_size
 
@@ -122,18 +134,29 @@ class SoundSpeedProfile:
             keys are depth and values are soundspeed
         """
 
-        if self.prof_type == 'raw_ping':  # profile comes from xarray_conversion raw_ping dataset attribute
+        if (
+            self.prof_type == "raw_ping"
+        ):  # profile comes from xarray_conversion raw_ping dataset attribute
             return self.load_from_xarray()
-        elif self.prof_type == 'caris_svp':
-            svpdata, self.prof_location, self.prof_time, self.prof_name = cast_data_from_file(self.raw_profile)
+        elif self.prof_type == "caris_svp":
+            (
+                svpdata,
+                self.prof_location,
+                self.prof_time,
+                self.prof_name,
+            ) = cast_data_from_file(self.raw_profile)
             if len(svpdata) > 1:
-                print('WARNING: Found multiple casts in file {}, only using the first for this object'.format(self.raw_profile))
+                print(
+                    "WARNING: Found multiple casts in file {}, only using the first for this object".format(
+                        self.raw_profile
+                    )
+                )
                 svpdata = svpdata[0]
                 self.prof_location = self.prof_location[0]
                 self.prof_time = self.prof_time[0]
             return svpdata
         else:
-            raise ValueError('Unrecognized format: {}'.format(self.prof_type))
+            raise ValueError("Unrecognized format: {}".format(self.prof_type))
 
     def load_from_xarray(self):
         """
@@ -146,12 +169,14 @@ class SoundSpeedProfile:
             keys are depth in meters and values are soundspeed in m/s
         """
 
-        if type(self.raw_profile) == str:   # this is how it should come in, as a json string
+        if (
+            type(self.raw_profile) == str
+        ):  # this is how it should come in, as a json string
             self.raw_profile = json.loads(self.raw_profile)
 
         # insert zero point in profile with matching soundspeed as first actual layer, for when trans is above the
         #   shallowest point in the cast
-        self.raw_profile = [['0.0', self.raw_profile[0][1]]] + self.raw_profile
+        self.raw_profile = [["0.0", self.raw_profile[0][1]]] + self.raw_profile
 
         profdata = {float(k): float(v) for k, v in self.raw_profile}
         return OrderedDict(sorted(profdata.items()))
@@ -169,9 +194,17 @@ class SoundSpeedProfile:
         self.corr_profile = []
         # print('Generating lookup tables for {} unique soundspeed entries...'.format(len(unique_ss)))
         for u in unique_ss:
-            newprof = OrderedDict({i - self.z_val: j for (i, j) in self.profile.items() if i - self.z_val >= 0})
+            newprof = OrderedDict(
+                {
+                    i - self.z_val: j
+                    for (i, j) in self.profile.items()
+                    if i - self.z_val >= 0
+                }
+            )
             frst_ss = OrderedDict({0: u})
-            self.corr_profile.append(OrderedDict(list(frst_ss.items()) + list(newprof.items())))
+            self.corr_profile.append(
+                OrderedDict(list(frst_ss.items()) + list(newprof.items()))
+            )
 
     def interpolate_extended_casts(self, max_allowable_depth_distance: float = 100.0):
         """
@@ -194,18 +227,31 @@ class SoundSpeedProfile:
                 interp_idx = np.where(needs_interp)
                 if len(interp_idx) > 1:
                     raise ValueError(
-                        'Found more than one gap in profile greater than {}'.format(max_allowable_depth_distance))
+                        "Found more than one gap in profile greater than {}".format(
+                            max_allowable_depth_distance
+                        )
+                    )
                 firstval = dpths[interp_idx[0]][0]
                 secval = dpths[interp_idx[0] + 1][0]
-                new_dpths = np.round(np.linspace(firstval + max_allowable_depth_distance, secval,
-                                                int((secval - firstval) / max_allowable_depth_distance)), 2)
-                new_svp = np.interp(new_dpths, [firstval, secval], [prof[firstval], prof[secval]])
+                new_dpths = np.round(
+                    np.linspace(
+                        firstval + max_allowable_depth_distance,
+                        secval,
+                        int((secval - firstval) / max_allowable_depth_distance),
+                    ),
+                    2,
+                )
+                new_svp = np.interp(
+                    new_dpths, [firstval, secval], [prof[firstval], prof[secval]]
+                )
                 for d, s in zip(new_dpths, new_svp):
                     prof[d] = s
             rslt.append(OrderedDict(sorted(prof.items())))
         self.corr_profile = rslt
 
-    def generate_lookup_table(self, max_pointing_angle: float = 90.0, beam_inc: float = 0.02):
+    def generate_lookup_table(
+        self, max_pointing_angle: float = 90.0, beam_inc: float = 0.02
+    ):
         """
         Compute a lookup table for all possible launch angles to get acrosstrack/alongtrack distance and travel time.
         Build look up table around approximate launch angles, something like .02 deg increments.  When using table, find
@@ -225,12 +271,40 @@ class SoundSpeedProfile:
 
         # max_pointing_angle is from boresight, only doing one side as port/stbd are the same
         # print('Generating lookup table to {} deg in {} deg increments'.format(max_pointing_angle, beam_inc))
-        starter_angles = np.arange(np.deg2rad(0), np.deg2rad(max_pointing_angle), np.deg2rad(beam_inc), dtype=np.float32)
+        starter_angles = np.arange(
+            np.deg2rad(0),
+            np.deg2rad(max_pointing_angle),
+            np.deg2rad(beam_inc),
+            dtype=np.float32,
+        )
 
-        lookup_table_angles = np.zeros([len(self.corr_profile), starter_angles.shape[0], len(self.corr_profile[0])], dtype=np.float32)
-        cumulative_ray_time = np.zeros([len(self.corr_profile), starter_angles.shape[0], len(self.corr_profile[0])], dtype=np.float32)
-        cumulative_across_dist = np.zeros([len(self.corr_profile), starter_angles.shape[0], len(self.corr_profile[0])], dtype=np.float32)
-        cumulative_down_dist = np.zeros([len(self.corr_profile), len(self.corr_profile[0])], dtype=np.float32)
+        lookup_table_angles = np.zeros(
+            [
+                len(self.corr_profile),
+                starter_angles.shape[0],
+                len(self.corr_profile[0]),
+            ],
+            dtype=np.float32,
+        )
+        cumulative_ray_time = np.zeros(
+            [
+                len(self.corr_profile),
+                starter_angles.shape[0],
+                len(self.corr_profile[0]),
+            ],
+            dtype=np.float32,
+        )
+        cumulative_across_dist = np.zeros(
+            [
+                len(self.corr_profile),
+                starter_angles.shape[0],
+                len(self.corr_profile[0]),
+            ],
+            dtype=np.float32,
+        )
+        cumulative_down_dist = np.zeros(
+            [len(self.corr_profile), len(self.corr_profile[0])], dtype=np.float32
+        )
 
         for pcnt, prof in enumerate(self.corr_profile):
             lookup_table_angles[pcnt, :, 0] = starter_angles
@@ -241,18 +315,28 @@ class SoundSpeedProfile:
                     # ray parameters for all lookup angles
                     difdpth = dpths[cnt + 1] - dpth
                     across_dist = difdpth * np.tan(lookup_table_angles[pcnt, :, cnt])
-                    ray_dist = np.sqrt(difdpth**2 + across_dist**2)
+                    ray_dist = np.sqrt(difdpth ** 2 + across_dist ** 2)
                     ray_time = ray_dist / prof[dpth]
 
-                    cumulative_ray_time[pcnt, :, cnt + 1] = cumulative_ray_time[pcnt, :, cnt] + ray_time
-                    cumulative_across_dist[pcnt, :, cnt + 1] = cumulative_across_dist[pcnt, :, cnt] + across_dist
-                    cumulative_down_dist[pcnt, cnt + 1] = cumulative_down_dist[pcnt, cnt] + difdpth
+                    cumulative_ray_time[pcnt, :, cnt + 1] = (
+                        cumulative_ray_time[pcnt, :, cnt] + ray_time
+                    )
+                    cumulative_across_dist[pcnt, :, cnt + 1] = (
+                        cumulative_across_dist[pcnt, :, cnt] + across_dist
+                    )
+                    cumulative_down_dist[pcnt, cnt + 1] = (
+                        cumulative_down_dist[pcnt, cnt] + difdpth
+                    )
 
                     # incidence angles for next layer
                     # use clip to clamp values where beams are reflected, i.e. greater than 1 (90°)
                     #  - this happens with a lot of the extended-to-1200m casts in kongsberg data, these angles should
                     #    not be used, this is mostly to suppress the runtime warning
-                    _tmpdat = prof[dpths[cnt + 1]] / prof[dpths[cnt]] * np.sin(lookup_table_angles[pcnt, :, cnt])
+                    _tmpdat = (
+                        prof[dpths[cnt + 1]]
+                        / prof[dpths[cnt]]
+                        * np.sin(lookup_table_angles[pcnt, :, cnt])
+                    )
                     next_angles = np.arcsin(np.clip(_tmpdat, -1, 1))
                     lookup_table_angles[pcnt, :, cnt + 1] = next_angles
         self.lkup_across_dist = cumulative_across_dist
@@ -301,13 +385,17 @@ class SoundSpeedProfile:
         newalong: numpy array 1d, rotated alongtrack offset
 
         """
-        zerod_x = xr.DataArray(np.zeros_like(angle), coords={'time': angle.time}, dims=['time'])
+        zerod_x = xr.DataArray(
+            np.zeros_like(angle), coords={"time": angle.time}, dims=["time"]
+        )
         zerod_y = zerod_x
         rotmat = build_rot_mat(angle, zerod_x, zerod_y)
         expanded_rotmat = rotmat[data_idx].values
 
         vec = np.squeeze(np.dstack([x, y, np.zeros_like(x)]))
-        rotvec = np.round(np.einsum('lij,lj->li', expanded_rotmat, vec), 3)  # round to mm
+        rotvec = np.round(
+            np.einsum("lij,lj->li", expanded_rotmat, vec), 3
+        )  # round to mm
 
         newacross = rotvec[:, 0]
         newdown = rotvec[:, 1]
@@ -355,15 +443,33 @@ class SoundSpeedProfile:
         fac = (dpth1 - transdepth) / (dpth1 - dpth2)
 
         # apply interp factor to get across value corrector
-        interp_across = np.round(nearest_across[srch_rows, srch_vals] - (fac * (nearest_across[srch_rows, srch_vals] -
-                                 nearest_across[srch_rows, srch_vals + offset])), 3)
+        interp_across = np.round(
+            nearest_across[srch_rows, srch_vals]
+            - (
+                fac
+                * (
+                    nearest_across[srch_rows, srch_vals]
+                    - nearest_across[srch_rows, srch_vals + offset]
+                )
+            ),
+            3,
+        )
 
         return interp_across
 
-    def _run_ray_trace(self, dim_angle: np.array, dim_raytime: np.ndarray, lkup_across_dist: np.ndarray,
-                      lkup_down_dist: np.ndarray, corr_profile_lkup: np.ndarray,
-                      beam_azimuth: xr.DataArray, beam_angle: xr.DataArray, two_way_travel_time: xr.DataArray,
-                      subset: np.array = None, offsets: list = None):
+    def _run_ray_trace(
+        self,
+        dim_angle: np.array,
+        dim_raytime: np.ndarray,
+        lkup_across_dist: np.ndarray,
+        lkup_down_dist: np.ndarray,
+        corr_profile_lkup: np.ndarray,
+        beam_azimuth: xr.DataArray,
+        beam_angle: xr.DataArray,
+        two_way_travel_time: xr.DataArray,
+        subset: np.array = None,
+        offsets: list = None,
+    ):
         """
         | Sources:
         |    Ray Trace Modeling of Underwater Sound Propagation - Jens M. Hovern
@@ -421,7 +527,7 @@ class SoundSpeedProfile:
         """
 
         if lkup_across_dist is None:
-            raise ValueError('Generate lookup table first')
+            raise ValueError("Generate lookup table first")
         if subset is not None:
             corr_lkup = corr_profile_lkup[subset]
         else:
@@ -434,23 +540,29 @@ class SoundSpeedProfile:
         orig_shape = beam_angle.shape
         orig_coords = beam_angle.coords
         orig_dims = beam_angle.dims
-        beam_idx, beam_angle_stck = stack_nan_array(beam_angle, stack_dims=('time', 'beam'))
-        twtt_idx, twoway_stck = stack_nan_array(two_way_travel_time, stack_dims=('time', 'beam'))
-        beamaz_idx, beamaz_stck = stack_nan_array(beam_azimuth, stack_dims=('time', 'beam'))
+        beam_idx, beam_angle_stck = stack_nan_array(
+            beam_angle, stack_dims=("time", "beam")
+        )
+        twtt_idx, twoway_stck = stack_nan_array(
+            two_way_travel_time, stack_dims=("time", "beam")
+        )
+        beamaz_idx, beamaz_stck = stack_nan_array(
+            beam_azimuth, stack_dims=("time", "beam")
+        )
 
         arr_lens = [len(beam_angle_stck), len(twoway_stck), len(beamaz_stck)]
         if len(np.unique(arr_lens)) > 1:
-            print('Found uneven arrays:')
-            print('corr_pointing_angle: {}'.format(arr_lens[0]))
-            print('traveltime: {}'.format(arr_lens[1]))
-            print('rel_azimuth: {}'.format(arr_lens[2]))
+            print("Found uneven arrays:")
+            print("corr_pointing_angle: {}".format(arr_lens[0]))
+            print("traveltime: {}".format(arr_lens[1]))
+            print("rel_azimuth: {}".format(arr_lens[2]))
             shortest_idx = np.argmin(np.array(arr_lens))
             shortest = [beam_angle, two_way_travel_time, beam_azimuth][shortest_idx]
             beam_idx = [beam_idx, twtt_idx, beamaz_idx][shortest_idx]
-            nan_idx = ~np.isnan(shortest.stack(stck=('time', 'beam'))).compute()
-            beam_angle_stck = beam_angle.stack(stck=('time', 'beam'))[nan_idx]
-            twoway_stck = two_way_travel_time.stack(stck=('time', 'beam'))[nan_idx]
-            beamaz_stck = beam_azimuth.stack(stck=('time', 'beam'))[nan_idx]
+            nan_idx = ~np.isnan(shortest.stack(stck=("time", "beam"))).compute()
+            beam_angle_stck = beam_angle.stack(stck=("time", "beam"))[nan_idx]
+            twoway_stck = two_way_travel_time.stack(stck=("time", "beam"))[nan_idx]
+            beamaz_stck = beam_azimuth.stack(stck=("time", "beam"))[nan_idx]
         del beam_angle, two_way_travel_time, beam_azimuth
 
         beam_angle_stck = np.abs(beam_angle_stck)
@@ -468,7 +580,7 @@ class SoundSpeedProfile:
         try:
             nearest_raytimes = dim_raytime[lkup, nearest_angles, :]
         except:
-            print('Found beams with angles greater than lookup table')
+            print("Found beams with angles greater than lookup table")
             nearest_angles = np.clip(nearest_angles, 0, int(dim_raytime.shape[1]) - 1)
             nearest_raytimes = dim_raytime[lkup, nearest_angles, :]
 
@@ -477,8 +589,9 @@ class SoundSpeedProfile:
 
         # print('Running sv_correct on {} total beams...'.format(nearest_raytimes.shape[0]))
 
-        interp_acrossvals, interp_downvals = _construct_across_down_vals(nearest_raytimes, nearest_across,
-                                                                         nearest_down, oneway_stck)
+        interp_acrossvals, interp_downvals = _construct_across_down_vals(
+            nearest_raytimes, nearest_across, nearest_down, oneway_stck
+        )
         del nearest_raytimes, nearest_across, nearest_down, oneway_stck
 
         # here we use the beam azimuth to go from xy sv corrected beams to xyz soundings
@@ -496,14 +609,29 @@ class SoundSpeedProfile:
                 newalong = newalong + offsets[0]
                 interp_downvals = interp_downvals + offsets[2]
 
-        reformed_across = reform_nan_array(newacross, beam_idx, orig_shape, orig_coords, orig_dims)
-        reformed_downvals = reform_nan_array(interp_downvals, beam_idx, orig_shape, orig_coords, orig_dims)
-        reformed_along = reform_nan_array(newalong, beam_idx, orig_shape, orig_coords, orig_dims)
+        reformed_across = reform_nan_array(
+            newacross, beam_idx, orig_shape, orig_coords, orig_dims
+        )
+        reformed_downvals = reform_nan_array(
+            interp_downvals, beam_idx, orig_shape, orig_coords, orig_dims
+        )
+        reformed_along = reform_nan_array(
+            newalong, beam_idx, orig_shape, orig_coords, orig_dims
+        )
         del newacross, newalong, interp_downvals
 
-        return [np.round(reformed_along, 3), np.round(reformed_across, 3), np.round(reformed_downvals, 3)]
+        return [
+            np.round(reformed_along, 3),
+            np.round(reformed_across, 3),
+            np.round(reformed_downvals, 3),
+        ]
 
-    def run_sv_correct(self, beam_angle: xr.DataArray, two_way_travel_time: xr.DataArray, beam_azimuth: xr.DataArray):
+    def run_sv_correct(
+        self,
+        beam_angle: xr.DataArray,
+        two_way_travel_time: xr.DataArray,
+        beam_azimuth: xr.DataArray,
+    ):
         """
         Convenience function for run_ray_trace on self.  See run_ray_trace for more info.
 
@@ -517,9 +645,18 @@ class SoundSpeedProfile:
             2d array of time/beam azimuth.  Assumes the second dim contains the actual beam azimuth data, ex: (time, azimuth)
         """
 
-        x, y, z = self._run_ray_trace(self.dim_angle, self.dim_raytime, self.lkup_across_dist, self.lkup_down_dist,
-                                      self.corr_profile_lkup, beam_azimuth, beam_angle, two_way_travel_time,
-                                      subset=None, offsets=None)
+        x, y, z = self._run_ray_trace(
+            self.dim_angle,
+            self.dim_raytime,
+            self.lkup_across_dist,
+            self.lkup_down_dist,
+            self.corr_profile_lkup,
+            beam_azimuth,
+            beam_angle,
+            two_way_travel_time,
+            subset=None,
+            offsets=None,
+        )
         return x, y, z
 
 
@@ -568,7 +705,7 @@ def return_supported_casts_from_list(list_files: list):
     """
 
     if type(list_files) != list:
-        raise TypeError('Function expects a list of sv files to be provided.')
+        raise TypeError("Function expects a list of sv files to be provided.")
     return [x for x in list_files if os.path.splitext(x)[1] in supported_file_formats]
 
 
@@ -595,7 +732,7 @@ def cast_data_from_file(profile_file: str):
         list of str names of each cast
     """
 
-    if profile_file.endswith('.svp'):
+    if profile_file.endswith(".svp"):
         return _load_from_caris_svp(profile_file)
 
 
@@ -650,25 +787,29 @@ def _parse_single_svp_cast(filname: str, svpdata: list):
     try:
         jdate, tme, lat, lon = [header.split()[i] for i in [1, 2, 3, 4]]
     except IndexError:
-        error = 'Error reading {}\n'.format(filname)
-        error += 'Please verify that the svp file has the correct header'
+        error = "Error reading {}\n".format(filname)
+        error += "Please verify that the svp file has the correct header"
         raise IOError(error)
     try:
         svpdata = _load_caris_svp_data(svpdata)
     except:
-        error = 'Error reading {}\n'.format(filname)
-        error += 'Unable to parse sound velocity profile data'
+        error = "Error reading {}\n".format(filname)
+        error += "Unable to parse sound velocity profile data"
         raise IOError(error)
 
-    jdate = jdate.split('-')
-    tme = tme.split(':')
+    jdate = jdate.split("-")
+    tme = tme.split(":")
     prof_location = [parse_dms_to_dd(lat), parse_dms_to_dd(lon)]
     if len(tme) == 3:
-        prof_time = julian_day_time_to_utctimestamp(int(jdate[0]), int(jdate[1]), int(tme[0]), int(tme[1]), int(tme[2]))
+        prof_time = julian_day_time_to_utctimestamp(
+            int(jdate[0]), int(jdate[1]), int(tme[0]), int(tme[1]), int(tme[2])
+        )
     elif len(tme) == 2:
-        prof_time = julian_day_time_to_utctimestamp(int(jdate[0]), int(jdate[1]), int(tme[0]), int(tme[1]), 0)
+        prof_time = julian_day_time_to_utctimestamp(
+            int(jdate[0]), int(jdate[1]), int(tme[0]), int(tme[1]), 0
+        )
     else:
-        raise ValueError('Unrecognized timestamp: {}'.format(tme))
+        raise ValueError("Unrecognized timestamp: {}".format(tme))
 
     return svpdata, prof_location, prof_time
 
@@ -695,8 +836,8 @@ def _load_from_caris_svp(profile_file: str):
         list of str names of each cast
     """
 
-    if os.path.exists(profile_file) and profile_file.endswith('.svp'):
-        with open(profile_file, 'r') as svp:
+    if os.path.exists(profile_file) and profile_file.endswith(".svp"):
+        with open(profile_file, "r") as svp:
             cast_datasets = []
             end_cast_idx = 0
             all_lines = svp.readlines()
@@ -706,7 +847,7 @@ def _load_from_caris_svp(profile_file: str):
             all_lines = all_lines[2:]
 
             for cnt, lne in enumerate(all_lines):
-                if lne[0:8].lstrip() == 'Section ' and cnt != 0:
+                if lne[0:8].lstrip() == "Section " and cnt != 0:
                     cast_datasets.append(all_lines[end_cast_idx:cnt])
                     end_cast_idx = cnt
             cast_datasets.append(all_lines[end_cast_idx:])
@@ -715,17 +856,25 @@ def _load_from_caris_svp(profile_file: str):
             locations = []
             times = []
             for cast in cast_datasets:
-                svpdata, prof_location, prof_time = _parse_single_svp_cast(profile_file, cast)
+                svpdata, prof_location, prof_time = _parse_single_svp_cast(
+                    profile_file, cast
+                )
                 profiles.append(svpdata)
                 locations.append(prof_location)
                 times.append(prof_time)
 
             return profiles, locations, times, prof_name
     else:
-        raise IOError('Not a valid caris svp file: {}'.format(profile_file))
+        raise IOError("Not a valid caris svp file: {}".format(profile_file))
 
 
-def _interp(arr: np.ndarray, row_idx: np.array, col_idx: np.array, msk: np.array, interp_factor: np.ndarray):
+def _interp(
+    arr: np.ndarray,
+    row_idx: np.array,
+    col_idx: np.array,
+    msk: np.array,
+    interp_factor: np.ndarray,
+):
     """
     See return_interp_beam_xy.  Takes in an array (arr) and some parameters that allow you to interp to the given
     interp factor.  Interp_factor represents location of actual values you are wanting, a ratio you can use to find
@@ -780,8 +929,12 @@ def _interp(arr: np.ndarray, row_idx: np.array, col_idx: np.array, msk: np.array
     return interp_vals
 
 
-def _construct_across_down_vals(nearest_raytimes: np.ndarray, nearest_across: np.ndarray, nearest_down: np.ndarray,
-                                one_way_travel_time: np.array):
+def _construct_across_down_vals(
+    nearest_raytimes: np.ndarray,
+    nearest_across: np.ndarray,
+    nearest_down: np.ndarray,
+    one_way_travel_time: np.array,
+):
     """
     Using SoundSpeedProfile as a lookup table, find the nearest raytime to the given one_way_travel_time, determine
     the proportional difference, and apply that same factor to across track/depth to get the interpolated xy at
@@ -808,7 +961,9 @@ def _construct_across_down_vals(nearest_raytimes: np.ndarray, nearest_across: np
 
     # get the index of the closest onewaytraveltime from nearest raytimes
     # self.dim_raytime will have nan for part of profile where beams reflect, angle>90, use nanargmin
-    srch_vals = np.nanargmin(np.abs(nearest_raytimes - np.expand_dims(one_way_travel_time, axis=1)), axis=1)
+    srch_vals = np.nanargmin(
+        np.abs(nearest_raytimes - np.expand_dims(one_way_travel_time, axis=1)), axis=1
+    )
     srch_rows = np.arange(len(nearest_raytimes))
 
     # get val before and after actual value nearest the index
@@ -846,7 +1001,9 @@ def _convert_cast(cast: list, z_waterline_offset: float):
     """
 
     cast_depth, cast_soundvelocity = np.array(cast[0]), np.array(cast[1])
-    if cast_depth[-1] < 10000:  # we extend the cast to ensure that casts that are too short still work, we use the kongsberg extended cast value
+    if (
+        cast_depth[-1] < 10000
+    ):  # we extend the cast to ensure that casts that are too short still work, we use the kongsberg extended cast value
         cast_depth = np.concatenate([cast_depth, [12000.0]])
         cast_soundvelocity = np.concatenate([cast_soundvelocity, [1669.0]])
     cast_depth_rel_tx = cast_depth + z_waterline_offset
@@ -856,7 +1013,9 @@ def _convert_cast(cast: list, z_waterline_offset: float):
     return cast_depth_rel_tx, cast_soundvelocity
 
 
-def _process_cast_for_ssv(cast_depth: np.ndarray, cast_sv: np.ndarray, max_allowed_sv: float, ssv: float):
+def _process_cast_for_ssv(
+    cast_depth: np.ndarray, cast_sv: np.ndarray, max_allowed_sv: float, ssv: float
+):
     """
     Process the cast to add the surface sound velocity layer as the initial layer.
 
@@ -891,8 +1050,8 @@ def _process_cast_for_ssv(cast_depth: np.ndarray, cast_sv: np.ndarray, max_allow
         dpth1, dpth2 = cast_depth[layer_previous], cast_depth[first_invalid_layer]
         new_depth = dpth1 + (max_allowed_sv - sv1) * ((dpth2 - dpth1) / (sv2 - sv1))
 
-        cast_sv = cast_sv[:int(first_invalid_layer) + 1]
-        cast_depth = cast_depth[:int(first_invalid_layer) + 1]
+        cast_sv = cast_sv[: int(first_invalid_layer) + 1]
+        cast_depth = cast_depth[: int(first_invalid_layer) + 1]
         cast_sv[-1] = max_allowed_sv
         cast_depth[-1] = new_depth
 
@@ -914,7 +1073,9 @@ def _process_cast_for_ssv(cast_depth: np.ndarray, cast_sv: np.ndarray, max_allow
     return cast_depth, cast_sv
 
 
-def _build_beam_cumulative_tables(cast_depth: np.ndarray, cast_sv: np.ndarray, beam_angle: np.ndarray):
+def _build_beam_cumulative_tables(
+    cast_depth: np.ndarray, cast_sv: np.ndarray, beam_angle: np.ndarray
+):
     """
     Take the initial angle (the provided beam launch angle) and calculate the ray distance and travel time for each
     layer.  Allows you to end up with an array of cumulative depth, horizontal distance and ray time for each layer.
@@ -965,8 +1126,13 @@ def _build_beam_cumulative_tables(cast_depth: np.ndarray, cast_sv: np.ndarray, b
     return cumulative_depth, cumulative_h_dist, cumulative_raytime
 
 
-def _interpolate_cumulative_table(cumulative_depth: np.ndarray, cumulative_h_dist: np.ndarray, cumulative_raytime: np.ndarray,
-                                  cast_sv: np.ndarray, two_way_travel_time: np.ndarray):
+def _interpolate_cumulative_table(
+    cumulative_depth: np.ndarray,
+    cumulative_h_dist: np.ndarray,
+    cumulative_raytime: np.ndarray,
+    cast_sv: np.ndarray,
+    two_way_travel_time: np.ndarray,
+):
     """
     Take the previously generated cumulative tables for each layer, time, beam and interpolate the answer for our two way
     travel time.
@@ -993,13 +1159,15 @@ def _interpolate_cumulative_table(cumulative_depth: np.ndarray, cumulative_h_dis
     """
 
     oneway_traveltime = two_way_travel_time / 2
-    nearest_next_layer_index = (cumulative_raytime - oneway_traveltime[None, :, :] < 0).argmin(axis=0)
+    nearest_next_layer_index = (
+        cumulative_raytime - oneway_traveltime[None, :, :] < 0
+    ).argmin(axis=0)
     interp_across = np.zeros_like(oneway_traveltime)
     interp_down = np.zeros_like(oneway_traveltime)
 
     for layer_index in np.unique(nearest_next_layer_index):
         if layer_index == len(cast_sv):  # past the bounds of the cast
-            print('Found beam traveltime outside the range of the provided cast')
+            print("Found beam traveltime outside the range of the provided cast")
             continue
         elif layer_index == 0:
             # print('Found beam traveltime that places it above the transducer')
@@ -1013,13 +1181,23 @@ def _interpolate_cumulative_table(cumulative_depth: np.ndarray, cumulative_h_dis
         down_one = cumulative_depth[layer_index - 1]
         down_two = cumulative_depth[layer_index]
         interp_across[layer_index_mask] = across_one + (oneway - tt_one) * (
-                    (across_two - across_one) / (tt_two - tt_one))
-        interp_down[layer_index_mask] = down_one + (oneway - tt_one) * ((down_two - down_one) / (tt_two - tt_one))
+            (across_two - across_one) / (tt_two - tt_one)
+        )
+        interp_down[layer_index_mask] = down_one + (oneway - tt_one) * (
+            (down_two - down_one) / (tt_two - tt_one)
+        )
     return interp_across, interp_down
 
 
-def run_ray_trace_v2(cast: list, beam_azimuth: xr.DataArray, beam_angle: xr.DataArray, two_way_travel_time: xr.DataArray,
-                     surface_sound_speed: xr.DataArray, z_waterline_offset: float, additional_offsets: list):
+def run_ray_trace_v2(
+    cast: list,
+    beam_azimuth: xr.DataArray,
+    beam_angle: xr.DataArray,
+    two_way_travel_time: xr.DataArray,
+    surface_sound_speed: xr.DataArray,
+    z_waterline_offset: float,
+    additional_offsets: list,
+):
     """
     Apply the provided sound velocity cast and surface sound speed value to ray trace the angles/traveltime through
     each layer.  We construct cumulative depth/distance/time for each layer and then apply linear interpolation using
@@ -1082,18 +1260,36 @@ def run_ray_trace_v2(cast: list, beam_azimuth: xr.DataArray, beam_angle: xr.Data
             max_allowed_sv_layer_value = float(1 / rpmax)
 
         # apply surface sv to the cast and clean it up
-        cast_depth_rel_tx, cast_soundvelocity = _process_cast_for_ssv(cast_depth_rel_tx, cast_soundvelocity, max_allowed_sv_layer_value, ssv)
+        cast_depth_rel_tx, cast_soundvelocity = _process_cast_for_ssv(
+            cast_depth_rel_tx, cast_soundvelocity, max_allowed_sv_layer_value, ssv
+        )
 
         # build out the cumulative depth, horizontal distance and raytime by iterating through the cast layers
-        cumulative_depth, cumulative_h_dist, cumulative_raytime = _build_beam_cumulative_tables(cast_depth_rel_tx, cast_soundvelocity, subset_beam_angle)
+        (
+            cumulative_depth,
+            cumulative_h_dist,
+            cumulative_raytime,
+        ) = _build_beam_cumulative_tables(
+            cast_depth_rel_tx, cast_soundvelocity, subset_beam_angle
+        )
         # determine the correct acrosstrack/depth for our two way travel time values
-        interp_across, interp_down = _interpolate_cumulative_table(cumulative_depth, cumulative_h_dist, cumulative_raytime, cast_soundvelocity, two_way_travel_time[idx])
+        interp_across, interp_down = _interpolate_cumulative_table(
+            cumulative_depth,
+            cumulative_h_dist,
+            cumulative_raytime,
+            cast_soundvelocity,
+            two_way_travel_time[idx],
+        )
 
         # here we use the beam azimuth to go from xy sv corrected beams to xyz soundings
         # relying on the relative azimuth to determine direction/sign
         interp_across = np.abs(interp_across)
-        newacross = interp_across * np.sin(subset_beam_azimuth) + additional_offsets[1][idx]
-        newalong = interp_across * np.cos(subset_beam_azimuth) + additional_offsets[0][idx]
+        newacross = (
+            interp_across * np.sin(subset_beam_azimuth) + additional_offsets[1][idx]
+        )
+        newalong = (
+            interp_across * np.cos(subset_beam_azimuth) + additional_offsets[0][idx]
+        )
         newdown = interp_down + additional_offsets[2][idx]
 
         # populate the answer arrays with this value for this specific ssv value
@@ -1102,9 +1298,21 @@ def run_ray_trace_v2(cast: list, beam_azimuth: xr.DataArray, beam_angle: xr.Data
         depth_answer[idx, :] = newdown
 
     # reform the xarray dataarrays
-    alongtrack_answer = xr.DataArray(np.round(alongtrack_answer, 3), coords=[orig_time_coord, orig_beam_coord], dims=['time', 'beam'])
-    acrosstrack_answer = xr.DataArray(np.round(acrosstrack_answer, 3), coords=[orig_time_coord, orig_beam_coord], dims=['time', 'beam'])
-    depth_answer = xr.DataArray(np.round(depth_answer, 3), coords=[orig_time_coord, orig_beam_coord], dims=['time', 'beam'])
+    alongtrack_answer = xr.DataArray(
+        np.round(alongtrack_answer, 3),
+        coords=[orig_time_coord, orig_beam_coord],
+        dims=["time", "beam"],
+    )
+    acrosstrack_answer = xr.DataArray(
+        np.round(acrosstrack_answer, 3),
+        coords=[orig_time_coord, orig_beam_coord],
+        dims=["time", "beam"],
+    )
+    depth_answer = xr.DataArray(
+        np.round(depth_answer, 3),
+        coords=[orig_time_coord, orig_beam_coord],
+        dims=["time", "beam"],
+    )
 
     return [alongtrack_answer, acrosstrack_answer, depth_answer]
 
@@ -1129,12 +1337,23 @@ def distributed_run_sv_correct(worker_dat: list):
          xr.DataArray (time, down distance in meters), processing_status]
     """
 
-    ans = run_ray_trace_v2(worker_dat[0], worker_dat[1][0], worker_dat[1][1], worker_dat[2], worker_dat[3], worker_dat[4],
-                           worker_dat[5])
+    ans = run_ray_trace_v2(
+        worker_dat[0],
+        worker_dat[1][0],
+        worker_dat[1][1],
+        worker_dat[2],
+        worker_dat[3],
+        worker_dat[4],
+        worker_dat[5],
+    )
     # return processing status = 3 for all affected soundings
-    processing_status = xr.DataArray(np.full_like(worker_dat[2], 3, dtype=np.uint8),
-                                     coords={'time': worker_dat[2].coords['time'],
-                                             'beam': worker_dat[2].coords['beam']},
-                                     dims=['time', 'beam'])
+    processing_status = xr.DataArray(
+        np.full_like(worker_dat[2], 3, dtype=np.uint8),
+        coords={
+            "time": worker_dat[2].coords["time"],
+            "beam": worker_dat[2].coords["beam"],
+        },
+        dims=["time", "beam"],
+    )
     ans.append(processing_status)
     return ans

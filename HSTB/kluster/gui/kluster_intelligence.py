@@ -13,11 +13,13 @@ from HSTB.kluster import fqpr_project, fqpr_intelligence, monitor
 
 # STILL SERVES AS A USEFUL WAY TO VISUALIZE THE DATA IN EACH INTEL MODULE
 
+
 class ActionTab(QtWidgets.QWidget):
     """
     Action tab displays all of the actions we have queued up from the intelligence module, shows the text/tooltip
     attributes that we built in the kluster_intelligence module
     """
+
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -32,8 +34,10 @@ class ActionTab(QtWidgets.QWidget):
         self.table.setColumnWidth(1, 200)
         self.table.setColumnWidth(2, 200)
 
-        self.table.setHorizontalHeaderLabels(['Action', 'Progress', 'Function'])
-        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.table.setHorizontalHeaderLabels(["Action", "Progress", "Function"])
+        self.table.horizontalHeader().setSectionResizeMode(
+            0, QtWidgets.QHeaderView.Stretch
+        )
 
         self.setMinimumHeight(600)
 
@@ -87,8 +91,12 @@ class IntelViewer(QtWidgets.QTableWidget):
 
         self.setDragEnabled(True)  # enable support for dragging table items
         self.setAcceptDrops(True)  # enable drop events
-        self.viewport().setAcceptDrops(True)  # viewport is the total rendered area, this is recommended from my reading
-        self.setDragDropOverwriteMode(False)  # False makes sure we don't overwrite rows on dragging
+        self.viewport().setAcceptDrops(
+            True
+        )  # viewport is the total rendered area, this is recommended from my reading
+        self.setDragDropOverwriteMode(
+            False
+        )  # False makes sure we don't overwrite rows on dragging
         self.setDropIndicatorShown(True)
 
         self.setSortingEnabled(True)
@@ -110,11 +118,11 @@ class IntelViewer(QtWidgets.QTableWidget):
         Build the right click menu for added lines
         """
 
-        self.right_click_menu = QtWidgets.QMenu('menu', self)
+        self.right_click_menu = QtWidgets.QMenu("menu", self)
 
-        close_dat = QtWidgets.QAction('Close', self)
+        close_dat = QtWidgets.QAction("Close", self)
         close_dat.triggered.connect(self.right_click_close_row)
-        show_explorer = QtWidgets.QAction('Open Explorer', self)
+        show_explorer = QtWidgets.QAction("Open Explorer", self)
         show_explorer.triggered.connect(self.show_file_in_explorer)
 
         self.right_click_menu.addAction(close_dat)
@@ -140,7 +148,7 @@ class IntelViewer(QtWidgets.QTableWidget):
         """
 
         itms = self.selectedItems()
-        if self.headr[-1] != 'unique_id':
+        if self.headr[-1] != "unique_id":
             print('Error: context menu requires "unique_id" as the last element')
             return
         idx = len(self.headr) - 1
@@ -160,7 +168,7 @@ class IntelViewer(QtWidgets.QTableWidget):
         """
 
         itms = self.selectedItems()
-        if self.headr[-1] != 'unique_id':
+        if self.headr[-1] != "unique_id":
             print('Error: context menu requires "unique_id" as the last element')
             return
         idx = len(self.headr) - 1
@@ -213,7 +221,7 @@ class IntelViewer(QtWidgets.QTableWidget):
             for url in event.mimeData().urls():
                 self.file_added.emit(url.toLocalFile())
         else:
-            print('Unrecognized input: {}'.format(event.source()))
+            print("Unrecognized input: {}".format(event.source()))
 
     def _drop_row_index(self, event: QtCore.QEvent):
         """
@@ -273,9 +281,16 @@ class IntelViewer(QtWidgets.QTableWidget):
             row index of the insertion point for the drag and drop
         """
 
-        rows = sorted(set(item.row() for item in self.selectedItems()))  # pull all the selected rows
-        rows_to_move = [[QtWidgets.QTableWidgetItem(self.item(row_index, column_index)) for column_index in
-                         range(self.columnCount())] for row_index in rows]  # get the data for the rows
+        rows = sorted(
+            set(item.row() for item in self.selectedItems())
+        )  # pull all the selected rows
+        rows_to_move = [
+            [
+                QtWidgets.QTableWidgetItem(self.item(row_index, column_index))
+                for column_index in range(self.columnCount())
+            ]
+            for row_index in rows
+        ]  # get the data for the rows
 
         for row_index in reversed(rows):
             self.removeRow(row_index)
@@ -305,17 +320,19 @@ class IntelViewer(QtWidgets.QTableWidget):
             new row to be added
         """
 
-        if dict_attributes and self.headr:  # headr is only populated when extending this class
+        if (
+            dict_attributes and self.headr
+        ):  # headr is only populated when extending this class
             next_row = self.rowCount()
             self.insertRow(next_row)
             for col_index, ky in enumerate(self.headr):
                 data = dict_attributes[ky]
                 if isinstance(data, datetime):
-                    data = data.strftime('%D %H:%M:%S')
+                    data = data.strftime("%D %H:%M:%S")
                 elif isinstance(data, list):
                     for cnt, d in enumerate(data):
                         if isinstance(d, datetime):
-                            data[cnt] = d.strftime('%D %H:%M:%S')
+                            data[cnt] = d.strftime("%D %H:%M:%S")
                 data_item = QtWidgets.QTableWidgetItem(str(data))
                 self.setItem(next_row, col_index, data_item)
 
@@ -328,13 +345,15 @@ class IntelViewer(QtWidgets.QTableWidget):
         unique_id
             unique id for the row to be removed
         """
-        uid_column_index = self.headr.index('unique_id')
+        uid_column_index = self.headr.index("unique_id")
         total_rows = self.rowCount()
         remove_these_rows = []
         for i in range(total_rows):
             if self.item(i, uid_column_index).text() == str(unique_id):
                 remove_these_rows.append(i)
-        for i in sorted(remove_these_rows, reverse=True):  # remove from bottom up to not mess up index
+        for i in sorted(
+            remove_these_rows, reverse=True
+        ):  # remove from bottom up to not mess up index
             self.removeRow(i)
 
 
@@ -345,9 +364,20 @@ class MultibeamIntel(IntelViewer):
 
     def __init__(self):
         super().__init__()
-        self.headr = ['file_name', 'type', 'data_start_time_utc', 'data_end_time_utc', 'primary_serial_number',
-                      'secondary_serial_number', 'sonar_model_number',
-                      'last_modified_time_utc', 'created_time_utc', 'file_size_kb', 'time_added', 'unique_id']
+        self.headr = [
+            "file_name",
+            "type",
+            "data_start_time_utc",
+            "data_end_time_utc",
+            "primary_serial_number",
+            "secondary_serial_number",
+            "sonar_model_number",
+            "last_modified_time_utc",
+            "created_time_utc",
+            "file_size_kb",
+            "time_added",
+            "unique_id",
+        ]
         self.setColumnCount(len(self.headr))
         self.setHorizontalHeaderLabels(self.headr)
 
@@ -363,8 +393,17 @@ class NavIntel(IntelViewer):
 
     def __init__(self):
         super().__init__()
-        self.headr = ['file_name', 'type', 'weekly_seconds_start', 'weekly_seconds_end', 'last_modified_time_utc',
-                      'created_time_utc', 'file_size_kb', 'time_added', 'unique_id']
+        self.headr = [
+            "file_name",
+            "type",
+            "weekly_seconds_start",
+            "weekly_seconds_end",
+            "last_modified_time_utc",
+            "created_time_utc",
+            "file_size_kb",
+            "time_added",
+            "unique_id",
+        ]
         self.setColumnCount(len(self.headr))
         self.setHorizontalHeaderLabels(self.headr)
 
@@ -380,8 +419,17 @@ class NavErrorIntel(IntelViewer):
 
     def __init__(self):
         super().__init__()
-        self.headr = ['file_name', 'type', 'weekly_seconds_start', 'weekly_seconds_end', 'last_modified_time_utc',
-                      'created_time_utc', 'file_size_kb', 'time_added', 'unique_id']
+        self.headr = [
+            "file_name",
+            "type",
+            "weekly_seconds_start",
+            "weekly_seconds_end",
+            "last_modified_time_utc",
+            "created_time_utc",
+            "file_size_kb",
+            "time_added",
+            "unique_id",
+        ]
         self.setColumnCount(len(self.headr))
         self.setHorizontalHeaderLabels(self.headr)
 
@@ -397,9 +445,21 @@ class NavLogIntel(IntelViewer):
 
     def __init__(self):
         super().__init__()
-        self.headr = ['file_name', 'input_sbet_file', 'exported_sbet_file', 'sample_rate_hertz', 'type',
-                      'mission_date', 'datum', 'ellipsoid', 'last_modified_time_utc', 'created_time_utc',
-                      'file_size_kb', 'time_added', 'unique_id']
+        self.headr = [
+            "file_name",
+            "input_sbet_file",
+            "exported_sbet_file",
+            "sample_rate_hertz",
+            "type",
+            "mission_date",
+            "datum",
+            "ellipsoid",
+            "last_modified_time_utc",
+            "created_time_utc",
+            "file_size_kb",
+            "time_added",
+            "unique_id",
+        ]
         self.setColumnCount(len(self.headr))
         self.setHorizontalHeaderLabels(self.headr)
 
@@ -415,9 +475,24 @@ class SvpIntel(IntelViewer):
 
     def __init__(self):
         super().__init__()
-        self.headr = ['file_name', 'type', 'number_of_profiles', 'number_of_layers', 'julian_day',
-                      'time_utc', 'latitude', 'longitude', 'source_epsg', 'utm_zone', 'utm_hemisphere',
-                      'last_modified_time_utc', 'created_time_utc', 'file_size_kb', 'time_added', 'unique_id']
+        self.headr = [
+            "file_name",
+            "type",
+            "number_of_profiles",
+            "number_of_layers",
+            "julian_day",
+            "time_utc",
+            "latitude",
+            "longitude",
+            "source_epsg",
+            "utm_zone",
+            "utm_hemisphere",
+            "last_modified_time_utc",
+            "created_time_utc",
+            "file_size_kb",
+            "time_added",
+            "unique_id",
+        ]
         self.setColumnCount(len(self.headr))
         self.setHorizontalHeaderLabels(self.headr)
 
@@ -433,7 +508,9 @@ class IntelTab(QtWidgets.QTabWidget):
 
     def __init__(self):
         super().__init__()
-        self.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
         # self.setStyleSheet(('font: 10.5pt "Consolas";'))
 
 
@@ -444,7 +521,9 @@ class IntelOutput(kluster_output_window.KlusterOutput):
 
     def __init__(self):
         super().__init__()
-        self.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
 
 
 class MonitorPath(QtWidgets.QWidget):
@@ -466,23 +545,23 @@ class MonitorPath(QtWidgets.QWidget):
 
         self.parent = parent
         self.hlayout = QtWidgets.QHBoxLayout()
-        self.statuslight = QtWidgets.QCheckBox('')
+        self.statuslight = QtWidgets.QCheckBox("")
         self.statuslight.setStyleSheet("background-color: black")
         self.statuslight.setCheckable(False)
         self.hlayout.addWidget(self.statuslight)
-        self.fil_text = QtWidgets.QLineEdit('')
+        self.fil_text = QtWidgets.QLineEdit("")
         self.fil_text.setMinimumWidth(400)
         self.fil_text.setReadOnly(True)
         self.hlayout.addWidget(self.fil_text)
         self.browse_button = QtWidgets.QPushButton("Browse")
         self.hlayout.addWidget(self.browse_button)
-        self.start_button = QtWidgets.QPushButton('Start')
+        self.start_button = QtWidgets.QPushButton("Start")
         self.hlayout.addWidget(self.start_button)
-        self.stop_button = QtWidgets.QPushButton('Stop')
+        self.stop_button = QtWidgets.QPushButton("Stop")
         self.hlayout.addWidget(self.stop_button)
-        spcr = QtWidgets.QLabel('      ')
+        spcr = QtWidgets.QLabel("      ")
         self.hlayout.addWidget(spcr)
-        self.include_subdirectories = QtWidgets.QCheckBox('Include Subdirectories')
+        self.include_subdirectories = QtWidgets.QCheckBox("Include Subdirectories")
         self.hlayout.addWidget(self.include_subdirectories)
         self.setLayout(self.hlayout)
 
@@ -499,12 +578,16 @@ class MonitorPath(QtWidgets.QWidget):
 
         if not self.is_running():
             # dirpath will be None or a string
-            msg, pth = RegistryHelpers.GetDirFromUserQT(self, RegistryKey='klusterintel',
-                                                        Title='Select directory to monitor', AppName='klusterintel')
+            msg, pth = RegistryHelpers.GetDirFromUserQT(
+                self,
+                RegistryKey="klusterintel",
+                Title="Select directory to monitor",
+                AppName="klusterintel",
+            )
             if pth is not None:
                 self.fil_text.setText(pth)
         else:
-            print('You have to stop monitoring before you can change the path')
+            print("You have to stop monitoring before you can change the path")
 
     def return_monitoring_path(self):
         """
@@ -564,7 +647,7 @@ class MonitorPath(QtWidgets.QWidget):
             self.monitor.start()
             self.include_subdirectories.setEnabled(False)
             self.statuslight.setStyleSheet("background-color: green")
-            print('Monitoring {}'.format(pth))
+            print("Monitoring {}".format(pth))
 
     def stop_monitoring(self):
         """
@@ -575,7 +658,7 @@ class MonitorPath(QtWidgets.QWidget):
             self.monitor.stop()
             self.include_subdirectories.setEnabled(True)
             self.statuslight.setStyleSheet("background-color: black")
-            print('No longer monitoring {}'.format(self.return_monitoring_path()))
+            print("No longer monitoring {}".format(self.return_monitoring_path()))
 
 
 class MonitorDashboard(QtWidgets.QWidget):
@@ -630,14 +713,16 @@ class MonitorDashboard(QtWidgets.QWidget):
         """
 
         if self.parent is not None:
-            if fil not in self.seen_files and file_event == 'created':
+            if fil not in self.seen_files and file_event == "created":
                 self.parent.add_new_file(fil)
-            elif file_event == 'deleted':
+            elif file_event == "deleted":
                 if fil in self.seen_files:
                     self.seen_files.remove(fil)
                 self.parent.remove_file(fil)
         else:
-            print('expected the KlusterIntelligence module passed as a parent to this class')
+            print(
+                "expected the KlusterIntelligence module passed as a parent to this class"
+            )
 
 
 class KlusterIntelligence(QtWidgets.QMainWindow):
@@ -649,15 +734,19 @@ class KlusterIntelligence(QtWidgets.QMainWindow):
 
         super().__init__()
 
-        self.setWindowTitle('Kluster Intelligence')
+        self.setWindowTitle("Kluster Intelligence")
         self.setDockNestingEnabled(True)
 
-        self.iconpath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'images', 'kluster_img.ico')
+        self.iconpath = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "images", "kluster_img.ico"
+        )
         self.setWindowIcon(QtGui.QIcon(self.iconpath))
 
         self.widget_obj_names = []
 
-        self.project = fqpr_project.FqprProject(is_gui=False)  # is_gui controls the progress bar text, used to disable it for gui, no longer
+        self.project = fqpr_project.FqprProject(
+            is_gui=False
+        )  # is_gui controls the progress bar text, used to disable it for gui, no longer
 
         # fqpr = fully qualified ping record, the term for the datastore in kluster
         self.intelligence = fqpr_intelligence.FqprIntel(project=self.project)
@@ -716,14 +805,14 @@ class KlusterIntelligence(QtWidgets.QMainWindow):
         # hide the central widget so that we can have an application with all dockable widgets
         self.setCentralWidget(self.top_widget)
 
-        self.intel_tab.addTab(self.action_tab, 'Actions')
-        self.intel_tab.addTab(self.project_view, 'Project')
-        self.intel_tab.addTab(self.multibeam_intel, 'Multibeam')
-        self.intel_tab.addTab(self.nav_intel, 'Processed Navigation')
-        self.intel_tab.addTab(self.naverror_intel, 'Processed Nav Error')
-        self.intel_tab.addTab(self.navlog_intel, 'Processed Nav Log')
-        self.intel_tab.addTab(self.svp_intel, 'Processed SVP')
-        self.intel_tab.addTab(self.monitor_dashboard, 'Monitor')
+        self.intel_tab.addTab(self.action_tab, "Actions")
+        self.intel_tab.addTab(self.project_view, "Project")
+        self.intel_tab.addTab(self.multibeam_intel, "Multibeam")
+        self.intel_tab.addTab(self.nav_intel, "Processed Navigation")
+        self.intel_tab.addTab(self.naverror_intel, "Processed Nav Error")
+        self.intel_tab.addTab(self.navlog_intel, "Processed Nav Log")
+        self.intel_tab.addTab(self.svp_intel, "Processed SVP")
+        self.intel_tab.addTab(self.monitor_dashboard, "Monitor")
 
         self.lyout.addWidget(self.intel_tab, 0, 0, 2, 1)
         self.lyout.addWidget(self.output_window, 2, 0, 1, 1)
@@ -769,15 +858,15 @@ class KlusterIntelligence(QtWidgets.QMainWindow):
             fils = [filepath]
         for f in fils:
             updated_type, new_data, new_project = self.intelligence.add_file(f)
-            if updated_type == 'multibeam':
+            if updated_type == "multibeam":
                 self.multibeam_intel.update_from_dict(new_data)
-            elif updated_type == 'svp':
+            elif updated_type == "svp":
                 self.svp_intel.update_from_dict(new_data)
-            elif updated_type == 'navigation':
+            elif updated_type == "navigation":
                 self.nav_intel.update_from_dict(new_data)
-            elif updated_type == 'naverror':
+            elif updated_type == "naverror":
                 self.naverror_intel.update_from_dict(new_data)
-            elif updated_type == 'navlog':
+            elif updated_type == "navlog":
                 self.navlog_intel.update_from_dict(new_data)
 
     def remove_file(self, filepath: str):
@@ -797,15 +886,15 @@ class KlusterIntelligence(QtWidgets.QMainWindow):
             fils = [filepath]
         for f in fils:
             updated_type, unique_id = self.intelligence.remove_file(f)
-            if updated_type == 'multibeam':
+            if updated_type == "multibeam":
                 self.multibeam_intel.remove_row(unique_id)
-            elif updated_type == 'svp':
+            elif updated_type == "svp":
                 self.svp_intel.remove_row(unique_id)
-            elif updated_type == 'navigation':
+            elif updated_type == "navigation":
                 self.nav_intel.remove_row(unique_id)
-            elif updated_type == 'naverror':
+            elif updated_type == "naverror":
                 self.naverror_intel.remove_row(unique_id)
-            elif updated_type == 'navlog':
+            elif updated_type == "navlog":
                 self.navlog_intel.remove_row(unique_id)
 
     def return_filepath_from_unique_id(self, unique_id: int):
@@ -824,13 +913,17 @@ class KlusterIntelligence(QtWidgets.QMainWindow):
         """
 
         filepath = None
-        if unique_id in list(self.intelligence.multibeam_intel.unique_id_reverse.keys()):
+        if unique_id in list(
+            self.intelligence.multibeam_intel.unique_id_reverse.keys()
+        ):
             filepath = self.intelligence.multibeam_intel.unique_id_reverse[unique_id]
         elif unique_id in list(self.intelligence.svp_intel.unique_id_reverse.keys()):
             filepath = self.intelligence.svp_intel.unique_id_reverse[unique_id]
         elif unique_id in list(self.intelligence.nav_intel.unique_id_reverse.keys()):
             filepath = self.intelligence.nav_intel.unique_id_reverse[unique_id]
-        elif unique_id in list(self.intelligence.naverror_intel.unique_id_reverse.keys()):
+        elif unique_id in list(
+            self.intelligence.naverror_intel.unique_id_reverse.keys()
+        ):
             filepath = self.intelligence.naverror_intel.unique_id_reverse[unique_id]
         elif unique_id in list(self.intelligence.navlog_intel.unique_id_reverse.keys()):
             filepath = self.intelligence.navlog_intel.unique_id_reverse[unique_id]
@@ -871,7 +964,7 @@ class KlusterIntelligence(QtWidgets.QMainWindow):
             print("Can't locate row by uniqueid {}".format(unique_id))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:  # pyside2
         app = QtWidgets.QApplication()
     except TypeError:  # pyqt5

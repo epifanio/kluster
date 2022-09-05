@@ -1,5 +1,9 @@
 from watchdog.observers import Observer
-from watchdog.events import PatternMatchingEventHandler, FileCreatedEvent, FileDeletedEvent
+from watchdog.events import (
+    PatternMatchingEventHandler,
+    FileCreatedEvent,
+    FileDeletedEvent,
+)
 from threading import Thread, Event
 from types import FunctionType
 import numpy as np
@@ -8,10 +12,16 @@ from HSTB.kluster import kluster_variables
 
 
 supported_mbes = kluster_variables.supported_sonar
-supported_sbet = kluster_variables.supported_ppnav  # people keep mixing up these extensions, so just check for the nav/smrmsg in both
+supported_sbet = (
+    kluster_variables.supported_ppnav
+)  # people keep mixing up these extensions, so just check for the nav/smrmsg in both
 supported_export_log = kluster_variables.supported_ppnav_log
 supported_svp = kluster_variables.supported_sv
-all_extensions = list(np.concatenate([supported_mbes, supported_sbet, supported_export_log, supported_svp]))
+all_extensions = list(
+    np.concatenate(
+        [supported_mbes, supported_sbet, supported_export_log, supported_svp]
+    )
+)
 
 
 class DirectoryMonitor:
@@ -45,24 +55,30 @@ class DirectoryMonitor:
 
         self.directory_path = directory_path
         self.is_recursive = is_recursive
-        self.patterns = ['*' + ext for ext in all_extensions]
-        self.my_event_handler = IntelligenceMonitorHandler(self,  # parent class that holds the files list
-                                                           self.patterns,  # find all files matching these patterns
-                                                           "",  # no ignore patterns to use here
-                                                           False,  # do not ignore directories
-                                                           False)  # do not make this case sensitive
+        self.patterns = ["*" + ext for ext in all_extensions]
+        self.my_event_handler = IntelligenceMonitorHandler(
+            self,  # parent class that holds the files list
+            self.patterns,  # find all files matching these patterns
+            "",  # no ignore patterns to use here
+            False,  # do not ignore directories
+            False,
+        )  # do not make this case sensitive
         self.watchdog_observer = Observer()
-        self.watchdog_observer.schedule(self.my_event_handler, directory_path, recursive=is_recursive)
+        self.watchdog_observer.schedule(
+            self.my_event_handler, directory_path, recursive=is_recursive
+        )
         self._observers = []
         self.seen_files = []
         self.file_buffer = {}
 
         # apply WatchBuffer to only push to intelligence once the file has finished copying
         self.watch_buffer_event = Event()
-        self.watch_buffer_timer = WatchBuffer(self.watch_buffer_event, self.push_to_kluster_intelligence, runtime=1)
+        self.watch_buffer_timer = WatchBuffer(
+            self.watch_buffer_event, self.push_to_kluster_intelligence, runtime=1
+        )
         self.watch_buffer_timer.start()
-        self._newfile = ''
-        self.file_event = 'created'
+        self._newfile = ""
+        self.file_event = "created"
 
     def build_initial_file_state(self):
         """
@@ -70,7 +86,7 @@ class DirectoryMonitor:
         not get you the current state.  Apply this method in addition to starting the observer to get the initial state.
         """
 
-        self.file_event = 'created'
+        self.file_event = "created"
         if self.is_recursive:
             for root, direc, files in os.walk(self.directory_path):
                 for fil in files:
@@ -81,7 +97,9 @@ class DirectoryMonitor:
             for fil in os.listdir(self.directory_path):
                 filext = os.path.splitext(fil)[1]
                 if filext in all_extensions:
-                    self.add_to_buffer(os.path.join(self.directory_path, fil), self.file_event)
+                    self.add_to_buffer(
+                        os.path.join(self.directory_path, fil), self.file_event
+                    )
 
     def add_to_buffer(self, filepath: str, file_event: str):
         """
@@ -98,9 +116,9 @@ class DirectoryMonitor:
         """
 
         filepath = os.path.normpath(filepath)
-        if filepath in self.seen_files and file_event == 'deleted':
+        if filepath in self.seen_files and file_event == "deleted":
             self.seen_files.remove(filepath)
-            self.file_event = 'deleted'
+            self.file_event = "deleted"
             self.newfile = filepath
         elif filepath not in self.seen_files:
             self.seen_files.append(filepath)
@@ -120,7 +138,9 @@ class DirectoryMonitor:
                 continue
 
             file_event, previous_file_size = self.file_buffer[fil]
-            if filesize != previous_file_size or filesize == 0:  # update the buffer if file size changed since we last checked
+            if (
+                filesize != previous_file_size or filesize == 0
+            ):  # update the buffer if file size changed since we last checked
                 self.file_buffer[fil] = [file_event, filesize]
             else:  # this is a file that finished writing
                 self.file_event = file_event
@@ -182,8 +202,15 @@ class IntelligenceMonitorHandler(PatternMatchingEventHandler):
     """
     Event handler for the fqpr_intelligence directory monitoring.
     """
-    def __init__(self, parent: DirectoryMonitor, patterns: list, ignore_patterns: list, ignore_directories: bool,
-                 case_sensitive: bool):
+
+    def __init__(
+        self,
+        parent: DirectoryMonitor,
+        patterns: list,
+        ignore_patterns: list,
+        ignore_directories: bool,
+        case_sensitive: bool,
+    ):
         """
         initialize the handler
 
@@ -216,7 +243,7 @@ class IntelligenceMonitorHandler(PatternMatchingEventHandler):
         """
 
         newfil = event.src_path
-        self.parent.add_to_buffer(newfil, 'created')
+        self.parent.add_to_buffer(newfil, "created")
 
     def on_deleted(self, event: FileDeletedEvent):
         """
@@ -230,7 +257,7 @@ class IntelligenceMonitorHandler(PatternMatchingEventHandler):
         """
 
         newfil = event.src_path
-        self.parent.add_to_buffer(newfil, 'deleted')
+        self.parent.add_to_buffer(newfil, "deleted")
 
 
 class WatchBuffer(Thread):
@@ -240,6 +267,7 @@ class WatchBuffer(Thread):
     See DirectoryMonitor for usage.  We use this thread in that class to monitor the file buffer, to see when incoming
     files have finished being written (and are then ready to be read)
     """
+
     def __init__(self, event: Event, timed_func: FunctionType, runtime=1):
         """
         initialize
