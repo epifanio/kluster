@@ -7,6 +7,8 @@ services:
             - NVIDIA_VISIBLE_DEVICES=all
             - DISPLAY=$DISPLAY
         command: /usr/bin/python3 -m HSTB.kluster
+        ports:
+            - 44683:44683
         volumes:
             - /tmp/.X11-unix:/tmp/.X11-unix
             - ~/.Xauthority:/root/.Xauthority
