@@ -1,0 +1,51 @@
+FROM nvidia/cuda:11.7.1-devel-ubuntu20.04
+LABEL maintainer="massimods@met.no"
+
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get -y dist-upgrade
+
+RUN apt-get install -y software-properties-common
+RUN apt-get update && apt-get -y dist-upgrade
+RUN add-apt-repository ppa:ubuntugis/ppa
+RUN apt-get update && apt-get -y dist-upgrade
+
+
+RUN apt install -y mesa-utils xserver-xorg-video-all nvidia-common kmod x11-apps 
+
+COPY NVIDIA-Linux-x86_64-515.43.04.run .
+# RUN wget https://us.download.nvidia.com/XFree86/Linux-x86_64/515.43.04/NVIDIA-Linux-x86_64-515.43.04.run && \
+RUN /bin/sh NVIDIA-Linux-x86_64-515.43.04.run -a -s --no-kernel-module --install-libglvnd || \
+    cat /var/log/nvidia-installer.log
+    
+    
+COPY cudnn-linux-x86_64-8.5.0.96_cuda11-archive.tar.xz cudnn-linux-x86_64-8.5.0.96_cuda11-archive.tar.xz
+RUN tar -xf cudnn-linux-x86_64-8.5.0.96_cuda11-archive.tar.xz && \
+    cd cudnn-linux-x86_64-8.5.0.96_cuda11-archive && \
+    cp -P lib/* /usr/local/cuda/lib64/ && \
+    cp -P include/* /usr/local/cuda/include/ && \
+    rm -rf cudnn-linux-x86_64-8.5.0.96_cuda11-archive.tar.xz cudnn-linux-x86_64-8.5.0.96_cuda11-archive
+
+
+RUN apt-get install  -y qgis \ 
+                        libqgis-dev \
+                        python3-qgis \
+                        python3-vispy \
+                        python3-qtpy \
+                        python3-pyside2.* \
+                        libgdal-dev \
+                        python3-pip \
+                        build-essential \
+                        gfortran \
+                        cmake \
+                        git \
+                        nano \
+                        python3-h5py
+                    
+RUN pip install geohash
+
+RUN python3 --version
+
+RUN pip install git+https://github.com/epifanio/kluster.git#egg=hstb.kluster
