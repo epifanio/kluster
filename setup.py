@@ -24,7 +24,7 @@ REQUIRED = [
     "fasteners==0.16",
     "laspy==2.0.3",
     "matplotlib==3.5.1",  # >=3.3.3 required, FuncAnimation and Pyside2/matplotlib do not play well in 3.2.1
-    "numba==0.53.0",
+    "numba>=0.53.0",
     "openpyxl==3.0.9",
     "psutil==5.8.0",
     "numpy==1.21.5",  # cannot be 1.19.4, see https://tinyurl.com/y3dm3h86
