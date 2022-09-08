@@ -15,13 +15,14 @@ RUN apt-get update && apt-get -y dist-upgrade
 
 RUN apt install -y mesa-utils xserver-xorg-video-all nvidia-common kmod x11-apps wget
 
+# download fron NVIDIA or install from repo
 # COPY NVIDIA-Linux-x86_64-515.43.04.run .
 RUN wget https://us.download.nvidia.com/XFree86/Linux-x86_64/515.43.04/NVIDIA-Linux-x86_64-515.43.04.run
 
 RUN /bin/sh NVIDIA-Linux-x86_64-515.43.04.run -a -s --no-kernel-module --install-libglvnd || \
     cat /var/log/nvidia-installer.log
 
-# The following is needed only when adding opencv with CUDA support
+# The following is needed only when building opencv with CUDA support
 
 # COPY cudnn-linux-x86_64-8.5.0.96_cuda11-archive.tar.xz cudnn-linux-x86_64-8.5.0.96_cuda11-archive.tar.xz
 # RUN tar -xf cudnn-linux-x86_64-8.5.0.96_cuda11-archive.tar.xz && \
